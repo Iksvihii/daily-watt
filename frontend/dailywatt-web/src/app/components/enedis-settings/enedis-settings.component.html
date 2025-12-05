@@ -1,0 +1,42 @@
+<div class="grid two">
+  <div class="card">
+    <h3>Enedis credentials</h3>
+    <p class="status">Stored securely with data protection.</p>
+    <form [formGroup]="credentialsForm" (ngSubmit)="saveCredentials()">
+      <div>
+        <label>Login</label>
+        <input type="text" formControlName="login" placeholder="Enedis login">
+      </div>
+      <div>
+        <label>Password</label>
+        <input type="password" formControlName="password" placeholder="Enedis password">
+      </div>
+      <button class="btn" type="submit" [disabled]="saving">Save</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>Import consumption</h3>
+    <form [formGroup]="importForm" (ngSubmit)="startImport()">
+      <div>
+        <label>From</label>
+        <input type="datetime-local" formControlName="from">
+      </div>
+      <div>
+        <label>To</label>
+        <input type="datetime-local" formControlName="to">
+      </div>
+      <button class="btn" type="submit" [disabled]="importing">Start import</button>
+    </form>
+
+    <div *ngIf="job" style="margin-top: 12px;">
+      <div class="status">Job: {{ job.id }}</div>
+      <div class="status" [ngClass]="{'positive': job.status === 'Completed', 'negative': job.status === 'Failed'}">
+        Status: {{ job.status }} • Imported: {{ job.importedCount }}
+      </div>
+      <div *ngIf="job.errorMessage" class="status negative">{{ job.errorMessage }}</div>
+    </div>
+
+    <p *ngIf="message" class="status">{{ message }}</p>
+  </div>
+</div>

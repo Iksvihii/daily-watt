@@ -1,0 +1,29 @@
+# OS
+Thumbs.db
+.DS_Store
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+
+# .NET build
+**/bin/
+**/obj/
+**/TestResults/
+**/*.pidb
+**/*.svclog
+**/*.pdb
+
+# EF Core
+**/Migrations/
+
+# Angular / Node
+frontend/dailywatt-web/node_modules/
+frontend/dailywatt-web/dist/
+frontend/dailywatt-web/.angular/
+frontend/dailywatt-web/.npm/
+frontend/dailywatt-web/npm-debug.log*
+frontend/dailywatt-web/yarn-error.log*

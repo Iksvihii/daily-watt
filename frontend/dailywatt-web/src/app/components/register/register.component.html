@@ -1,0 +1,16 @@
+<div class="card">
+  <h2>Create account</h2>
+  <p class="status" *ngIf="error" class="status negative">{{ error }}</p>
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div>
+      <label>Email</label>
+      <input type="email" formControlName="email" placeholder="user@example.com">
+    </div>
+    <div>
+      <label>Password</label>
+      <input type="password" formControlName="password" placeholder="At least 6 characters">
+    </div>
+    <button class="btn" type="submit" [disabled]="loading">Register</button>
+  </form>
+  <p class="status">Already registered? <a routerLink="/login">Sign in</a></p>
+</div>

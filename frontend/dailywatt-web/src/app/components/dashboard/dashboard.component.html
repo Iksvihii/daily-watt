@@ -1,0 +1,47 @@
+<div class="card">
+  <h3>Dashboard</h3>
+  <form class="grid two" (ngSubmit)="load()">
+    <div>
+      <label>From</label>
+      <input type="datetime-local" [(ngModel)]="from" name="from">
+    </div>
+    <div>
+      <label>To</label>
+      <input type="datetime-local" [(ngModel)]="to" name="to">
+    </div>
+    <div>
+      <label>Granularity</label>
+      <select [(ngModel)]="granularity" name="granularity">
+        <option value="30min">30 minutes</option>
+        <option value="hour">Hour</option>
+        <option value="day">Day</option>
+      </select>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" [(ngModel)]="withWeather" id="weather" name="weather">
+      <label for="weather">Show temperature</label>
+    </div>
+    <button class="btn" type="submit" [disabled]="loading">Load</button>
+  </form>
+  <p class="status negative" *ngIf="error">{{ error }}</p>
+</div>
+
+<div class="grid two" *ngIf="data">
+  <div class="card">
+    <div class="status">Total kWh</div>
+    <div style="font-size:28px;font-weight:700;">{{ data.summary.totalKwh | number:'1.0-2' }}</div>
+  </div>
+  <div class="card">
+    <div class="status">Average per day</div>
+    <div style="font-size:28px;font-weight:700;">{{ data.summary.avgKwhPerDay | number:'1.0-2' }}</div>
+  </div>
+  <div class="card">
+    <div class="status">Max day</div>
+    <div style="font-size:28px;font-weight:700;">{{ data.summary.maxDayKwh | number:'1.0-2' }}</div>
+    <div class="status">{{ data.summary.maxDay }}</div>
+  </div>
+</div>
+
+<div class="chart-wrapper" *ngIf="data">
+  <app-consumption-chart [consumption]="data.consumption" [weather]="withWeather ? data.weather : undefined"></app-consumption-chart>
+</div>
