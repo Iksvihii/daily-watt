@@ -1,12 +1,14 @@
 import { Component } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { EnedisService } from '../../services/enedis.service';
 import { ImportJob } from '../../models/enedis.models';
 
 @Component({
   selector: 'app-enedis-settings',
+  standalone: true,
+  imports: [ReactiveFormsModule],
   templateUrl: './enedis-settings.component.html',
-  styleUrls: ['./enedis-settings.component.css']
+  styleUrl: './enedis-settings.component.css'
 })
 export class EnedisSettingsComponent {
   message?: string;

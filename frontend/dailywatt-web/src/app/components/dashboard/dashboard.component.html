@@ -23,25 +23,29 @@
     </div>
     <button class="btn" type="submit" [disabled]="loading">Load</button>
   </form>
-  <p class="status negative" *ngIf="error">{{ error }}</p>
+  @if (error) {
+    <p class="status negative">{{ error }}</p>
+  }
 </div>
 
-<div class="grid two" *ngIf="data">
-  <div class="card">
-    <div class="status">Total kWh</div>
-    <div style="font-size:28px;font-weight:700;">{{ data.summary.totalKwh | number:'1.0-2' }}</div>
+@if (data) {
+  <div class="grid two">
+    <div class="card">
+      <div class="status">Total kWh</div>
+      <div style="font-size:28px;font-weight:700;">{{ data.summary.totalKwh | number:'1.0-2' }}</div>
+    </div>
+    <div class="card">
+      <div class="status">Average per day</div>
+      <div style="font-size:28px;font-weight:700;">{{ data.summary.avgKwhPerDay | number:'1.0-2' }}</div>
+    </div>
+    <div class="card">
+      <div class="status">Max day</div>
+      <div style="font-size:28px;font-weight:700;">{{ data.summary.maxDayKwh | number:'1.0-2' }}</div>
+      <div class="status">{{ data.summary.maxDay }}</div>
+    </div>
   </div>
-  <div class="card">
-    <div class="status">Average per day</div>
-    <div style="font-size:28px;font-weight:700;">{{ data.summary.avgKwhPerDay | number:'1.0-2' }}</div>
-  </div>
-  <div class="card">
-    <div class="status">Max day</div>
-    <div style="font-size:28px;font-weight:700;">{{ data.summary.maxDayKwh | number:'1.0-2' }}</div>
-    <div class="status">{{ data.summary.maxDay }}</div>
-  </div>
-</div>
 
-<div class="chart-wrapper" *ngIf="data">
-  <app-consumption-chart [consumption]="data.consumption" [weather]="withWeather ? data.weather : undefined"></app-consumption-chart>
-</div>
+  <div class="chart-wrapper">
+    <app-consumption-chart [consumption]="data.consumption" [weather]="withWeather ? data.weather : undefined"></app-consumption-chart>
+  </div>
+}

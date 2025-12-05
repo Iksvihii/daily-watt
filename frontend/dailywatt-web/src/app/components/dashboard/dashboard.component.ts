@@ -1,11 +1,16 @@
+import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../services/dashboard.service';
 import { Granularity, TimeSeriesResponse } from '../../models/dashboard.models';
+import { ConsumptionChartComponent } from '../consumption-chart/consumption-chart.component';
 
 @Component({
   selector: 'app-dashboard',
+  standalone: true,
+  imports: [CommonModule, FormsModule, ConsumptionChartComponent],
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css']
+  styleUrl: './dashboard.component.css'
 })
 export class DashboardComponent {
   from = this.defaultFrom();

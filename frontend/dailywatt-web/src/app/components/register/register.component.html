@@ -1,6 +1,8 @@
 <div class="card">
   <h2>Create account</h2>
-  <p class="status" *ngIf="error" class="status negative">{{ error }}</p>
+  @if (error) {
+    <p class="status negative">{{ error }}</p>
+  }
   <form [formGroup]="form" (ngSubmit)="submit()">
     <div>
       <label>Email</label>

@@ -29,14 +29,20 @@
       <button class="btn" type="submit" [disabled]="importing">Start import</button>
     </form>
 
-    <div *ngIf="job" style="margin-top: 12px;">
-      <div class="status">Job: {{ job.id }}</div>
-      <div class="status" [ngClass]="{'positive': job.status === 'Completed', 'negative': job.status === 'Failed'}">
-        Status: {{ job.status }} • Imported: {{ job.importedCount }}
+    @if (job) {
+      <div style="margin-top: 12px;">
+        <div class="status">Job: {{ job.id }}</div>
+        <div class="status" [class.positive]="job.status === 'Completed'" [class.negative]="job.status === 'Failed'">
+          Status: {{ job.status }} • Imported: {{ job.importedCount }}
+        </div>
+        @if (job.errorMessage) {
+          <div class="status negative">{{ job.errorMessage }}</div>
+        }
       </div>
-      <div *ngIf="job.errorMessage" class="status negative">{{ job.errorMessage }}</div>
-    </div>
+    }
 
-    <p *ngIf="message" class="status">{{ message }}</p>
+    @if (message) {
+      <p class="status">{{ message }}</p>
+    }
   </div>
 </div>

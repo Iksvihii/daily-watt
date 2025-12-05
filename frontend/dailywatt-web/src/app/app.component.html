@@ -7,9 +7,13 @@
     <div class="links">
       <a routerLink="/dashboard">Dashboard</a>
       <a routerLink="/enedis">Enedis</a>
-      <a routerLink="/login" *ngIf="!(isLoggedIn$ | async)">Login</a>
-      <a routerLink="/register" *ngIf="!(isLoggedIn$ | async)">Register</a>
-      <button class="btn secondary" (click)="logout()" *ngIf="isLoggedIn$ | async">Logout</button>
+      @if (!(isLoggedIn$ | async)) {
+        <a routerLink="/login">Login</a>
+        <a routerLink="/register">Register</a>
+      }
+      @if (isLoggedIn$ | async) {
+        <button class="btn secondary" (click)="logout()">Logout</button>
+      }
     </div>
   </header>
 
