@@ -126,12 +126,12 @@ public static class ExcelMeasurementParser
       var rowObj = worksheet.Row(row);
       var firstCell = rowObj.FirstCell();
       var lastColumn = worksheet.LastColumnUsed();
-      
+
       if (firstCell == null || lastColumn == null)
       {
         continue;
       }
-      
+
       for (int col = firstCell.Address.ColumnNumber; col <= lastColumn.ColumnNumber(); col++)
       {
         var cell = worksheet.Cell(row, col);
@@ -150,12 +150,12 @@ public static class ExcelMeasurementParser
   {
     var row = worksheet.Row(headerRow);
     var lastColumn = worksheet.LastColumnUsed();
-    
+
     if (lastColumn == null)
     {
       return -1;
     }
-    
+
     for (int col = 1; col <= lastColumn.ColumnNumber(); col++)
     {
       var cell = row.Cell(col);

@@ -5,34 +5,48 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections;
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using DailyWatt.Domain.Entities;
 using DailyWatt.Domain.Enums;
 using DailyWatt.Domain.Services;
 using DailyWatt.Infrastructure.Data;
 using DailyWatt.Infrastructure.Services;
+using DailyWatt.Tests.Infrastructure;
 using Moq;
 using Xunit;
 
 namespace DailyWatt.Tests.Infrastructure.Services;
 
-public class ConsumptionServiceTests
+public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
 {
+  private readonly TestDatabaseFixture _fixture;
+
+  public ConsumptionServiceTests(TestDatabaseFixture fixture)
+  {
+    _fixture = fixture;
+  }
   [Fact]
   public async Task GetAggregatedAsync_WithHourlyGranularity_AggregatesDataCorrectly()
   {
     // Arrange
-    var userId = Guid.NewGuid();
-    var measurements = new List<Measurement>
-        {
-            new() { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc), Kwh = 0.31 },
-            new() { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 0, 30, 0, DateTimeKind.Utc), Kwh = 0.22 },
-            new() { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 1, 0, 0, DateTimeKind.Utc), Kwh = 0.28 },
-            new() { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 1, 30, 0, DateTimeKind.Utc), Kwh = 0.25 },
-        };
-
-    var mockDbContext = CreateMockDbContext(measurements);
-    var consumptionService = new ConsumptionService(mockDbContext.Object);
+    var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    using var dbContext = _fixture.CreateContext();
+    
+    // Disable FK constraints for inserting test data
+    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = OFF;");
+    
+    // Insert test data directly
+    dbContext.Measurements.AddRange(
+      new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc), Kwh = 0.31 },
+      new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 0, 30, 0, DateTimeKind.Utc), Kwh = 0.22 },
+      new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 1, 0, 0, DateTimeKind.Utc), Kwh = 0.28 },
+      new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 1, 30, 0, DateTimeKind.Utc), Kwh = 0.25 }
+    );
+    await dbContext.SaveChangesAsync();
+    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = ON;");
+    
+    var consumptionService = new ConsumptionService(dbContext);
 
     var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
     var toUtc = new DateTime(2025, 12, 1, 23, 59, 59, DateTimeKind.Utc);
@@ -58,10 +72,14 @@ public class ConsumptionServiceTests
   public async Task GetAggregatedAsync_WithDailyGranularity_AggregatesAllDayData()
   {
     // Arrange
-    var userId = Guid.NewGuid();
+    var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    using var dbContext = _fixture.CreateContext();
+    
+    // Disable FK constraints for inserting test data
+    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = OFF;");
+    
+    // Insert 48 measurements for a full day (30-min intervals)
     var measurements = new List<Measurement>();
-
-    // Create 48 measurements for a full day (30-min intervals)
     for (int i = 0; i < 48; i++)
     {
       measurements.Add(new Measurement
@@ -72,9 +90,11 @@ public class ConsumptionServiceTests
         Kwh = 0.5
       });
     }
-
-    var mockDbContext = CreateMockDbContext(measurements);
-    var consumptionService = new ConsumptionService(mockDbContext.Object);
+    dbContext.Measurements.AddRange(measurements);
+    await dbContext.SaveChangesAsync();
+    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = ON;");
+    
+    var consumptionService = new ConsumptionService(dbContext);
 
     var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
     var toUtc = new DateTime(2025, 12, 1, 23, 59, 59, DateTimeKind.Utc);
@@ -93,16 +113,22 @@ public class ConsumptionServiceTests
   public async Task GetSummaryAsync_CalculatesSummaryCorrectly()
   {
     // Arrange
-    var userId = Guid.NewGuid();
-    var measurements = new List<Measurement>
-        {
-            new() { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc), Kwh = 10 },
-            new() { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 2, 0, 0, 0, DateTimeKind.Utc), Kwh = 15 },
-            new() { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 3, 0, 0, 0, DateTimeKind.Utc), Kwh = 20 },
-        };
-
-    var mockDbContext = CreateMockDbContext(measurements);
-    var consumptionService = new ConsumptionService(mockDbContext.Object);
+    var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    using var dbContext = _fixture.CreateContext();
+    
+    // Disable FK constraints for inserting test data
+    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = OFF;");
+    
+    // Insert test data
+    dbContext.Measurements.AddRange(
+      new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc), Kwh = 10 },
+      new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 2, 0, 0, 0, DateTimeKind.Utc), Kwh = 15 },
+      new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 3, 0, 0, 0, DateTimeKind.Utc), Kwh = 20 }
+    );
+    await dbContext.SaveChangesAsync();
+    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = ON;");
+    
+    var consumptionService = new ConsumptionService(dbContext);
 
     var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
     var toUtc = new DateTime(2025, 12, 3, 23, 59, 59, DateTimeKind.Utc);
@@ -129,18 +155,25 @@ public class ConsumptionServiceTests
             new() { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = DateTime.UtcNow, Kwh = 0.7 },
         };
 
-    var mockDbContext = CreateMockDbContext(new List<Measurement>());
-    var mockMeasurementSet = mockDbContext.Object.Measurements;
-
-    var consumptionService = new ConsumptionService(mockDbContext.Object);
+    using var dbContext = _fixture.CreateContext();
+    var consumptionService = new ConsumptionService(dbContext);
 
     // Act
-    await consumptionService.BulkInsertAsync(measurements);
+    // Temporarily disable FK constraints for this test
+    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = OFF;");
+    try
+    {
+      await consumptionService.BulkInsertAsync(measurements);
+    }
+    finally
+    {
+      await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = ON;");
+    }
 
     // Assert
-    // Verify that AddRangeAsync was called with the measurements
-    // This is a basic check - in a real scenario you'd mock more thoroughly
-    Assert.Equal(measurements.Count, measurements.Count);
+    // Verify measurements were added to context
+    var inserted = dbContext.Measurements.ToList();
+    Assert.Equal(measurements.Count, inserted.Count);
   }
 
   [Fact]
@@ -148,8 +181,8 @@ public class ConsumptionServiceTests
   {
     // Arrange
     var userId = Guid.NewGuid();
-    var mockDbContext = CreateMockDbContext(new List<Measurement>());
-    var consumptionService = new ConsumptionService(mockDbContext.Object);
+    using var dbContext = _fixture.CreateContext();
+    var consumptionService = new ConsumptionService(dbContext);
 
     var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
     var toUtc = new DateTime(2025, 12, 8, 23, 59, 59, DateTimeKind.Utc);
@@ -165,10 +198,14 @@ public class ConsumptionServiceTests
   public async Task GetAggregatedAsync_WithMonthGranularity_AggregatesMonthlyData()
   {
     // Arrange
-    var userId = Guid.NewGuid();
+    var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    using var dbContext = _fixture.CreateContext();
+    
+    // Disable FK constraints for inserting test data
+    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = OFF;");
+    
+    // Insert test data for 14 days
     var measurements = new List<Measurement>();
-
-    // Create data for Dec 1-7 and Dec 8-14 (two different "weeks" spanning 2 months conceptually)
     for (int day = 1; day <= 14; day++)
     {
       measurements.Add(new Measurement
@@ -179,9 +216,11 @@ public class ConsumptionServiceTests
         Kwh = day * 1.0 // Different value per day
       });
     }
-
-    var mockDbContext = CreateMockDbContext(measurements);
-    var consumptionService = new ConsumptionService(mockDbContext.Object);
+    dbContext.Measurements.AddRange(measurements);
+    await dbContext.SaveChangesAsync();
+    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = ON;");
+    
+    var consumptionService = new ConsumptionService(dbContext);
 
     var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
     var toUtc = new DateTime(2025, 12, 14, 23, 59, 59, DateTimeKind.Utc);
@@ -194,61 +233,6 @@ public class ConsumptionServiceTests
     var monthData = result.First();
     // Sum should be 1+2+3+...+14 = 105
     Assert.Equal(105, monthData.Kwh, 1);
-  }
-
-  /// <summary>
-  /// Helper method to create a mock DbContext with test measurements
-  /// </summary>
-  private Mock<ApplicationDbContext> CreateMockDbContext(List<Measurement> measurements)
-  {
-    var mockDbContext = new Mock<ApplicationDbContext>();
-
-    // Create IQueryable from the measurements list
-    var measurementsQueryable = measurements.AsQueryable();
-
-    // Mock the DbSet
-    var mockSet = new Mock<IQueryable<Measurement>>();
-    mockSet.As<IAsyncEnumerable<Measurement>>()
-        .Setup(m => m.GetAsyncEnumerator(It.IsAny<CancellationToken>()))
-        .Returns(new TestAsyncEnumerator<Measurement>(measurementsQueryable.GetEnumerator()));
-
-    mockSet.As<IQueryable<Measurement>>()
-        .Setup(m => m.Provider)
-        .Returns(new TestAsyncQueryProvider<Measurement>(measurementsQueryable.Provider));
-
-    mockSet.As<IQueryable<Measurement>>()
-        .Setup(m => m.Expression)
-        .Returns(measurementsQueryable.Expression);
-
-    mockSet.As<IQueryable<Measurement>>()
-        .Setup(m => m.ElementType)
-        .Returns(measurementsQueryable.ElementType);
-
-    mockSet.As<IQueryable<Measurement>>()
-        .Setup(m => m.GetEnumerator())
-        .Returns(measurementsQueryable.GetEnumerator());
-
-    // Setup Measurements property
-    mockDbContext.Setup(m => m.Measurements).Returns(() =>
-    {
-      var mockSet2 = new Mock<IQueryable<Measurement>>();
-      var q = measurements.AsQueryable();
-      mockSet2.As<IQueryable<Measurement>>()
-              .Setup(m2 => m2.Provider)
-              .Returns(q.Provider);
-      mockSet2.As<IQueryable<Measurement>>()
-              .Setup(m2 => m2.Expression)
-              .Returns(q.Expression);
-      mockSet2.As<IQueryable<Measurement>>()
-              .Setup(m2 => m2.ElementType)
-              .Returns(q.ElementType);
-      mockSet2.As<IQueryable<Measurement>>()
-              .Setup(m2 => m2.GetEnumerator())
-              .Returns(q.GetEnumerator());
-      return mockSet2.Object;
-    });
-
-    return mockDbContext;
   }
 }
 

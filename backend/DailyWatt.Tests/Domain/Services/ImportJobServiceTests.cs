@@ -27,19 +27,11 @@ public class ImportJobServiceTests
       CreatedAt = DateTime.UtcNow
     };
 
-    var mockDbContext = new Mock<ApplicationDbContext>();
-    var mockImportJobSet = new Mock<IQueryable<ImportJob>>();
-
-    mockDbContext.Setup(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()))
-        .ReturnsAsync(1);
-
     // Act
     job.Status = ImportJobStatus.Running;
-    await mockDbContext.Object.SaveChangesAsync();
 
     // Assert
     Assert.Equal(ImportJobStatus.Running, job.Status);
-    mockDbContext.Verify(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
   }
 
   [Fact]
@@ -57,16 +49,11 @@ public class ImportJobServiceTests
       ImportedCount = 0
     };
 
-    var mockDbContext = new Mock<ApplicationDbContext>();
-    mockDbContext.Setup(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()))
-        .ReturnsAsync(1);
-
     const int measurementCount = 336;
 
     // Act
     job.Status = ImportJobStatus.Completed;
     job.ImportedCount = measurementCount;
-    await mockDbContext.Object.SaveChangesAsync();
 
     // Assert
     Assert.Equal(ImportJobStatus.Completed, job.Status);
@@ -88,10 +75,6 @@ public class ImportJobServiceTests
       ErrorMessage = null
     };
 
-    var mockDbContext = new Mock<ApplicationDbContext>();
-    mockDbContext.Setup(db => db.SaveChangesAsync(It.IsAny<CancellationToken>()))
-        .ReturnsAsync(1);
-
     const string errorMessage = "File format not supported";
     const string errorCode = "INVALID_FORMAT";
 
@@ -99,7 +82,6 @@ public class ImportJobServiceTests
     job.Status = ImportJobStatus.Failed;
     job.ErrorCode = errorCode;
     job.ErrorMessage = errorMessage;
-    await mockDbContext.Object.SaveChangesAsync();
 
     // Assert
     Assert.Equal(ImportJobStatus.Failed, job.Status);

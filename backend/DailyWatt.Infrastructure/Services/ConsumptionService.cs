@@ -39,32 +39,36 @@ public class ConsumptionService : IConsumptionService
                     .ToListAsync(ct);
 
             case Granularity.Hour:
-                return await query
+                var hourData = await query.ToListAsync(ct);
+                return hourData
                     .GroupBy(x => new DateTime(x.TimestampUtc.Year, x.TimestampUtc.Month, x.TimestampUtc.Day, x.TimestampUtc.Hour, 0, 0, DateTimeKind.Utc))
                     .Select(g => new AggregatedConsumptionPoint(g.Key, g.Sum(m => m.Kwh)))
                     .OrderBy(x => x.TimestampUtc)
-                    .ToListAsync(ct);
+                    .ToList();
 
             case Granularity.Day:
-                return await query
+                var dayData = await query.ToListAsync(ct);
+                return dayData
                     .GroupBy(x => new DateTime(x.TimestampUtc.Year, x.TimestampUtc.Month, x.TimestampUtc.Day, 0, 0, 0, DateTimeKind.Utc))
                     .Select(g => new AggregatedConsumptionPoint(g.Key, g.Sum(m => m.Kwh)))
                     .OrderBy(x => x.TimestampUtc)
-                    .ToListAsync(ct);
+                    .ToList();
 
             case Granularity.Month:
-                return await query
+                var monthData = await query.ToListAsync(ct);
+                return monthData
                     .GroupBy(x => new DateTime(x.TimestampUtc.Year, x.TimestampUtc.Month, 1, 0, 0, 0, DateTimeKind.Utc))
                     .Select(g => new AggregatedConsumptionPoint(g.Key, g.Sum(m => m.Kwh)))
                     .OrderBy(x => x.TimestampUtc)
-                    .ToListAsync(ct);
+                    .ToList();
 
             case Granularity.Year:
-                return await query
+                var yearData = await query.ToListAsync(ct);
+                return yearData
                     .GroupBy(x => new DateTime(x.TimestampUtc.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc))
                     .Select(g => new AggregatedConsumptionPoint(g.Key, g.Sum(m => m.Kwh)))
                     .OrderBy(x => x.TimestampUtc)
-                    .ToListAsync(ct);
+                    .ToList();
 
             default:
                 return await query
