@@ -5,14 +5,14 @@
       <div class="pill">Enedis + Weather insights</div>
     </div>
     <div class="links">
-      <a routerLink="/dashboard">Dashboard</a>
-      <a routerLink="/enedis">Enedis</a>
+      @if (loggedIn()) {
+        <a routerLink="/dashboard">Dashboard</a>
+        <a routerLink="/enedis">Enedis</a>
+        <button class="btn secondary" (click)="logout()">Logout</button>
+      }
       @if (!loggedIn()) {
         <a routerLink="/login">Login</a>
         <a routerLink="/register">Register</a>
-      }
-      @if (loggedIn()) {
-        <button class="btn secondary" (click)="logout()">Logout</button>
       }
     </div>
   </header>
