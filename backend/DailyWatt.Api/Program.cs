@@ -13,7 +13,8 @@ builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddPermissiveCors();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Swagger temporarily disabled due to .NET 10 compatibility issues
+// builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -33,8 +34,9 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    // Swagger temporarily disabled due to .NET 10 compatibility issues
+    // app.UseSwagger();
+    // app.UseSwaggerUI();
 }
 
 app.UseCors();
