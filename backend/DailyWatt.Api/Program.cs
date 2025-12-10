@@ -22,6 +22,12 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.Migrate();
+    
+    // Seed demo data in development
+    if (app.Environment.IsDevelopment())
+    {
+        await DbSeeder.SeedDemoDataAsync(scope.ServiceProvider);
+    }
 }
 
 // Configure the HTTP request pipeline
