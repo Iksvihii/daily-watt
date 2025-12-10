@@ -1,0 +1,59 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": ".NET Launch API",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "backend: build solution",
+      "program": "${workspaceFolder}/backend/DailyWatt.Api/bin/Debug/net10.0/DailyWatt.Api.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/backend/DailyWatt.Api",
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
+    },
+    {
+      "name": ".NET Launch Worker",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "backend: build solution",
+      "program": "${workspaceFolder}/backend/DailyWatt.Worker/bin/Debug/net10.0/DailyWatt.Worker.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/backend/DailyWatt.Worker",
+      "stopAtEntry": false,
+      "env": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
+    },
+    {
+      "name": "Launch Frontend (Angular)",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "preLaunchTask": "frontend: start",
+      "url": "http://localhost:4200",
+      "webRoot": "${workspaceFolder}/frontend/dailywatt-web/src",
+      "userDataDir": "${workspaceFolder}/.vscode/chrome-profile"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Launch API + Worker",
+      "configurations": [
+        ".NET Launch API",
+        ".NET Launch Worker"
+      ]
+    },
+    {
+      "name": "Launch API + Worker + Web",
+      "configurations": [
+        ".NET Launch API",
+        ".NET Launch Worker",
+        "Launch Frontend (Angular)"
+      ]
+    }
+  ]
+}

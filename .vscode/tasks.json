@@ -1,0 +1,82 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "backend: build solution",
+      "type": "shell",
+      "command": "dotnet build backend/DailyWatt.sln",
+      "group": "build",
+      "problemMatcher": "$msCompile",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "backend: run API",
+      "type": "shell",
+      "command": "dotnet run --project backend/DailyWatt.Api",
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "backend: run Worker",
+      "type": "shell",
+      "command": "dotnet run --project backend/DailyWatt.Worker",
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "frontend: install",
+      "type": "shell",
+      "command": "npm install",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend/dailywatt-web"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "frontend: start",
+      "type": "shell",
+      "command": "npm start",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "angular",
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*(Starting.*(Angular|Development) Server|Generating browser application bundles).*",
+          "endsPattern": ".*(Compiled successfully|Compiled with warnings).*"
+        }
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/frontend/dailywatt-web"
+      }
+    },
+    {
+      "label": "run all (API + Worker + Web)",
+      "type": "compound",
+      "dependsOn": [
+        "backend: run API",
+        "backend: run Worker",
+        "frontend: start"
+      ]
+    }
+  ]
+}
