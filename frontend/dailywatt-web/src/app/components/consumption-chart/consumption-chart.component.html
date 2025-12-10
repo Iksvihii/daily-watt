@@ -1,14 +1,36 @@
-<div class="chart-shell" *ngIf="consumption?.length; else empty">
-  <svg [attr.viewBox]="'0 0 ' + width + ' ' + height" preserveAspectRatio="none">
-    <polyline *ngIf="consumptionPoints" [attr.points]="consumptionPoints" class="line consumption" />
-    <polyline *ngIf="temperaturePoints" [attr.points]="temperaturePoints" class="line temperature" />
-  </svg>
-  <div class="legend">
-    <span class="dot consumption"></span> Consumption (kWh) — min {{ minLabel }} / max {{ maxLabel }}
-    <span *ngIf="temperaturePoints" class="dot temperature" style="margin-left:12px;"></span>
-    <span *ngIf="temperaturePoints">Temperature (°C)</span>
+<div class="chart-controls">
+  <div class="time-scale-selector">
+    <label for="timeScale">Time Scale:</label>
+    <select id="timeScale" [value]="timeScale()" (change)="onTimeScaleChange($event)">
+      <option value="hour">Hour</option>
+      <option value="day">Day</option>
+      <option value="month">Month</option>
+      <option value="year">Year</option>
+    </select>
+  </div>
+
+  <div class="range-controls">
+    <label for="startRange">Range:</label>
+    <input 
+      id="startRange" 
+      type="range" 
+      min="0" 
+      max="100" 
+      [value]="startRangePercent"
+      (input)="onStartRangeInput($event)"
+      class="range-slider"
+    >
+    <span class="range-label">{{ startRangePercent }}%</span>
+    <input 
+      type="range" 
+      min="0" 
+      max="100" 
+      [value]="endRangePercent"
+      (input)="onEndRangeInput($event)"
+      class="range-slider"
+    >
+    <span class="range-label">{{ endRangePercent }}%</span>
   </div>
 </div>
-<ng-template #empty>
-  <div class="chart-shell empty">No consumption data yet.</div>
-</ng-template>
+
+<div #chartContainer class="chart-container"></div>
