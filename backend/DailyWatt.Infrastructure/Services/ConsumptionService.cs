@@ -33,17 +33,39 @@ public class ConsumptionService : IConsumptionService
         switch (granularity)
         {
             case Granularity.ThirtyMinutes:
-                var slots = await query
+                return await query
                     .OrderBy(x => x.TimestampUtc)
                     .Select(x => new AggregatedConsumptionPoint(x.TimestampUtc, x.Kwh))
                     .ToListAsync(ct);
-                return slots;
+            
             case Granularity.Hour:
                 return await query
                     .GroupBy(x => new DateTime(x.TimestampUtc.Year, x.TimestampUtc.Month, x.TimestampUtc.Day, x.TimestampUtc.Hour, 0, 0, DateTimeKind.Utc))
                     .Select(g => new AggregatedConsumptionPoint(g.Key, g.Sum(m => m.Kwh)))
                     .OrderBy(x => x.TimestampUtc)
                     .ToListAsync(ct);
+            
+            case Granularity.Day:
+                return await query
+                    .GroupBy(x => new DateTime(x.TimestampUtc.Year, x.TimestampUtc.Month, x.TimestampUtc.Day, 0, 0, 0, DateTimeKind.Utc))
+                    .Select(g => new AggregatedConsumptionPoint(g.Key, g.Sum(m => m.Kwh)))
+                    .OrderBy(x => x.TimestampUtc)
+                    .ToListAsync(ct);
+            
+            case Granularity.Month:
+                return await query
+                    .GroupBy(x => new DateTime(x.TimestampUtc.Year, x.TimestampUtc.Month, 1, 0, 0, 0, DateTimeKind.Utc))
+                    .Select(g => new AggregatedConsumptionPoint(g.Key, g.Sum(m => m.Kwh)))
+                    .OrderBy(x => x.TimestampUtc)
+                    .ToListAsync(ct);
+            
+            case Granularity.Year:
+                return await query
+                    .GroupBy(x => new DateTime(x.TimestampUtc.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc))
+                    .Select(g => new AggregatedConsumptionPoint(g.Key, g.Sum(m => m.Kwh)))
+                    .OrderBy(x => x.TimestampUtc)
+                    .ToListAsync(ct);
+            
             default:
                 return await query
                     .GroupBy(x => new DateTime(x.TimestampUtc.Year, x.TimestampUtc.Month, x.TimestampUtc.Day, 0, 0, 0, DateTimeKind.Utc))

@@ -1,8 +1,9 @@
 <div class="chart-wrapper">
   <div class="chart-controls">
     <div class="time-scale-selector">
-      <label for="timeScale">Time Scale:</label>
-      <select id="timeScale" [value]="timeScale()" (change)="onTimeScaleChange($event)" [disabled]="isLoading()">
+      <label for="granularity">Time Scale:</label>
+      <select id="granularity" [value]="granularity()" (change)="onTimeScaleChange($event)" [disabled]="isLoading()">
+        <option value="30min">30 minutes</option>
         <option value="hour">Hour</option>
         <option value="day">Day</option>
         <option value="month">Month</option>

@@ -19,8 +19,6 @@ import { DashboardService } from "../../services/dashboard.service";
 import { Subject } from "rxjs";
 import { takeUntil, debounceTime } from "rxjs/operators";
 
-type TimeScale = "hour" | "day" | "month" | "year";
-
 interface ChartData {
   timestamps: number[];
   consumptionValues: number[];
@@ -42,7 +40,7 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
   @Input() dateRangeStart?: string; // ISO string
   @Input() dateRangeEnd?: string; // ISO string
 
-  timeScale = signal<TimeScale>("day");
+  granularity = signal<Granularity>("day");
   chartData: ChartData | null = null;
   startRangePercent = 0;
   endRangePercent = 100;
@@ -52,7 +50,8 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
   private destroy$ = new Subject<void>();
   private rangeChange$ = new Subject<void>();
 
-  timeScaleOptions: { label: string; value: TimeScale }[] = [
+  granularityOptions: { label: string; value: Granularity }[] = [
+    { label: "30 minutes", value: "30min" },
     { label: "Hour", value: "hour" },
     { label: "Day", value: "day" },
     { label: "Month", value: "month" },
@@ -111,7 +110,7 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
 
   onTimeScaleChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
-    this.timeScale.set(target.value as TimeScale);
+    this.granularity.set(target.value as Granularity);
     this.startRangePercent = 0;
     this.endRangePercent = 100;
     this.rangeChange$.next();
@@ -158,21 +157,11 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
     const rangeStart = new Date(rangeStartMs).toISOString();
     const rangeEnd = new Date(rangeEndMs).toISOString();
 
-    // Map TimeScale to Granularity
-    const granularityMap: Record<TimeScale, Granularity> = {
-      hour: "hour",
-      day: "day",
-      month: "day", // Backend doesn't support 'month', use 'day' and let frontend handle aggregation
-      year: "day", // Backend doesn't support 'year', use 'day' and let frontend handle aggregation
-    };
-
-    const granularity = granularityMap[this.timeScale()];
-
     this.dashboardService
       .getTimeSeries({
         from: this.dateRangeStart,
         to: this.dateRangeEnd,
-        granularity,
+        granularity: this.granularity(),
         startDate: rangeStart,
         endDate: rangeEnd,
         withWeather: !!this.weather,

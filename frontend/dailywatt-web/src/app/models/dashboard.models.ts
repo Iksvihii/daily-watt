@@ -1,4 +1,4 @@
-export type Granularity = "30min" | "hour" | "day";
+export type Granularity = "30min" | "hour" | "day" | "month" | "year";
 
 export interface GetTimeSeriesRequest {
   from: string;
