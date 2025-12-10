@@ -61,7 +61,7 @@ export class EnedisSettingsComponent {
         this.job.set(job);
         this.pollJob(job.id);
       },
-      error: (err) => {
+      error: (err: { error?: { error?: string } }) => {
         this.message.set(err.error?.error || "Failed to start import");
         this.importing.set(false);
       },

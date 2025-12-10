@@ -19,7 +19,6 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://localhost:5000"
       },
-      "dotnetRunMessages": true,
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     },
@@ -35,13 +34,12 @@
       "env": {
         "DOTNET_ENVIRONMENT": "Development"
       },
-      "dotnetRunMessages": true,
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Angular (Chrome)",
-      "type": "pwa-chrome",
+      "type": "chrome",
       "request": "launch",
       "preLaunchTask": "frontend: start",
       "url": "http://localhost:4200",
