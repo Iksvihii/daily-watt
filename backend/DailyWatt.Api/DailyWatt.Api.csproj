@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DailyWatt.Application\DailyWatt.Application.csproj" />
     <ProjectReference Include="..\DailyWatt.Domain\DailyWatt.Domain.csproj" />
     <ProjectReference Include="..\DailyWatt.Infrastructure\DailyWatt.Infrastructure.csproj" />
   </ItemGroup>

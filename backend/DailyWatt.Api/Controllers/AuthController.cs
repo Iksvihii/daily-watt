@@ -1,9 +1,13 @@
+using AutoMapper;
+using DailyWatt.Api.Extensions;
 using DailyWatt.Api.Models.Auth;
 using DailyWatt.Api.Services;
+using DailyWatt.Application.DTOs;
+using DailyWatt.Application.Services;
 using DailyWatt.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 
 namespace DailyWatt.Api.Controllers;
 
@@ -11,69 +15,54 @@ namespace DailyWatt.Api.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly UserManager<DailyWattUser> _userManager;
+    private readonly Application.Services.IAuthService _authService;
     private readonly IJwtTokenService _tokenService;
+    private readonly IMapper _mapper;
+    private readonly UserManager<DailyWattUser> _userManager;
 
-    public AuthController(UserManager<DailyWattUser> userManager, IJwtTokenService tokenService)
+    public AuthController(
+        Application.Services.IAuthService authService,
+        IJwtTokenService tokenService,
+        IMapper mapper,
+        UserManager<DailyWattUser> userManager)
     {
-        _userManager = userManager;
+        _authService = authService;
         _tokenService = tokenService;
+        _mapper = mapper;
+        _userManager = userManager;
     }
 
     [HttpPost("register")]
-    public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request)
+    public async Task<ActionResult<Application.DTOs.AuthResponse>> Register(Models.Auth.RegisterRequest request)
     {
-        var existing = await _userManager.FindByEmailAsync(request.Email);
-        if (existing != null)
+        var appRequest = new Application.Services.RegisterRequest(request.Email, request.Username, request.Password);
+        var (success, errorMessage, user) = await _authService.RegisterAsync(appRequest);
+        if (!success)
         {
-            return BadRequest(new { error = "Email already registered." });
+            return BadRequest(new { error = errorMessage });
         }
 
-        var usernameExists = await _userManager.FindByNameAsync(request.Username);
-        if (usernameExists != null)
-        {
-            return BadRequest(new { error = "Username already taken." });
-        }
-
-        var user = new DailyWattUser
-        {
-            Id = Guid.NewGuid(),
-            Email = request.Email,
-            UserName = request.Username
-        };
-
-        var result = await _userManager.CreateAsync(user, request.Password);
-        if (!result.Succeeded)
-        {
-            return BadRequest(new { errors = result.Errors.Select(e => e.Description) });
-        }
-
-        var token = _tokenService.CreateToken(user);
-        return Ok(new AuthResponse { Token = token });
+        var token = _tokenService.CreateToken(user!);
+        return Ok(new Application.DTOs.AuthResponse { Token = token });
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
+    public async Task<ActionResult<Application.DTOs.AuthResponse>> Login(Models.Auth.LoginRequest request)
     {
-        var user = await _userManager.FindByEmailAsync(request.Email);
-        if (user == null)
+        var appRequest = new Application.Services.LoginRequest(request.Email, request.Password);
+        var (success, user) = await _authService.AuthenticateAsync(appRequest);
+        if (!success)
         {
             return Unauthorized();
         }
 
-        var passwordValid = await _userManager.CheckPasswordAsync(user, request.Password);
-        if (!passwordValid)
-        {
-            return Unauthorized();
-        }
-
-        var token = _tokenService.CreateToken(user);
-        return Ok(new AuthResponse { Token = token });
+        var token = _tokenService.CreateToken(user!);
+        return Ok(new Application.DTOs.AuthResponse { Token = token });
     }
 
     [Authorize]
     [HttpGet("me")]
-    public async Task<ActionResult<UserProfileResponse>> Me()
+    public async Task<ActionResult<UserProfileDto>> Me()
     {
         var user = await _userManager.GetUserAsync(User);
         if (user == null)
@@ -81,16 +70,12 @@ public class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        return Ok(new UserProfileResponse
-        {
-            Email = user.Email ?? string.Empty,
-            Username = user.UserName ?? string.Empty
-        });
+        return Ok(_mapper.Map<UserProfileDto>(user));
     }
 
     [Authorize]
     [HttpPut("profile")]
-    public async Task<IActionResult> UpdateProfile(UpdateProfileRequest request)
+    public async Task<IActionResult> UpdateProfile(Models.Auth.UpdateProfileRequest request)
     {
         var user = await _userManager.GetUserAsync(User);
         if (user == null)
@@ -98,17 +83,11 @@ public class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        var usernameExists = await _userManager.FindByNameAsync(request.Username);
-        if (usernameExists != null && usernameExists.Id != user.Id)
+        var appRequest = new Application.Services.UpdateProfileRequest(request.Username);
+        var (success, errorMessage) = await _authService.UpdateProfileAsync(user, appRequest);
+        if (!success)
         {
-            return BadRequest(new { error = "Username already taken." });
-        }
-
-        user.UserName = request.Username;
-        var result = await _userManager.UpdateAsync(user);
-        if (!result.Succeeded)
-        {
-            return BadRequest(new { errors = result.Errors.Select(e => e.Description) });
+            return BadRequest(new { error = errorMessage });
         }
 
         return NoContent();
@@ -116,7 +95,7 @@ public class AuthController : ControllerBase
 
     [Authorize]
     [HttpPost("change-password")]
-    public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
+    public async Task<IActionResult> ChangePassword(Models.Auth.ChangePasswordRequest request)
     {
         var user = await _userManager.GetUserAsync(User);
         if (user == null)
@@ -124,10 +103,11 @@ public class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
-        if (!result.Succeeded)
+        var appRequest = new Application.Services.ChangePasswordRequest(request.CurrentPassword, request.NewPassword);
+        var (success, errorMessage) = await _authService.ChangePasswordAsync(user, appRequest);
+        if (!success)
         {
-            return BadRequest(new { errors = result.Errors.Select(e => e.Description) });
+            return BadRequest(new { errors = new[] { errorMessage } });
         }
 
         return NoContent();

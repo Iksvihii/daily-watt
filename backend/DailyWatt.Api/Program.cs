@@ -1,4 +1,5 @@
 using DailyWatt.Api.Extensions;
+using DailyWatt.Application;
 using DailyWatt.Infrastructure;
 using DailyWatt.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplicationLayer();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddPermissiveCors();
 builder.Services.AddControllers();

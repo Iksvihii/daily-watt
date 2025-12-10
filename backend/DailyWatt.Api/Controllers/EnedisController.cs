@@ -1,6 +1,7 @@
+using AutoMapper;
 using DailyWatt.Api.Extensions;
-using DailyWatt.Api.Helpers;
 using DailyWatt.Api.Models.Enedis;
+using DailyWatt.Application.DTOs;
 using DailyWatt.Domain.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,11 +15,16 @@ public class EnedisController : ControllerBase
 {
     private readonly IEnedisCredentialService _credentialsService;
     private readonly IImportJobService _importJobService;
+    private readonly IMapper _mapper;
 
-    public EnedisController(IEnedisCredentialService credentialsService, IImportJobService importJobService)
+    public EnedisController(
+        IEnedisCredentialService credentialsService,
+        IImportJobService importJobService,
+        IMapper mapper)
     {
         _credentialsService = credentialsService;
         _importJobService = importJobService;
+        _mapper = mapper;
     }
 
     [HttpPost("credentials")]
@@ -58,7 +64,18 @@ public class EnedisController : ControllerBase
 
         var userId = User.GetUserId();
         var job = await _importJobService.CreateJobAsync(userId, request.FromUtc.ToUniversalTime(), request.ToUtc.ToUniversalTime(), ct);
-        return Ok(DtoMapper.ToResponse(job));
+        var dto = _mapper.Map<ImportJobDto>(job);
+
+        return Ok(new ImportJobResponse
+        {
+            Id = dto.Id,
+            Status = dto.Status,
+            ImportedCount = dto.ImportedCount,
+            CreatedAt = dto.CreatedAt,
+            CompletedAt = dto.CompletedAt,
+            ErrorCode = dto.ErrorCode,
+            ErrorMessage = dto.ErrorMessage
+        });
     }
 
     [HttpGet("import/{jobId:guid}")]
@@ -70,7 +87,18 @@ public class EnedisController : ControllerBase
             return NotFound();
         }
 
-        return Ok(DtoMapper.ToResponse(job));
+        var dto = _mapper.Map<ImportJobDto>(job);
+
+        return Ok(new ImportJobResponse
+        {
+            Id = dto.Id,
+            Status = dto.Status,
+            ImportedCount = dto.ImportedCount,
+            CreatedAt = dto.CreatedAt,
+            CompletedAt = dto.CompletedAt,
+            ErrorCode = dto.ErrorCode,
+            ErrorMessage = dto.ErrorMessage
+        });
     }
 }
 

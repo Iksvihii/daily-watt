@@ -10,7 +10,11 @@ import {
 import { CommonModule } from "@angular/common";
 import { NgxEchartsModule } from "ngx-echarts";
 import type { EChartsOption } from "echarts";
-import { ConsumptionPoint, WeatherDay, Granularity } from "../../models/dashboard.models";
+import {
+  ConsumptionPoint,
+  WeatherDay,
+  Granularity,
+} from "../../models/dashboard.models";
 import { DashboardService } from "../../services/dashboard.service";
 import { Subject } from "rxjs";
 import { takeUntil, debounceTime } from "rxjs/operators";
@@ -59,10 +63,7 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnInit(): void {
     this.rangeChange$
-      .pipe(
-        debounceTime(300),
-        takeUntil(this.destroy$)
-      )
+      .pipe(debounceTime(300), takeUntil(this.destroy$))
       .subscribe(() => {
         this.fetchDataWithRange();
       });
@@ -150,7 +151,8 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
     const end = new Date(this.dateRangeEnd);
     const totalMs = end.getTime() - start.getTime();
 
-    const rangeStartMs = start.getTime() + (this.startRangePercent / 100) * totalMs;
+    const rangeStartMs =
+      start.getTime() + (this.startRangePercent / 100) * totalMs;
     const rangeEndMs = start.getTime() + (this.endRangePercent / 100) * totalMs;
 
     const rangeStart = new Date(rangeStartMs).toISOString();
@@ -158,10 +160,10 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
 
     // Map TimeScale to Granularity
     const granularityMap: Record<TimeScale, Granularity> = {
-      hour: 'hour',
-      day: 'day',
-      month: 'day', // Backend doesn't support 'month', use 'day' and let frontend handle aggregation
-      year: 'day', // Backend doesn't support 'year', use 'day' and let frontend handle aggregation
+      hour: "hour",
+      day: "day",
+      month: "day", // Backend doesn't support 'month', use 'day' and let frontend handle aggregation
+      year: "day", // Backend doesn't support 'year', use 'day' and let frontend handle aggregation
     };
 
     const granularity = granularityMap[this.timeScale()];
@@ -181,7 +183,10 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
           this.consumption = response.consumption;
           this.weather = response.weather;
           if (this.consumption?.length) {
-            this.chartData = this.buildChartData(this.consumption, this.weather);
+            this.chartData = this.buildChartData(
+              this.consumption,
+              this.weather
+            );
             this.updateChart();
           }
           this.isLoading.set(false);
@@ -330,5 +335,4 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
       ],
     } as EChartsOption;
   }
-
 }

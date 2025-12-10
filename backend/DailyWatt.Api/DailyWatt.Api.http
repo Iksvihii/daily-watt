@@ -1,6 +1,79 @@
 @DailyWatt.Api_HostAddress = http://localhost:5077
+@token = 
 
-GET {{DailyWatt.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### Auth Endpoints
+
+### Register a new user
+POST {{DailyWatt.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "username": "testuser",
+  "password": "Password123!"
+}
+
+###
+
+### Login user
+POST {{DailyWatt.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "Password123!"
+}
+
+###
+
+### Get current user profile
+GET {{DailyWatt.Api_HostAddress}}/api/auth/me
+Authorization: Bearer {{token}}
+
+###
+
+### Update user profile
+PUT {{DailyWatt.Api_HostAddress}}/api/auth/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "newusername"
+}
+
+###
+
+### Change password
+POST {{DailyWatt.Api_HostAddress}}/api/auth/change-password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "currentPassword": "Password123!",
+  "newPassword": "NewPassword123!"
+}
+
+###
+
+### Dashboard Endpoints
+
+### Get time series data
+GET {{DailyWatt.Api_HostAddress}}/api/dashboard/timeseries?from=2024-01-01&to=2024-01-31&granularity=day&withWeather=true
+Authorization: Bearer {{token}}
+
+###
+
+### Get time series with custom range
+GET {{DailyWatt.Api_HostAddress}}/api/dashboard/timeseries?from=2024-01-01&to=2024-12-31&startDate=2024-06-01&endDate=2024-06-30&granularity=hour
+Authorization: Bearer {{token}}
+
+###
+
+### Enedis Endpoints
+
+### Upload Enedis consumption file
+POST {{DailyWatt.Api_HostAddress}}/api/enedis/upload
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data
 
 ###
