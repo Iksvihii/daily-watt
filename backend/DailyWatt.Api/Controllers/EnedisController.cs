@@ -95,14 +95,17 @@ public class EnedisController : ControllerBase
     }
 
     [HttpGet("geocode/suggestions")]
-    public async Task<ActionResult<List<string>>> GetAddressSuggestions([FromQuery] string query, CancellationToken ct)
+    public async Task<ActionResult<List<string>>> GetAddressSuggestions(
+        [FromQuery] string query, 
+        [FromQuery] string? countryCode = null, 
+        CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(query) || query.Length < 3)
         {
             return BadRequest(new { error = "Query must be at least 3 characters" });
         }
 
-        var suggestions = await _geocodingService.GetAddressSuggestionsAsync(query, ct);
+        var suggestions = await _geocodingService.GetAddressSuggestionsAsync(query, countryCode, ct);
         return Ok(suggestions);
     }
 

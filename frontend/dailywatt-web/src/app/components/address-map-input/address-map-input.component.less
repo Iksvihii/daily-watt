@@ -150,12 +150,10 @@
   border-radius: 0.375rem;
   background-color: #f8fafc;
   z-index: 1;
+}
 
-  :deep(.leaflet-container) {
-    background-color: #f8fafc;
-  }
-
-  :deep(.leaflet-marker-icon) {
-    filter: hue-rotate(200deg) saturate(2);
-  }
+.leaflet-container {
+  height: 100% !important;
+  min-height: 400px;
+  border-radius: 0.375rem;
 }

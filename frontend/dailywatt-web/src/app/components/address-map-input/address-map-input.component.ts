@@ -39,6 +39,7 @@ export class AddressMapInputComponent implements OnInit {
   map: L.Map | null = null;
   isLoadingSuggestions = signal(false);
   errorMessage = signal("");
+  private searchTimeout: any = null;
 
   // Map options
   mapCenter = { lat: 48.8566, lng: 2.3522 }; // Default: Paris
@@ -68,6 +69,22 @@ export class AddressMapInputComponent implements OnInit {
     const mapContainer = document.getElementById("address-map");
     if (!mapContainer) return;
 
+    // Fix Leaflet default icon paths
+    const iconRetinaUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png';
+    const iconUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png';
+    const shadowUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png';
+    const iconDefault = L.icon({
+      iconRetinaUrl,
+      iconUrl,
+      shadowUrl,
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      tooltipAnchor: [16, -28],
+      shadowSize: [41, 41]
+    });
+    L.Marker.prototype.options.icon = iconDefault;
+
     this.map = L.map("address-map").setView(
       [this.mapCenter.lat, this.mapCenter.lng],
       this.mapZoom
@@ -86,6 +103,10 @@ export class AddressMapInputComponent implements OnInit {
         this.initialLatitude,
         this.initialLongitude,
       ]).addTo(this.map);
+      
+      if (this.initialAddress) {
+        this.selectedMarker.bindPopup(this.initialAddress).openPopup();
+      }
     }
 
     // Click to set coordinates
@@ -98,23 +119,31 @@ export class AddressMapInputComponent implements OnInit {
     const query = this.addressInput();
     this.errorMessage.set("");
 
+    // Clear previous timeout
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+
     if (query.length < 3) {
       this.suggestions.set([]);
       return;
     }
 
-    this.isLoadingSuggestions.set(true);
-    try {
-      const result = await this.geocodingService
-        .getAddressSuggestions(query)
-        .toPromise();
-      this.suggestions.set(result || []);
-    } catch {
-      this.errorMessage.set("Unable to fetch address suggestions");
-      this.suggestions.set([]);
-    } finally {
-      this.isLoadingSuggestions.set(false);
-    }
+    // Debounce: wait 400ms before sending request
+    this.searchTimeout = setTimeout(async () => {
+      this.isLoadingSuggestions.set(true);
+      try {
+        const result = await this.geocodingService
+          .getAddressSuggestions(query)
+          .toPromise();
+        this.suggestions.set(result || []);
+      } catch {
+        this.errorMessage.set("Unable to fetch address suggestions");
+        this.suggestions.set([]);
+      } finally {
+        this.isLoadingSuggestions.set(false);
+      }
+    }, 400);
   }
 
   async selectSuggestion(address: string): Promise<void> {
@@ -152,15 +181,20 @@ export class AddressMapInputComponent implements OnInit {
       this.map.removeLayer(this.selectedMarker);
     }
 
-    // Add new marker
-    this.selectedMarker = L.marker([latitude, longitude]).addTo(this.map);
+    const displayAddress = address || this.addressInput() || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+
+    // Add new marker with popup
+    this.selectedMarker = L.marker([latitude, longitude])
+      .addTo(this.map)
+      .bindPopup(`<strong>Selected location</strong><br/>${displayAddress}`)
+      .openPopup();
 
     // Center map on marker
     this.map.setView([latitude, longitude], this.mapZoom);
 
     // Emit result
     this.addressSelected.emit({
-      address: address || this.addressInput(),
+      address: displayAddress,
       latitude,
       longitude,
     });

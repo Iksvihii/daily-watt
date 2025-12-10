@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json.Serialization;
 using DailyWatt.Domain.Services;
 
@@ -40,7 +41,7 @@ public class GeocodingService : IGeocodingService
       if (results?.Count > 0)
       {
         var result = results[0];
-        return (double.Parse(result.Lat), double.Parse(result.Lon));
+        return (double.Parse(result.Lat, CultureInfo.InvariantCulture), double.Parse(result.Lon, CultureInfo.InvariantCulture));
       }
 
       return null;
@@ -55,6 +56,7 @@ public class GeocodingService : IGeocodingService
 
   public async Task<List<string>> GetAddressSuggestionsAsync(
       string query,
+      string? countryCode = null,
       CancellationToken ct = default)
   {
     try
@@ -63,6 +65,13 @@ public class GeocodingService : IGeocodingService
         return new List<string>();
 
       var url = $"{NominatimApiUrl}/search?q={Uri.EscapeDataString(query)}&format=json&limit=5&dedupe=1";
+      
+      // Add country code filter if provided
+      if (!string.IsNullOrWhiteSpace(countryCode))
+      {
+        url += $"&countrycodes={countryCode.ToLower()}";
+      }
+      
       var response = await _httpClient.GetAsync(url, ct);
 
       if (!response.IsSuccessStatusCode)

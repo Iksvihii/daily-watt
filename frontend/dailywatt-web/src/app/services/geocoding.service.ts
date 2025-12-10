@@ -13,13 +13,16 @@ export class GeocodingService {
   private http = inject(HttpClient);
 
   /**
-   * Get address suggestions for autocomplete
+   * Get address suggestions for autocomplete (limited to metropolitan France)
    */
   getAddressSuggestions(query: string): Observable<string[]> {
     return this.http.get<string[]>(
       `${environment.apiUrl}/api/enedis/geocode/suggestions`,
       {
-        params: { query },
+        params: { 
+          query,
+          countryCode: 'FR' // Limit to France only
+        },
       }
     );
   }
