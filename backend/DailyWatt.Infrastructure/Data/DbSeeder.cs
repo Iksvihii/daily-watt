@@ -47,13 +47,28 @@ public static class DbSeeder
 
       logger.LogInformation("Demo user created with email: demo@dailywatt.com and password: Demo123!");
 
+      // Create Enedis credentials for demo user
+      var enedisCredential = new EnedisCredential
+      {
+        UserId = demoUser.Id,
+        LoginEncrypted = System.Text.Encoding.UTF8.GetBytes("demo_login"),
+        PasswordEncrypted = System.Text.Encoding.UTF8.GetBytes("demo_password"),
+        MeterNumber = "DEMO123456789",
+        Address = "123 Demo Street, Demo City, 75000",
+        Latitude = 48.8566,
+        Longitude = 2.3522,
+        UpdatedAt = DateTime.UtcNow
+      };
+
+      await context.EnedisCredentials.AddAsync(enedisCredential);
+
       // Generate realistic consumption data
       var measurements = GenerateRealisticConsumptionData(demoUser.Id);
 
       await context.Measurements.AddRangeAsync(measurements);
       await context.SaveChangesAsync();
 
-      logger.LogInformation("Successfully seeded {Count} measurements for demo user", measurements.Count);
+      logger.LogInformation("Successfully seeded Enedis credentials and {Count} measurements for demo user", measurements.Count);
     }
     catch (Exception ex)
     {
