@@ -40,3 +40,24 @@ public class ImportJobResponse
   /// </summary>
   public string? ErrorMessage { get; set; }
 }
+
+/// <summary>
+/// Indicates if Enedis credentials are configured for the user.
+/// </summary>
+public class EnedisStatusResponse
+{
+  /// <summary>
+  /// True when credentials and meter number are stored.
+  /// </summary>
+  public bool Configured { get; set; }
+
+  /// <summary>
+  /// Optional meter number for display.
+  /// </summary>
+  public string? MeterNumber { get; set; }
+
+  /// <summary>
+  /// Last update timestamp in UTC.
+  /// </summary>
+  public DateTime? UpdatedAt { get; set; }
+}

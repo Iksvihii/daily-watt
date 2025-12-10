@@ -2,7 +2,7 @@ import { Component, signal } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
 import { AuthService } from "../../services/auth.service";
-import { Credentials } from "../../models/auth.models";
+import { RegisterRequest } from "../../models/auth.models";
 
 @Component({
   selector: "app-register",
@@ -17,6 +17,7 @@ export class RegisterComponent {
 
   form = this.fb.group({
     email: ["", [Validators.required, Validators.email]],
+    username: ["", [Validators.required, Validators.minLength(2)]],
     password: ["", [Validators.required, Validators.minLength(6)]],
   });
 
@@ -31,8 +32,8 @@ export class RegisterComponent {
       return;
     }
     this.loading.set(true);
-    const credentials = this.form.value as Credentials;
-    this.auth.register(credentials).subscribe({
+    const payload = this.form.value as RegisterRequest;
+    this.auth.register(payload).subscribe({
       next: () => this.router.navigate(["/dashboard"]),
       error: (err: { error?: { errors?: string[]; error?: string } }) => {
         this.error.set(

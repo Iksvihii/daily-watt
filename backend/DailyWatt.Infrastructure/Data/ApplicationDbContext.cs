@@ -31,6 +31,7 @@ public class ApplicationDbContext : IdentityDbContext<DailyWattUser, IdentityRol
                 .OnDelete(DeleteBehavior.Cascade);
             b.Property(x => x.LoginEncrypted).IsRequired();
             b.Property(x => x.PasswordEncrypted).IsRequired();
+            b.Property(x => x.MeterNumber).HasMaxLength(64).IsRequired();
             b.Property(x => x.UpdatedAt).IsRequired();
         });
 

@@ -10,3 +10,19 @@ public class AuthResponse
   /// </summary>
   public string Token { get; set; } = string.Empty;
 }
+
+/// <summary>
+/// Basic user profile information.
+/// </summary>
+public class UserProfileResponse
+{
+  /// <summary>
+  /// Account email (also used as login identifier).
+  /// </summary>
+  public string Email { get; set; } = string.Empty;
+
+  /// <summary>
+  /// Public username displayed in the app.
+  /// </summary>
+  public string Username { get; set; } = string.Empty;
+}

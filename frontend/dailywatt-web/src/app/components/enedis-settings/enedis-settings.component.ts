@@ -19,6 +19,7 @@ export class EnedisSettingsComponent {
   credentialsForm = this.fb.group({
     login: ["", Validators.required],
     password: ["", Validators.required],
+    meterNumber: ["", Validators.required],
   });
 
   importForm = this.fb.group({

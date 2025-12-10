@@ -25,8 +25,27 @@ public class EnedisController : ControllerBase
     public async Task<IActionResult> SaveCredentials([FromBody] SaveEnedisCredentialsRequest request, CancellationToken ct)
     {
         var userId = User.GetUserId();
-        await _credentialsService.SaveCredentialsAsync(userId, request.Login, request.Password, ct);
+        await _credentialsService.SaveCredentialsAsync(userId, request.Login, request.Password, request.MeterNumber, ct);
         return Ok();
+    }
+
+    [HttpGet("status")]
+    public async Task<ActionResult<EnedisStatusResponse>> GetStatus(CancellationToken ct)
+    {
+        var userId = User.GetUserId();
+        var cred = await _credentialsService.GetCredentialsAsync(userId, ct);
+
+        if (cred == null)
+        {
+            return Ok(new EnedisStatusResponse { Configured = false });
+        }
+
+        return Ok(new EnedisStatusResponse
+        {
+            Configured = true,
+            MeterNumber = cred.MeterNumber,
+            UpdatedAt = cred.UpdatedAt
+        });
     }
 
     [HttpPost("import")]

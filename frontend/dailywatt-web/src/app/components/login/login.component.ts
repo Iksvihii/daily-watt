@@ -2,7 +2,7 @@ import { Component, signal } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
 import { AuthService } from "../../services/auth.service";
-import { Credentials } from "../../models/auth.models";
+import { LoginRequest } from "../../models/auth.models";
 
 @Component({
   selector: "app-login",
@@ -31,7 +31,7 @@ export class LoginComponent {
       return;
     }
     this.loading.set(true);
-    const credentials = this.form.value as Credentials;
+    const credentials = this.form.value as LoginRequest;
     this.auth.login(credentials).subscribe({
       next: () => this.router.navigate(["/dashboard"]),
       error: (err: { error?: { error?: string } }) => {

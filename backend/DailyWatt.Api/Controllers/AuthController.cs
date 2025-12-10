@@ -3,6 +3,7 @@ using DailyWatt.Api.Services;
 using DailyWatt.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DailyWatt.Api.Controllers;
 
@@ -28,11 +29,17 @@ public class AuthController : ControllerBase
             return BadRequest(new { error = "Email already registered." });
         }
 
+        var usernameExists = await _userManager.FindByNameAsync(request.Username);
+        if (usernameExists != null)
+        {
+            return BadRequest(new { error = "Username already taken." });
+        }
+
         var user = new DailyWattUser
         {
             Id = Guid.NewGuid(),
             Email = request.Email,
-            UserName = request.Email
+            UserName = request.Username
         };
 
         var result = await _userManager.CreateAsync(user, request.Password);
@@ -62,5 +69,67 @@ public class AuthController : ControllerBase
 
         var token = _tokenService.CreateToken(user);
         return Ok(new AuthResponse { Token = token });
+    }
+
+    [Authorize]
+    [HttpGet("me")]
+    public async Task<ActionResult<UserProfileResponse>> Me()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return Unauthorized();
+        }
+
+        return Ok(new UserProfileResponse
+        {
+            Email = user.Email ?? string.Empty,
+            Username = user.UserName ?? string.Empty
+        });
+    }
+
+    [Authorize]
+    [HttpPut("profile")]
+    public async Task<IActionResult> UpdateProfile(UpdateProfileRequest request)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return Unauthorized();
+        }
+
+        var usernameExists = await _userManager.FindByNameAsync(request.Username);
+        if (usernameExists != null && usernameExists.Id != user.Id)
+        {
+            return BadRequest(new { error = "Username already taken." });
+        }
+
+        user.UserName = request.Username;
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            return BadRequest(new { errors = result.Errors.Select(e => e.Description) });
+        }
+
+        return NoContent();
+    }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        if (!result.Succeeded)
+        {
+            return BadRequest(new { errors = result.Errors.Select(e => e.Description) });
+        }
+
+        return NoContent();
     }
 }

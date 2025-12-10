@@ -20,6 +20,13 @@ public class SaveEnedisCredentialsRequest
   [Required(ErrorMessage = "Password is required")]
   [StringLength(255)]
   public required string Password { get; init; }
+
+  /// <summary>
+  /// Linky meter number to pull data from.
+  /// </summary>
+  [Required(ErrorMessage = "Meter number is required")]
+  [StringLength(64)]
+  public required string MeterNumber { get; init; }
 }
 
 /// <summary>

@@ -1,6 +1,7 @@
 export interface SaveCredentialsRequest {
   login: string;
   password: string;
+  meterNumber: string;
 }
 
 export interface CreateImportJobRequest {
@@ -8,7 +9,7 @@ export interface CreateImportJobRequest {
   toUtc: string;
 }
 
-export type ImportJobStatus = 'Pending' | 'Running' | 'Completed' | 'Failed';
+export type ImportJobStatus = "Pending" | "Running" | "Completed" | "Failed";
 
 export interface ImportJob {
   id: string;
@@ -18,4 +19,10 @@ export interface ImportJob {
   errorCode?: string;
   errorMessage?: string;
   importedCount: number;
+}
+
+export interface EnedisStatus {
+  configured: boolean;
+  meterNumber?: string;
+  updatedAt?: string;
 }
