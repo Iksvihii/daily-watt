@@ -29,15 +29,12 @@ public class DashboardQueryService : IDashboardQueryService
       Guid userId,
       DateTime from,
       DateTime to,
-      DateTime? startDate,
-      DateTime? endDate,
       Granularity granularity,
       bool withWeather,
       CancellationToken ct = default)
   {
-    // Use provided range if available, otherwise use full range
-    var queryStartDate = (startDate ?? from).ToUniversalTime();
-    var queryEndDate = (endDate ?? to).ToUniversalTime();
+    var queryStartDate = from.ToUniversalTime();
+    var queryEndDate = to.ToUniversalTime();
 
     // Fetch aggregated consumption data
     var consumption = await _consumptionService.GetAggregatedAsync(

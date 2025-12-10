@@ -37,8 +37,6 @@ interface ChartData {
 export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
   @Input() consumption: ConsumptionPoint[] = [];
   @Input() weather?: WeatherDay[];
-  @Input() dateRangeStart?: string; // ISO string
-  @Input() dateRangeEnd?: string; // ISO string
 
   granularity = signal<Granularity>("day");
   chartData: ChartData | null = null;
@@ -64,7 +62,7 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
     this.rangeChange$
       .pipe(debounceTime(300), takeUntil(this.destroy$))
       .subscribe(() => {
-        this.fetchDataWithRange();
+        this.updateChartZoom();
       });
   }
 
@@ -136,55 +134,9 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
     this.rangeChange$.next();
   }
 
-  private fetchDataWithRange(): void {
-    if (!this.dateRangeStart || !this.dateRangeEnd) {
-      // If no date range provided, just update the chart with existing data
-      this.updateChart();
-      return;
-    }
-
-    this.isLoading.set(true);
-
-    // Calculate the actual date range based on the percentage values
-    const start = new Date(this.dateRangeStart);
-    const end = new Date(this.dateRangeEnd);
-    const totalMs = end.getTime() - start.getTime();
-
-    const rangeStartMs =
-      start.getTime() + (this.startRangePercent / 100) * totalMs;
-    const rangeEndMs = start.getTime() + (this.endRangePercent / 100) * totalMs;
-
-    const rangeStart = new Date(rangeStartMs).toISOString();
-    const rangeEnd = new Date(rangeEndMs).toISOString();
-
-    this.dashboardService
-      .getTimeSeries({
-        from: this.dateRangeStart,
-        to: this.dateRangeEnd,
-        granularity: this.granularity(),
-        startDate: rangeStart,
-        endDate: rangeEnd,
-        withWeather: !!this.weather,
-      })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          this.consumption = response.consumption;
-          this.weather = response.weather;
-          if (this.consumption?.length) {
-            this.chartData = this.buildChartData(
-              this.consumption,
-              this.weather
-            );
-            this.updateChart();
-          }
-          this.isLoading.set(false);
-        },
-        error: (err) => {
-          console.error("Error fetching chart data:", err);
-          this.isLoading.set(false);
-        },
-      });
+  private updateChartZoom(): void {
+    // Update chart zoom based on range sliders (UI only, no API call)
+    this.updateChart();
   }
 
   private updateChart(): void {

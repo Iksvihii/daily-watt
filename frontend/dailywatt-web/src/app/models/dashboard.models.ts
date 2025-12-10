@@ -4,8 +4,6 @@ export interface GetTimeSeriesRequest {
   from: string;
   to: string;
   granularity: Granularity;
-  startDate?: string;
-  endDate?: string;
   withWeather?: boolean;
 }
 

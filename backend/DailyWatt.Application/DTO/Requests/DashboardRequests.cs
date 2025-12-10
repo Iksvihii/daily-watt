@@ -15,13 +15,9 @@ public record GetTimeSeriesRequest
   public required DateTime To { get; init; }
 
   [Required(ErrorMessage = "Granularity is required")]
-  [RegularExpression(@"^(30min|hour|day|month|year)$", 
+  [RegularExpression(@"^(30min|hour|day|month|year)$",
     ErrorMessage = "Granularity must be one of: 30min, hour, day, month, year")]
   public required string Granularity { get; init; }
-
-  public DateTime? StartDate { get; init; }
-
-  public DateTime? EndDate { get; init; }
 
   public bool WithWeather { get; init; }
 }

@@ -19,13 +19,6 @@ export class DashboardService {
       .set("granularity", request.granularity)
       .set("withWeather", request.withWeather ?? false);
 
-    if (request.startDate) {
-      params.set("startDate", request.startDate);
-    }
-    if (request.endDate) {
-      params.set("endDate", request.endDate);
-    }
-
     return this.http.get<TimeSeriesResponse>(
       `${environment.apiUrl}/api/dashboard/timeseries`,
       { params }

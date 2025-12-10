@@ -16,8 +16,6 @@ public interface IDashboardQueryService
       Guid userId,
       DateTime from,
       DateTime to,
-      DateTime? startDate,
-      DateTime? endDate,
       Granularity granularity,
       bool withWeather,
       CancellationToken ct = default);
