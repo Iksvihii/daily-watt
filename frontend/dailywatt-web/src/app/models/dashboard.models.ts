@@ -1,4 +1,13 @@
-export type Granularity = '30min' | 'hour' | 'day';
+export type Granularity = "30min" | "hour" | "day";
+
+export interface GetTimeSeriesRequest {
+  from: string;
+  to: string;
+  granularity: Granularity;
+  startDate?: string;
+  endDate?: string;
+  withWeather?: boolean;
+}
 
 export interface ConsumptionPoint {
   timestampUtc: string;

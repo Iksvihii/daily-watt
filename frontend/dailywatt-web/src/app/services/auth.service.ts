@@ -3,7 +3,6 @@ import { HttpClient } from "@angular/common/http";
 import { map, tap } from "rxjs";
 import { environment } from "../../environments/environment";
 import {
-  AuthResponse,
   ChangePasswordRequest,
   LoginRequest,
   RegisterRequest,
@@ -23,21 +22,18 @@ export class AuthService {
 
   login(credentials: LoginRequest) {
     return this.http
-      .post<AuthResponse>(`${environment.apiUrl}/api/auth/login`, credentials)
+      .post<string>(`${environment.apiUrl}/api/auth/login`, credentials)
       .pipe(
-        tap((res: AuthResponse) => this.setToken(res.token)),
+        tap((token: string) => this.setToken(token)),
         map(() => void 0)
       );
   }
 
   register(credentials: RegisterRequest) {
     return this.http
-      .post<AuthResponse>(
-        `${environment.apiUrl}/api/auth/register`,
-        credentials
-      )
+      .post<string>(`${environment.apiUrl}/api/auth/register`, credentials)
       .pipe(
-        tap((res: AuthResponse) => this.setToken(res.token)),
+        tap((token: string) => this.setToken(token)),
         map(() => void 0)
       );
   }

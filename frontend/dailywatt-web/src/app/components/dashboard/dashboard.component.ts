@@ -84,12 +84,12 @@ export class DashboardComponent implements OnInit {
     this.loading.set(true);
     this.error.set(undefined);
     this.dashboard
-      .getTimeSeries(
-        new Date(this.from()).toISOString(),
-        new Date(this.to()).toISOString(),
-        this.granularity(),
-        this.withWeather()
-      )
+      .getTimeSeries({
+        from: new Date(this.from()).toISOString(),
+        to: new Date(this.to()).toISOString(),
+        granularity: this.granularity(),
+        withWeather: this.withWeather(),
+      })
       .subscribe({
         next: (res) => {
           this.data.set(res);

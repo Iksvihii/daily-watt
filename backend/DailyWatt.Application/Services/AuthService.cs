@@ -1,4 +1,5 @@
 using DailyWatt.Application.DTO.Requests;
+using DailyWatt.Application.DTO.Responses;
 using DailyWatt.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 
@@ -110,5 +111,16 @@ public class AuthService : IAuthService
     }
 
     return (true, null);
+  }
+
+  public async Task<UserProfileDto> GetProfileAsync(
+      DailyWattUser user,
+      CancellationToken ct = default)
+  {
+    return new UserProfileDto
+    {
+      Email = user.Email ?? string.Empty,
+      Username = user.UserName ?? string.Empty
+    };
   }
 }

@@ -1,4 +1,3 @@
-using AutoMapper;
 using DailyWatt.Api.Extensions;
 using DailyWatt.Api.Services;
 using DailyWatt.Application.DTO.Requests;
@@ -17,18 +16,15 @@ public class AuthController : ControllerBase
 {
     private readonly Application.Services.IAuthService _authService;
     private readonly IJwtTokenService _tokenService;
-    private readonly IMapper _mapper;
     private readonly UserManager<DailyWattUser> _userManager;
 
     public AuthController(
         Application.Services.IAuthService authService,
         IJwtTokenService tokenService,
-        IMapper mapper,
         UserManager<DailyWattUser> userManager)
     {
         _authService = authService;
         _tokenService = tokenService;
-        _mapper = mapper;
         _userManager = userManager;
     }
 
@@ -68,7 +64,8 @@ public class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        return Ok(_mapper.Map<UserProfileDto>(user));
+        var profile = await _authService.GetProfileAsync(user);
+        return Ok(profile);
     }
 
     [Authorize]

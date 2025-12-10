@@ -36,17 +36,17 @@ public class EnedisController : ControllerBase
     }
 
     [HttpGet("status")]
-    public async Task<ActionResult<EnedisStatus>> GetStatus(CancellationToken ct)
+    public async Task<ActionResult<EnedisStatusResponse>> GetStatus(CancellationToken ct)
     {
         var userId = User.GetUserId();
         var cred = await _credentialsService.GetCredentialsAsync(userId, ct);
 
         if (cred == null)
         {
-            return Ok(new EnedisStatus { Configured = false });
+            return Ok(new EnedisStatusResponse { Configured = false });
         }
 
-        return Ok(new EnedisStatus
+        return Ok(new EnedisStatusResponse
         {
             Configured = true,
             MeterNumber = cred.MeterNumber,

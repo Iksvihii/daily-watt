@@ -169,14 +169,14 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
     const granularity = granularityMap[this.timeScale()];
 
     this.dashboardService
-      .getTimeSeriesWithRange(
-        this.dateRangeStart,
-        this.dateRangeEnd,
+      .getTimeSeries({
+        from: this.dateRangeStart,
+        to: this.dateRangeEnd,
         granularity,
-        rangeStart,
-        rangeEnd,
-        !!this.weather
-      )
+        startDate: rangeStart,
+        endDate: rangeEnd,
+        withWeather: !!this.weather,
+      })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {

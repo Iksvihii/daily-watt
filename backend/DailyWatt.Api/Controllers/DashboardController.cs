@@ -1,5 +1,6 @@
 using DailyWatt.Api.Extensions;
 using DailyWatt.Api.Helpers;
+using DailyWatt.Application.DTO.Requests;
 using DailyWatt.Application.DTO.Responses;
 using DailyWatt.Application.Services;
 using DailyWatt.Domain.Enums;
@@ -22,33 +23,28 @@ public class DashboardController : ControllerBase
 
     [HttpGet("timeseries")]
     public async Task<ActionResult<TimeSeriesResponse>> GetTimeSeries(
-        [FromQuery] DateTime from,
-        [FromQuery] DateTime to,
-        [FromQuery] string? granularity,
-        [FromQuery] DateTime? startDate,
-        [FromQuery] DateTime? endDate,
-        [FromQuery] bool withWeather = false,
+        [FromQuery] GetTimeSeriesRequest request,
         CancellationToken ct = default)
     {
         // Validate date ranges
-        var validationError = ValidateDateRanges(from, to, startDate, endDate);
+        var validationError = ValidateDateRanges(request.From, request.To, request.StartDate, request.EndDate);
         if (validationError != null)
         {
             return BadRequest(new { error = validationError });
         }
 
         var userId = User.GetUserId();
-        var granularityValue = GranularityHelper.Parse(granularity);
+        var granularityValue = GranularityHelper.Parse(request.Granularity);
 
         // Delegate to service for data composition
         var response = await _dashboardQueryService.GetTimeSeriesAsync(
             userId,
-            from,
-            to,
-            startDate,
-            endDate,
+            request.From,
+            request.To,
+            request.StartDate,
+            request.EndDate,
             granularityValue,
-            withWeather,
+            request.WithWeather,
             ct);
 
         return Ok(response);
