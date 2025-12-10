@@ -8,7 +8,7 @@ namespace DailyWatt.Tests.Infrastructure;
 /// </summary>
 public class TestApplicationDbContext : ApplicationDbContext
 {
-  public TestApplicationDbContext(DbContextOptions<ApplicationDbContext> options) 
+  public TestApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
     : base(options)
   {
   }

@@ -13,7 +13,7 @@ namespace DailyWatt.Tests.Infrastructure;
 public class TestDatabaseFixture : IDisposable
 {
   private readonly List<string> _databasePaths = new();
-  
+
   /// <summary>
   /// Creates a fresh context for a test (creates new database each time)
   /// </summary>
@@ -21,18 +21,14 @@ public class TestDatabaseFixture : IDisposable
   {
     var databasePath = Path.Combine(Path.GetTempPath(), $"test_dailywatt_{Guid.NewGuid()}.db");
     _databasePaths.Add(databasePath);
-    
+
     var options = new DbContextOptionsBuilder<ApplicationDbContext>()
         .UseSqlite($"Data Source={databasePath}")
         .Options;
 
     var context = new TestApplicationDbContext(options);
-    
-    // Disable foreign key constraints for seeding
-    context.Database.ExecuteSqlRaw("PRAGMA foreign_keys = OFF;");
     context.Database.EnsureCreated();
-    context.Database.ExecuteSqlRaw("PRAGMA foreign_keys = ON;");
-    
+
     return context;
   }
 

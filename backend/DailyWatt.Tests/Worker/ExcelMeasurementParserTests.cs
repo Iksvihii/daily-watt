@@ -162,7 +162,7 @@ public class ExcelMeasurementParserTests
     // Create a temporary Excel file with wrong sheet name
     var tempPath = Path.GetTempPath();
     var tempFile = Path.Combine(tempPath, $"test_{Guid.NewGuid()}.xlsx");
-    
+
     try
     {
       // Create a temporary Excel file with the correct structure but wrong sheet name

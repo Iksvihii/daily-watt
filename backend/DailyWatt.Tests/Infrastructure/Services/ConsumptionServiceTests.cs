@@ -26,16 +26,34 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
   {
     _fixture = fixture;
   }
+
+  /// <summary>
+  /// Creates a test user in the database to satisfy FK constraints
+  /// </summary>
+  private async Task<Guid> CreateTestUserAsync(ApplicationDbContext dbContext)
+  {
+    var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    var user = new DailyWattUser
+    {
+      Id = userId,
+      UserName = "testuser@example.com",
+      Email = "testuser@example.com",
+      NormalizedUserName = "TESTUSER@EXAMPLE.COM",
+      NormalizedEmail = "TESTUSER@EXAMPLE.COM",
+      EmailConfirmed = true,
+      SecurityStamp = Guid.NewGuid().ToString()
+    };
+    dbContext.Users.Add(user);
+    await dbContext.SaveChangesAsync();
+    return userId;
+  }
   [Fact]
   public async Task GetAggregatedAsync_WithHourlyGranularity_AggregatesDataCorrectly()
   {
     // Arrange
-    var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     using var dbContext = _fixture.CreateContext();
-    
-    // Disable FK constraints for inserting test data
-    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = OFF;");
-    
+    var userId = await CreateTestUserAsync(dbContext);
+
     // Insert test data directly
     dbContext.Measurements.AddRange(
       new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc), Kwh = 0.31 },
@@ -44,8 +62,7 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
       new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 1, 30, 0, DateTimeKind.Utc), Kwh = 0.25 }
     );
     await dbContext.SaveChangesAsync();
-    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = ON;");
-    
+
     var consumptionService = new ConsumptionService(dbContext);
 
     var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -72,12 +89,9 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
   public async Task GetAggregatedAsync_WithDailyGranularity_AggregatesAllDayData()
   {
     // Arrange
-    var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     using var dbContext = _fixture.CreateContext();
-    
-    // Disable FK constraints for inserting test data
-    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = OFF;");
-    
+    var userId = await CreateTestUserAsync(dbContext);
+
     // Insert 48 measurements for a full day (30-min intervals)
     var measurements = new List<Measurement>();
     for (int i = 0; i < 48; i++)
@@ -92,8 +106,7 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
     }
     dbContext.Measurements.AddRange(measurements);
     await dbContext.SaveChangesAsync();
-    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = ON;");
-    
+
     var consumptionService = new ConsumptionService(dbContext);
 
     var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -113,12 +126,9 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
   public async Task GetSummaryAsync_CalculatesSummaryCorrectly()
   {
     // Arrange
-    var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     using var dbContext = _fixture.CreateContext();
-    
-    // Disable FK constraints for inserting test data
-    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = OFF;");
-    
+    var userId = await CreateTestUserAsync(dbContext);
+
     // Insert test data
     dbContext.Measurements.AddRange(
       new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc), Kwh = 10 },
@@ -126,8 +136,7 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
       new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 3, 0, 0, 0, DateTimeKind.Utc), Kwh = 20 }
     );
     await dbContext.SaveChangesAsync();
-    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = ON;");
-    
+
     var consumptionService = new ConsumptionService(dbContext);
 
     var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -147,7 +156,9 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
   public async Task BulkInsertAsync_InsertsMultipleMeasurements()
   {
     // Arrange
-    var userId = Guid.NewGuid();
+    using var dbContext = _fixture.CreateContext();
+    var userId = await CreateTestUserAsync(dbContext);
+    
     var measurements = new List<Measurement>
         {
             new() { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = DateTime.UtcNow.AddHours(-2), Kwh = 0.5 },
@@ -155,20 +166,10 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
             new() { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = DateTime.UtcNow, Kwh = 0.7 },
         };
 
-    using var dbContext = _fixture.CreateContext();
     var consumptionService = new ConsumptionService(dbContext);
 
     // Act
-    // Temporarily disable FK constraints for this test
-    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = OFF;");
-    try
-    {
-      await consumptionService.BulkInsertAsync(measurements);
-    }
-    finally
-    {
-      await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = ON;");
-    }
+    await consumptionService.BulkInsertAsync(measurements);
 
     // Assert
     // Verify measurements were added to context
@@ -198,12 +199,9 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
   public async Task GetAggregatedAsync_WithMonthGranularity_AggregatesMonthlyData()
   {
     // Arrange
-    var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     using var dbContext = _fixture.CreateContext();
-    
-    // Disable FK constraints for inserting test data
-    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = OFF;");
-    
+    var userId = await CreateTestUserAsync(dbContext);
+
     // Insert test data for 14 days
     var measurements = new List<Measurement>();
     for (int day = 1; day <= 14; day++)
@@ -218,8 +216,7 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
     }
     dbContext.Measurements.AddRange(measurements);
     await dbContext.SaveChangesAsync();
-    await dbContext.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = ON;");
-    
+
     var consumptionService = new ConsumptionService(dbContext);
 
     var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
