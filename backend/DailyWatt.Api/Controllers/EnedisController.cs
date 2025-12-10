@@ -1,4 +1,5 @@
 using DailyWatt.Api.Extensions;
+using DailyWatt.Api.Helpers;
 using DailyWatt.Api.Models.Enedis;
 using DailyWatt.Domain.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -38,16 +39,7 @@ public class EnedisController : ControllerBase
 
         var userId = User.GetUserId();
         var job = await _importJobService.CreateJobAsync(userId, request.FromUtc.ToUniversalTime(), request.ToUtc.ToUniversalTime(), ct);
-        return Ok(new ImportJobResponse
-        {
-            Id = job.Id,
-            CreatedAt = job.CreatedAt,
-            CompletedAt = job.CompletedAt,
-            ErrorCode = job.ErrorCode,
-            ErrorMessage = job.ErrorMessage,
-            ImportedCount = job.ImportedCount,
-            Status = job.Status
-        });
+        return Ok(DtoMapper.ToResponse(job));
     }
 
     [HttpGet("import/{jobId:guid}")]
@@ -59,15 +51,7 @@ public class EnedisController : ControllerBase
             return NotFound();
         }
 
-        return Ok(new ImportJobResponse
-        {
-            Id = job.Id,
-            CreatedAt = job.CreatedAt,
-            CompletedAt = job.CompletedAt,
-            ErrorCode = job.ErrorCode,
-            ErrorMessage = job.ErrorMessage,
-            ImportedCount = job.ImportedCount,
-            Status = job.Status
-        });
+        return Ok(DtoMapper.ToResponse(job));
     }
 }
+

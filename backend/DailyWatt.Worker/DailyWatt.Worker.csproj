@@ -11,4 +11,8 @@
     <ProjectReference Include="..\DailyWatt.Domain\DailyWatt.Domain.csproj" />
     <ProjectReference Include="..\DailyWatt.Infrastructure\DailyWatt.Infrastructure.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
+  </ItemGroup>
 </Project>

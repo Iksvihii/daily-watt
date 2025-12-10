@@ -1,0 +1,28 @@
+{
+  "recommendations": [
+    // C# and .NET
+    "ms-dotnettools.csharp",
+    "ms-dotnettools.vscode-dotnet-runtime",
+
+    // Angular/TypeScript
+    "Angular.ng-template",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "ms-vscode.vscode-typescript-next",
+
+    // General Development
+    "ms-vscode.makefile-tools",
+    "DavidAnson.vscode-markdownlint",
+    "eamodio.gitlens",
+    "ms-vscode.git-graph",
+
+    // Database
+    "ms-mssql.mssql",
+
+    // REST Client
+    "humao.rest-client",
+
+    // Code Quality
+    "SonarSource.sonarlint-vscode"
+  ]
+}

@@ -5,8 +5,43 @@
       "label": "backend: build solution",
       "type": "shell",
       "command": "dotnet build backend/DailyWatt.sln",
-      "group": "build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
       "problemMatcher": "$msCompile",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "backend: clean",
+      "type": "shell",
+      "command": "dotnet clean backend/DailyWatt.sln",
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "backend: watch",
+      "type": "shell",
+      "command": "dotnet watch --project backend/DailyWatt.Api run",
+      "group": "build",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": "$msCompile",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*dotnet watch.*",
+          "endsPattern": "^.*Application started.*"
+        }
+      },
       "options": {
         "cwd": "${workspaceFolder}"
       }
@@ -21,6 +56,10 @@
       },
       "options": {
         "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always"
       }
     },
     {
@@ -33,6 +72,10 @@
       },
       "options": {
         "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always"
       }
     },
     {
@@ -42,7 +85,10 @@
       "options": {
         "cwd": "${workspaceFolder}/frontend/dailywatt-web"
       },
-      "problemMatcher": []
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent"
+      }
     },
     {
       "label": "frontend: start",
@@ -51,14 +97,12 @@
       "isBackground": true,
       "problemMatcher": {
         "owner": "angular",
-        "pattern": [
-          {
-            "regexp": ".",
-            "file": 1,
-            "location": 2,
-            "message": 3
-          }
-        ],
+        "pattern": {
+          "regexp": ".",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
         "background": {
           "activeOnStart": true,
           "beginsPattern": ".*(Starting.*(Angular|Development) Server|Generating browser application bundles).*",
@@ -67,6 +111,40 @@
       },
       "options": {
         "cwd": "${workspaceFolder}/frontend/dailywatt-web"
+      },
+      "presentation": {
+        "reveal": "silent"
+      }
+    },
+    {
+      "label": "frontend: build",
+      "type": "shell",
+      "command": "npm run build",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/frontend/dailywatt-web"
+      },
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "frontend: test",
+      "type": "shell",
+      "command": "npm test",
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/frontend/dailywatt-web"
+      },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always"
       }
     },
     {

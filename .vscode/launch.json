@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": ".NET Launch API",
+      "name": ".NET Launch API (Debugging)",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "backend: build solution",
@@ -10,13 +10,21 @@
       "args": [],
       "cwd": "${workspaceFolder}/backend/DailyWatt.Api",
       "stopAtEntry": false,
-      "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+      "serverReadyAction": {
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s",
+        "action": "openExternally"
       },
-      "dotnetRunMessages": true
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5000"
+      },
+      "dotnetRunMessages": true,
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
     },
     {
-      "name": ".NET Launch Worker",
+      "name": ".NET Launch Worker (Debugging)",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "backend: build solution",
@@ -27,32 +35,35 @@
       "env": {
         "DOTNET_ENVIRONMENT": "Development"
       },
-      "dotnetRunMessages": true
+      "dotnetRunMessages": true,
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
     },
     {
-      "name": "Launch Frontend (Angular)",
+      "name": "Angular (Chrome)",
       "type": "pwa-chrome",
       "request": "launch",
       "preLaunchTask": "frontend: start",
       "url": "http://localhost:4200",
       "webRoot": "${workspaceFolder}/frontend/dailywatt-web/src",
-      "userDataDir": "${workspaceFolder}/.vscode/chrome-profile"
+      "userDataDir": "${workspaceFolder}/.vscode/chrome-profile",
+      "skipFiles": ["<node_internals>/**"]
     }
   ],
   "compounds": [
     {
-      "name": "Launch API + Worker",
+      "name": "🔵 API + Worker (Backend)",
       "configurations": [
-        ".NET Launch API",
-        ".NET Launch Worker"
+        ".NET Launch API (Debugging)",
+        ".NET Launch Worker (Debugging)"
       ]
     },
     {
-      "name": "Launch API + Worker + Web",
+      "name": "🟢 Full Stack (API + Worker + Web)",
       "configurations": [
-        ".NET Launch API",
-        ".NET Launch Worker",
-        "Launch Frontend (Angular)"
+        ".NET Launch API (Debugging)",
+        ".NET Launch Worker (Debugging)",
+        "Angular (Chrome)"
       ]
     }
   ]
