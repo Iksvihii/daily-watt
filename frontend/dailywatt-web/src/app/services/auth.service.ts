@@ -1,7 +1,8 @@
-import { Injectable, computed, signal } from "@angular/core";
+import { Injectable, computed, inject, signal } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { map, tap } from "rxjs";
 import { environment } from "../../environments/environment";
+import { AuthTokenService } from "./auth-token.service";
 import {
   ChangePasswordRequest,
   LoginRequest,
@@ -12,13 +13,17 @@ import {
 
 @Injectable({ providedIn: "root" })
 export class AuthService {
-  private tokenKey = "dailywatt_token";
-  private authState = signal<boolean>(this.hasValidToken());
+  private http = inject(HttpClient);
+  private tokenService = inject(AuthTokenService);
+  private authState = signal<boolean>(false);
 
   // Computed signal for logged-in status
   isLoggedIn = computed(() => this.authState());
 
-  constructor(private http: HttpClient) {}
+  constructor() {
+    // Do not call hasValidToken() during construction
+    // State will be verified on first access or after explicit login/logout
+  }
 
   login(credentials: LoginRequest) {
     return this.http
@@ -57,39 +62,45 @@ export class AuthService {
   }
 
   logout() {
-    localStorage.removeItem(this.tokenKey);
+    this.tokenService.clearToken();
     this.authState.set(false);
   }
 
   get token(): string | null {
-    return localStorage.getItem(this.tokenKey);
+    return this.tokenService.getToken();
   }
 
   get isLoggedIn$() {
     return this.authState();
   }
 
+  hasValidSession(): boolean {
+    const valid = this.hasValidToken();
+    this.authState.set(valid);
+    return valid;
+  }
+
   private setToken(token: string) {
-    localStorage.setItem(this.tokenKey, token);
+    this.tokenService.setToken(token);
     this.authState.set(true);
   }
 
   private hasValidToken() {
-    const token = localStorage.getItem(this.tokenKey);
+    const token = this.tokenService.getToken();
     if (!token) {
       return false;
     }
 
     const payload = this.decodeJwt(token);
     if (!payload?.exp) {
-      localStorage.removeItem(this.tokenKey);
+      this.tokenService.clearToken();
       return false;
     }
 
     const expiresAt = payload.exp * 1000;
     const isValid = Date.now() < expiresAt;
     if (!isValid) {
-      localStorage.removeItem(this.tokenKey);
+      this.tokenService.clearToken();
     }
     return isValid;
   }
@@ -102,11 +113,5 @@ export class AuthService {
     } catch {
       return null;
     }
-  }
-
-  hasValidSession(): boolean {
-    const valid = this.hasValidToken();
-    this.authState.set(valid);
-    return valid;
   }
 }

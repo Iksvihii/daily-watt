@@ -1,4 +1,4 @@
-import { Injectable } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { environment } from "../../environments/environment";
@@ -10,7 +10,7 @@ export interface GeocodeResult {
 
 @Injectable({ providedIn: "root" })
 export class GeocodingService {
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
 
   /**
    * Get address suggestions for autocomplete

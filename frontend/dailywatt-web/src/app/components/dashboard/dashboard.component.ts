@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit, signal } from "@angular/core";
+import { Component, OnInit, inject, signal } from "@angular/core";
 import {
   FormBuilder,
   ReactiveFormsModule,
@@ -29,6 +29,11 @@ import { ChangePasswordRequest, UserProfile } from "../../models/auth.models";
   styleUrl: "./dashboard.component.less",
 })
 export class DashboardComponent implements OnInit {
+  private dashboard = inject(DashboardService);
+  private enedis = inject(EnedisService);
+  private auth = inject(AuthService);
+  private fb = inject(FormBuilder);
+  
   from = signal(this.defaultFrom());
   to = signal(new Date().toISOString().slice(0, 16));
   granularity = signal<Granularity>("day");
@@ -54,13 +59,6 @@ export class DashboardComponent implements OnInit {
     currentPassword: ["", Validators.required],
     newPassword: ["", [Validators.required, Validators.minLength(6)]],
   });
-
-  constructor(
-    private dashboard: DashboardService,
-    private enedis: EnedisService,
-    private auth: AuthService,
-    private fb: FormBuilder
-  ) {}
 
   ngOnInit(): void {
     this.loadStatus();

@@ -2,6 +2,7 @@ import {
   Component,
   Input,
   OnChanges,
+  inject,
   signal,
   CUSTOM_ELEMENTS_SCHEMA,
   OnInit,
@@ -35,6 +36,7 @@ interface ChartData {
   styleUrl: "./consumption-chart.component.less",
 })
 export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
+  private dashboardService = inject(DashboardService);
   @Input() consumption: ConsumptionPoint[] = [];
   @Input() weather?: WeatherDay[];
 
@@ -55,8 +57,6 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
     { label: "Month", value: "month" },
     { label: "Year", value: "year" },
   ];
-
-  constructor(private dashboardService: DashboardService) {}
 
   ngOnInit(): void {
     this.rangeChange$

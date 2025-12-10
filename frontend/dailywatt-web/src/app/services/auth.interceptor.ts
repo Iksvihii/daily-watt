@@ -1,29 +1,31 @@
-import { Injectable } from "@angular/core";
+import { inject } from "@angular/core";
 import {
-  HttpEvent,
-  HttpHandler,
-  HttpInterceptor,
   HttpRequest,
+  HttpInterceptorFn,
+  HttpResponse,
 } from "@angular/common/http";
-import { Observable } from "rxjs";
-import { AuthService } from "./auth.service";
+import { AuthTokenService } from "./auth-token.service";
+import { tap } from "rxjs";
 
-@Injectable()
-export class AuthInterceptor implements HttpInterceptor {
-  constructor(private authService: AuthService) {}
+export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const tokenService = inject(AuthTokenService);
+  const token = tokenService.getToken();
 
-  intercept(
-    req: HttpRequest<unknown>,
-    next: HttpHandler
-  ): Observable<HttpEvent<unknown>> {
-    const token = this.authService.token;
-    if (token) {
-      req = req.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-    }
-    return next.handle(req);
+  if (token) {
+    req = req.clone({
+      setHeaders: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
   }
-}
+
+  return next(req).pipe(
+    tap({
+      next: (event) => {
+        if (event instanceof HttpResponse && event.status === 401) {
+          tokenService.clearToken();
+        }
+      },
+    })
+  );
+};

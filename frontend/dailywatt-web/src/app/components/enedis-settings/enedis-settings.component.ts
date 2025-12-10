@@ -1,4 +1,4 @@
-import { Component, signal } from "@angular/core";
+import { Component, inject, signal } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { EnedisService } from "../../services/enedis.service";
@@ -13,6 +13,9 @@ import { AddressMapInputComponent } from "../address-map-input/address-map-input
   styleUrl: "./enedis-settings.component.less",
 })
 export class EnedisSettingsComponent {
+  private fb = inject(FormBuilder);
+  private enedis = inject(EnedisService);
+
   message = signal<string | undefined>(undefined);
   job = signal<ImportJob | undefined>(undefined);
   saving = signal(false);
@@ -38,8 +41,6 @@ export class EnedisSettingsComponent {
     from: [this.defaultFrom(), Validators.required],
     to: [new Date().toISOString().slice(0, 16), Validators.required],
   });
-
-  constructor(private fb: FormBuilder, private enedis: EnedisService) {}
 
   toggleLocationMap(): void {
     this.showLocationMap.update((val) => !val);

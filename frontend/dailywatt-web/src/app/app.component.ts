@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, inject } from "@angular/core";
 import { RouterLink, RouterOutlet } from "@angular/router";
 import { AuthService } from "./services/auth.service";
 
@@ -10,10 +10,10 @@ import { AuthService } from "./services/auth.service";
   styleUrl: "./app.component.less",
 })
 export class AppComponent {
+  private authService = inject(AuthService);
+  
   title = "DailyWatt";
   loggedIn = this.authService.isLoggedIn;
-
-  constructor(private authService: AuthService) {}
 
   logout() {
     this.authService.logout();

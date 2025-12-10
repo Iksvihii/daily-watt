@@ -4,21 +4,14 @@ import {
   Output,
   EventEmitter,
   OnInit,
+  inject,
   signal,
-  effect,
   CUSTOM_ELEMENTS_SCHEMA,
-  ViewChild,
-  ElementRef,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import L from "leaflet";
 import { GeocodingService } from "../../services/geocoding.service";
-
-interface GeocodeResult {
-  latitude: number;
-  longitude: number;
-}
 
 @Component({
   selector: "app-address-map-input",
@@ -29,6 +22,7 @@ interface GeocodeResult {
   styleUrl: "./address-map-input.component.less",
 })
 export class AddressMapInputComponent implements OnInit {
+  private geocodingService = inject(GeocodingService);
   @Input() initialAddress = "";
   @Input() initialLatitude?: number;
   @Input() initialLongitude?: number;
@@ -50,7 +44,7 @@ export class AddressMapInputComponent implements OnInit {
   mapCenter = { lat: 48.8566, lng: 2.3522 }; // Default: Paris
   mapZoom = 13;
 
-  constructor(private geocodingService: GeocodingService) {
+  constructor() {
     // Initialize address from input
     this.addressInput.set(this.initialAddress);
 

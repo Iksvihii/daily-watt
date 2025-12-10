@@ -1,4 +1,4 @@
-import { Component, signal } from "@angular/core";
+import { Component, inject, signal } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
 import { AuthService } from "../../services/auth.service";
@@ -12,6 +12,10 @@ import { LoginRequest } from "../../models/auth.models";
   styleUrl: "./login.component.less",
 })
 export class LoginComponent {
+  private fb = inject(FormBuilder);
+  private auth = inject(AuthService);
+  private router = inject(Router);
+
   error = signal<string | undefined>(undefined);
   loading = signal(false);
 
@@ -19,12 +23,6 @@ export class LoginComponent {
     email: ["", [Validators.required, Validators.email]],
     password: ["", [Validators.required]],
   });
-
-  constructor(
-    private fb: FormBuilder,
-    private auth: AuthService,
-    private router: Router
-  ) {}
 
   submit() {
     if (this.form.invalid) {

@@ -1,16 +1,15 @@
-import { Injectable } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { environment } from "../../environments/environment";
 import {
-  Granularity,
   GetTimeSeriesRequest,
   TimeSeriesResponse,
 } from "../models/dashboard.models";
 
 @Injectable({ providedIn: "root" })
 export class DashboardService {
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
 
   getTimeSeries(request: GetTimeSeriesRequest): Observable<TimeSeriesResponse> {
     const params = new HttpParams()

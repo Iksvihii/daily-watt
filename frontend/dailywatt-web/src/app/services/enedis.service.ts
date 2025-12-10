@@ -1,4 +1,4 @@
-import { Injectable } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable, interval, switchMap, takeWhile } from "rxjs";
 import { environment } from "../../environments/environment";
@@ -11,7 +11,7 @@ import {
 
 @Injectable({ providedIn: "root" })
 export class EnedisService {
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
 
   saveCredentials(request: SaveCredentialsRequest): Observable<void> {
     return this.http.post<void>(
