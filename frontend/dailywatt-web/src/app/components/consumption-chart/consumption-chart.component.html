@@ -1,36 +1,38 @@
-<div class="chart-controls">
-  <div class="time-scale-selector">
-    <label for="timeScale">Time Scale:</label>
-    <select id="timeScale" [value]="timeScale()" (change)="onTimeScaleChange($event)">
-      <option value="hour">Hour</option>
-      <option value="day">Day</option>
-      <option value="month">Month</option>
-      <option value="year">Year</option>
-    </select>
+<div class="chart-wrapper">
+  <div class="chart-controls">
+    <div class="time-scale-selector">
+      <label for="timeScale">Time Scale:</label>
+      <select id="timeScale" [value]="timeScale()" (change)="onTimeScaleChange($event)">
+        <option value="hour">Hour</option>
+        <option value="day">Day</option>
+        <option value="month">Month</option>
+        <option value="year">Year</option>
+      </select>
+    </div>
+
+    <div class="range-controls">
+      <label for="startRange">Range:</label>
+      <input 
+        id="startRange" 
+        type="range" 
+        min="0" 
+        max="100" 
+        [value]="startRangePercent"
+        (input)="onStartRangeInput($event)"
+        class="range-slider"
+      >
+      <span class="range-label">{{ startRangePercent }}%</span>
+      <input 
+        type="range" 
+        min="0" 
+        max="100" 
+        [value]="endRangePercent"
+        (input)="onEndRangeInput($event)"
+        class="range-slider"
+      >
+      <span class="range-label">{{ endRangePercent }}%</span>
+    </div>
   </div>
 
-  <div class="range-controls">
-    <label for="startRange">Range:</label>
-    <input 
-      id="startRange" 
-      type="range" 
-      min="0" 
-      max="100" 
-      [value]="startRangePercent"
-      (input)="onStartRangeInput($event)"
-      class="range-slider"
-    >
-    <span class="range-label">{{ startRangePercent }}%</span>
-    <input 
-      type="range" 
-      min="0" 
-      max="100" 
-      [value]="endRangePercent"
-      (input)="onEndRangeInput($event)"
-      class="range-slider"
-    >
-    <span class="range-label">{{ endRangePercent }}%</span>
-  </div>
+  <div class="chart-container" echarts [options]="chartOption" [autoResize]="true"></div>
 </div>
-
-<div #chartContainer class="chart-container"></div>

@@ -2,13 +2,11 @@ import {
   Component,
   Input,
   OnChanges,
-  OnInit,
-  ViewChild,
-  ElementRef,
-  AfterViewInit,
   signal,
+  CUSTOM_ELEMENTS_SCHEMA,
 } from "@angular/core";
-import * as echarts from "echarts";
+import { NgxEchartsModule } from "ngx-echarts";
+import type { EChartsOption } from "echarts";
 import { ConsumptionPoint, WeatherDay } from "../../models/dashboard.models";
 
 type TimeScale = "hour" | "day" | "month" | "year";
@@ -23,21 +21,20 @@ interface ChartData {
 @Component({
   selector: "app-consumption-chart",
   standalone: true,
+  imports: [NgxEchartsModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: "./consumption-chart.component.html",
   styleUrl: "./consumption-chart.component.less",
 })
-export class ConsumptionChartComponent
-  implements OnInit, AfterViewInit, OnChanges
-{
+export class ConsumptionChartComponent implements OnChanges {
   @Input() consumption: ConsumptionPoint[] = [];
   @Input() weather?: WeatherDay[];
-  @ViewChild("chartContainer") chartContainer!: ElementRef;
 
-  chart: echarts.ECharts | null = null;
   timeScale = signal<TimeScale>("day");
   chartData: ChartData | null = null;
   startRangePercent = 0;
   endRangePercent = 100;
+  chartOption: EChartsOption = {};
 
   timeScaleOptions: { label: string; value: TimeScale }[] = [
     { label: "Hour", value: "hour" },
@@ -46,37 +43,11 @@ export class ConsumptionChartComponent
     { label: "Year", value: "year" },
   ];
 
-  ngOnInit(): void {
-    // Delayed chart initialization to ensure DOM is ready
-    setTimeout(() => this.initChart(), 100);
-  }
-
-  ngAfterViewInit(): void {
-    this.initChart();
-  }
-
   ngOnChanges(): void {
     if (this.consumption?.length) {
       this.chartData = this.buildChartData(this.consumption, this.weather);
       this.updateChart();
     }
-  }
-
-  private initChart(): void {
-    if (!this.chartContainer?.nativeElement || this.chart) {
-      return;
-    }
-
-    this.chart = echarts.init(this.chartContainer.nativeElement, undefined, {
-      renderer: "canvas",
-      useDirtyRect: true,
-    });
-
-    window.addEventListener("resize", () => {
-      this.chart?.resize();
-    });
-
-    this.updateChart();
   }
 
   private buildChartData(
@@ -116,7 +87,7 @@ export class ConsumptionChartComponent
   }
 
   private updateChart(): void {
-    if (!this.chart || !this.chartData) {
+    if (!this.chartData) {
       return;
     }
 
@@ -133,7 +104,7 @@ export class ConsumptionChartComponent
     const visibleTemperature = temperatureValues.slice(startIdx, endIdx);
     const visibleLabels = labels.slice(startIdx, endIdx);
 
-    const option: echarts.EChartsOption = {
+    this.chartOption = {
       backgroundColor: "#0f172a",
       textStyle: {
         color: "#94a3b8",
@@ -250,9 +221,7 @@ export class ConsumptionChartComponent
           moveHandleSize: 8,
         },
       ],
-    };
-
-    this.chart.setOption(option, true);
+    } as EChartsOption;
   }
 
   onRangeChange(): void {
