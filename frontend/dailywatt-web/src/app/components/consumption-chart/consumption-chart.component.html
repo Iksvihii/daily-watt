@@ -2,7 +2,7 @@
   <div class="chart-controls">
     <div class="time-scale-selector">
       <label for="timeScale">Time Scale:</label>
-      <select id="timeScale" [value]="timeScale()" (change)="onTimeScaleChange($event)">
+      <select id="timeScale" [value]="timeScale()" (change)="onTimeScaleChange($event)" [disabled]="isLoading()">
         <option value="hour">Hour</option>
         <option value="day">Day</option>
         <option value="month">Month</option>
@@ -20,6 +20,7 @@
         [value]="startRangePercent"
         (input)="onStartRangeInput($event)"
         class="range-slider"
+        [disabled]="isLoading()"
       >
       <span class="range-label">{{ startRangePercent }}%</span>
       <input 
@@ -29,10 +30,27 @@
         [value]="endRangePercent"
         (input)="onEndRangeInput($event)"
         class="range-slider"
+        [disabled]="isLoading()"
       >
       <span class="range-label">{{ endRangePercent }}%</span>
     </div>
   </div>
 
-  <div class="chart-container" echarts [options]="chartOption" [autoResize]="true"></div>
+  <div style="position: relative;">
+    @if (isLoading()) {
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; display: flex; align-items: center; gap: 8px;">
+        <div style="width: 20px; height: 20px; border: 3px solid #334155; border-top-color: #3ad1c5; border-radius: 50%; animation: spin 0.6s linear infinite;"></div>
+        <span style="color: #94a3b8;">Loading data...</span>
+      </div>
+    }
+    <div class="chart-container" echarts [options]="chartOption" [autoResize]="true" [style.opacity]="isLoading() ? 0.5 : 1"></div>
+  </div>
 </div>
+
+<style>
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+</style>

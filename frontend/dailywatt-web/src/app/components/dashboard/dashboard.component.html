@@ -67,7 +67,12 @@
       </div>
 
       <div class="chart-wrapper">
-        <app-consumption-chart [consumption]="data()!.consumption" [weather]="withWeather() ? data()!.weather : undefined"></app-consumption-chart>
+        <app-consumption-chart 
+          [consumption]="data()!.consumption" 
+          [weather]="withWeather() ? data()!.weather : undefined"
+          [dateRangeStart]="from()"
+          [dateRangeEnd]="to()">
+        </app-consumption-chart>
       </div>
     }
   }

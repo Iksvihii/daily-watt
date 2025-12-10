@@ -4,10 +4,16 @@ import {
   OnChanges,
   signal,
   CUSTOM_ELEMENTS_SCHEMA,
+  OnInit,
+  OnDestroy,
 } from "@angular/core";
+import { CommonModule } from "@angular/common";
 import { NgxEchartsModule } from "ngx-echarts";
 import type { EChartsOption } from "echarts";
-import { ConsumptionPoint, WeatherDay } from "../../models/dashboard.models";
+import { ConsumptionPoint, WeatherDay, Granularity } from "../../models/dashboard.models";
+import { DashboardService } from "../../services/dashboard.service";
+import { Subject } from "rxjs";
+import { takeUntil, debounceTime } from "rxjs/operators";
 
 type TimeScale = "hour" | "day" | "month" | "year";
 
@@ -21,20 +27,26 @@ interface ChartData {
 @Component({
   selector: "app-consumption-chart",
   standalone: true,
-  imports: [NgxEchartsModule],
+  imports: [NgxEchartsModule, CommonModule],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: "./consumption-chart.component.html",
   styleUrl: "./consumption-chart.component.less",
 })
-export class ConsumptionChartComponent implements OnChanges {
+export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
   @Input() consumption: ConsumptionPoint[] = [];
   @Input() weather?: WeatherDay[];
+  @Input() dateRangeStart?: string; // ISO string
+  @Input() dateRangeEnd?: string; // ISO string
 
   timeScale = signal<TimeScale>("day");
   chartData: ChartData | null = null;
   startRangePercent = 0;
   endRangePercent = 100;
   chartOption: EChartsOption = {};
+  isLoading = signal<boolean>(false);
+
+  private destroy$ = new Subject<void>();
+  private rangeChange$ = new Subject<void>();
 
   timeScaleOptions: { label: string; value: TimeScale }[] = [
     { label: "Hour", value: "hour" },
@@ -43,11 +55,29 @@ export class ConsumptionChartComponent implements OnChanges {
     { label: "Year", value: "year" },
   ];
 
+  constructor(private dashboardService: DashboardService) {}
+
+  ngOnInit(): void {
+    this.rangeChange$
+      .pipe(
+        debounceTime(300),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.fetchDataWithRange();
+      });
+  }
+
   ngOnChanges(): void {
     if (this.consumption?.length) {
       this.chartData = this.buildChartData(this.consumption, this.weather);
       this.updateChart();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private buildChartData(
@@ -83,7 +113,84 @@ export class ConsumptionChartComponent implements OnChanges {
     this.timeScale.set(target.value as TimeScale);
     this.startRangePercent = 0;
     this.endRangePercent = 100;
-    this.updateChart();
+    this.rangeChange$.next();
+  }
+
+  onStartRangeInput(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.startRangePercent = parseInt(target.value, 10);
+    this.endRangePercent = Math.max(
+      this.endRangePercent,
+      this.startRangePercent + 1
+    );
+    this.rangeChange$.next();
+  }
+
+  onEndRangeInput(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.endRangePercent = parseInt(target.value, 10);
+    this.startRangePercent = Math.min(
+      this.startRangePercent,
+      this.endRangePercent - 1
+    );
+    this.rangeChange$.next();
+  }
+
+  private fetchDataWithRange(): void {
+    if (!this.dateRangeStart || !this.dateRangeEnd) {
+      // If no date range provided, just update the chart with existing data
+      this.updateChart();
+      return;
+    }
+
+    this.isLoading.set(true);
+
+    // Calculate the actual date range based on the percentage values
+    const start = new Date(this.dateRangeStart);
+    const end = new Date(this.dateRangeEnd);
+    const totalMs = end.getTime() - start.getTime();
+
+    const rangeStartMs = start.getTime() + (this.startRangePercent / 100) * totalMs;
+    const rangeEndMs = start.getTime() + (this.endRangePercent / 100) * totalMs;
+
+    const rangeStart = new Date(rangeStartMs).toISOString();
+    const rangeEnd = new Date(rangeEndMs).toISOString();
+
+    // Map TimeScale to Granularity
+    const granularityMap: Record<TimeScale, Granularity> = {
+      hour: 'hour',
+      day: 'day',
+      month: 'day', // Backend doesn't support 'month', use 'day' and let frontend handle aggregation
+      year: 'day', // Backend doesn't support 'year', use 'day' and let frontend handle aggregation
+    };
+
+    const granularity = granularityMap[this.timeScale()];
+
+    this.dashboardService
+      .getTimeSeriesWithRange(
+        this.dateRangeStart,
+        this.dateRangeEnd,
+        granularity,
+        rangeStart,
+        rangeEnd,
+        !!this.weather
+      )
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.consumption = response.consumption;
+          this.weather = response.weather;
+          if (this.consumption?.length) {
+            this.chartData = this.buildChartData(this.consumption, this.weather);
+            this.updateChart();
+          }
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error("Error fetching chart data:", err);
+          this.isLoading.set(false);
+        },
+      });
   }
 
   private updateChart(): void {
@@ -224,19 +331,4 @@ export class ConsumptionChartComponent implements OnChanges {
     } as EChartsOption;
   }
 
-  onRangeChange(): void {
-    this.updateChart();
-  }
-
-  onStartRangeInput(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    this.startRangePercent = parseInt(target.value, 10);
-    this.onRangeChange();
-  }
-
-  onEndRangeInput(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    this.endRangePercent = parseInt(target.value, 10);
-    this.onRangeChange();
-  }
 }

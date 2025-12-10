@@ -27,6 +27,8 @@ public class DashboardController : ControllerBase
         [FromQuery] DateTime from,
         [FromQuery] DateTime to,
         [FromQuery] string? granularity,
+        [FromQuery] DateTime? startDate,
+        [FromQuery] DateTime? endDate,
         [FromQuery] bool withWeather = false,
         CancellationToken ct = default)
     {
@@ -38,8 +40,17 @@ public class DashboardController : ControllerBase
         var userId = User.GetUserId();
         var granularityValue = GranularityHelper.Parse(granularity);
 
-        var consumption = await _consumptionService.GetAggregatedAsync(userId, from.ToUniversalTime(), to.ToUniversalTime(), granularityValue, ct);
-        var summary = await _consumptionService.GetSummaryAsync(userId, from.ToUniversalTime(), to.ToUniversalTime(), ct);
+        // Use provided range if available, otherwise use full range
+        var queryStartDate = (startDate ?? from).ToUniversalTime();
+        var queryEndDate = (endDate ?? to).ToUniversalTime();
+
+        if (queryEndDate <= queryStartDate)
+        {
+            return BadRequest(new { error = "Invalid date range for query" });
+        }
+
+        var consumption = await _consumptionService.GetAggregatedAsync(userId, queryStartDate, queryEndDate, granularityValue, ct);
+        var summary = await _consumptionService.GetSummaryAsync(userId, queryStartDate, queryEndDate, ct);
 
         var response = new TimeSeriesResponse
         {
@@ -57,8 +68,8 @@ public class DashboardController : ControllerBase
 
         if (withWeather)
         {
-            var fromDate = DateOnly.FromDateTime(from);
-            var toDate = DateOnly.FromDateTime(to);
+            var fromDate = DateOnly.FromDateTime(queryStartDate);
+            var toDate = DateOnly.FromDateTime(queryEndDate);
             await _weatherService.EnsureWeatherRangeAsync(userId, fromDate, toDate, ct);
             var weather = await _weatherService.GetRangeAsync(userId, fromDate, toDate, ct);
             response.Weather = weather
