@@ -158,7 +158,7 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
     // Arrange
     using var dbContext = _fixture.CreateContext();
     var userId = await CreateTestUserAsync(dbContext);
-    
+
     var measurements = new List<Measurement>
         {
             new() { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = DateTime.UtcNow.AddHours(-2), Kwh = 0.5 },
