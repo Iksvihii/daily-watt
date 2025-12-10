@@ -44,16 +44,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "dailywatt-web:build"
+            "buildTarget": "dailywatt-web:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "dailywatt-web:build:production"
+              "buildTarget": "dailywatt-web:build:production"
             }
           }
         }
       }
     }
   },
-  "defaultProject": "dailywatt-web"
+  "cli": {
+    "analytics": false
+  }
 }

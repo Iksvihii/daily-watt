@@ -11,7 +11,7 @@
         <label>Password</label>
         <input type="password" formControlName="password" placeholder="Enedis password">
       </div>
-      <button class="btn" type="submit" [disabled]="saving">Save</button>
+      <button class="btn" type="submit" [disabled]="saving()">Save</button>
     </form>
   </div>
 
@@ -26,23 +26,23 @@
         <label>To</label>
         <input type="datetime-local" formControlName="to">
       </div>
-      <button class="btn" type="submit" [disabled]="importing">Start import</button>
+      <button class="btn" type="submit" [disabled]="importing()">Start import</button>
     </form>
 
-    @if (job) {
+    @if (job()) {
       <div style="margin-top: 12px;">
-        <div class="status">Job: {{ job.id }}</div>
-        <div class="status" [class.positive]="job.status === 'Completed'" [class.negative]="job.status === 'Failed'">
-          Status: {{ job.status }} • Imported: {{ job.importedCount }}
+        <div class="status">Job: {{ job()!.id }}</div>
+        <div class="status" [class.positive]="job()!.status === 'Completed'" [class.negative]="job()!.status === 'Failed'">
+          Status: {{ job()!.status }} • Imported: {{ job()!.importedCount }}
         </div>
-        @if (job.errorMessage) {
-          <div class="status negative">{{ job.errorMessage }}</div>
+        @if (job()!.errorMessage) {
+          <div class="status negative">{{ job()!.errorMessage }}</div>
         }
       </div>
     }
 
-    @if (message) {
-      <p class="status">{{ message }}</p>
+    @if (message()) {
+      <p class="status">{{ message() }}</p>
     }
   </div>
 </div>

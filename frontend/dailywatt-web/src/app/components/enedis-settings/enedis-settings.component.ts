@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { EnedisService } from '../../services/enedis.service';
 import { ImportJob } from '../../models/enedis.models';
@@ -8,13 +8,13 @@ import { ImportJob } from '../../models/enedis.models';
   standalone: true,
   imports: [ReactiveFormsModule],
   templateUrl: './enedis-settings.component.html',
-  styleUrl: './enedis-settings.component.css'
+  styleUrl: './enedis-settings.component.less'
 })
 export class EnedisSettingsComponent {
-  message?: string;
-  job?: ImportJob;
-  saving = false;
-  importing = false;
+  message = signal<string | undefined>(undefined);
+  job = signal<ImportJob | undefined>(undefined);
+  saving = signal(false);
+  importing = signal(false);
 
   credentialsForm = this.fb.group({
     login: ['', Validators.required],
@@ -32,15 +32,15 @@ export class EnedisSettingsComponent {
     if (this.credentialsForm.invalid) {
       return;
     }
-    this.saving = true;
+    this.saving.set(true);
     this.enedis.saveCredentials(this.credentialsForm.value as any).subscribe({
       next: () => {
-        this.message = 'Credentials saved';
-        this.saving = false;
+        this.message.set('Credentials saved');
+        this.saving.set(false);
       },
       error: err => {
-        this.message = err.error?.error || 'Failed to save credentials';
-        this.saving = false;
+        this.message.set(err.error?.error || 'Failed to save credentials');
+        this.saving.set(false);
       }
     });
   }
@@ -49,7 +49,7 @@ export class EnedisSettingsComponent {
     if (this.importForm.invalid) {
       return;
     }
-    this.importing = true;
+    this.importing.set(true);
     const payload = {
       fromUtc: new Date(this.importForm.value.from as string).toISOString(),
       toUtc: new Date(this.importForm.value.to as string).toISOString()
@@ -57,21 +57,21 @@ export class EnedisSettingsComponent {
 
     this.enedis.createImportJob(payload).subscribe({
       next: job => {
-        this.job = job;
+        this.job.set(job);
         this.pollJob(job.id);
       },
       error: err => {
-        this.message = err.error?.error || 'Failed to start import';
-        this.importing = false;
+        this.message.set(err.error?.error || 'Failed to start import');
+        this.importing.set(false);
       }
     });
   }
 
   private pollJob(id: string) {
     this.enedis.pollJobUntilDone(id).subscribe(job => {
-      this.job = job;
+      this.job.set(job);
       if (job.status === 'Completed' || job.status === 'Failed') {
-        this.importing = false;
+        this.importing.set(false);
       }
     });
   }

@@ -1,15 +1,15 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
 import 'chart.js/auto';
+import { BaseChartDirective } from 'ng2-charts';
 import { ConsumptionPoint, WeatherDay } from '../../models/dashboard.models';
-import { NgChartsModule } from 'ng2-charts';
 
 @Component({
   selector: 'app-consumption-chart',
   standalone: true,
-  imports: [NgChartsModule],
+  imports: [BaseChartDirective],
   templateUrl: './consumption-chart.component.html',
-  styleUrl: './consumption-chart.component.css'
+  styleUrl: './consumption-chart.component.less'
 })
 export class ConsumptionChartComponent implements OnChanges {
   @Input() consumption: ConsumptionPoint[] = [];

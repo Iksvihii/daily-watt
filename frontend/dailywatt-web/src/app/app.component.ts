@@ -8,7 +8,7 @@ import { AuthService } from './services/auth.service';
   standalone: true,
   imports: [RouterOutlet, RouterLink, AsyncPipe],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrl: './app.component.less'
 })
 export class AppComponent {
   title = 'DailyWatt';

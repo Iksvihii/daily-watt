@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../services/dashboard.service';
 import { Granularity, TimeSeriesResponse } from '../../models/dashboard.models';
@@ -10,36 +10,36 @@ import { ConsumptionChartComponent } from '../consumption-chart/consumption-char
   standalone: true,
   imports: [CommonModule, FormsModule, ConsumptionChartComponent],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.css'
+  styleUrl: './dashboard.component.less'
 })
 export class DashboardComponent {
-  from = this.defaultFrom();
-  to = new Date().toISOString().slice(0, 16);
-  granularity: Granularity = 'hour';
-  withWeather = true;
-  loading = false;
-  error?: string;
+  from = signal(this.defaultFrom());
+  to = signal(new Date().toISOString().slice(0, 16));
+  granularity = signal<Granularity>('hour');
+  withWeather = signal(true);
+  loading = signal(false);
+  error = signal<string | undefined>(undefined);
 
-  data?: TimeSeriesResponse;
+  data = signal<TimeSeriesResponse | undefined>(undefined);
 
   constructor(private dashboard: DashboardService) {}
 
   load() {
-    this.loading = true;
-    this.error = undefined;
+    this.loading.set(true);
+    this.error.set(undefined);
     this.dashboard.getTimeSeries(
-      new Date(this.from).toISOString(),
-      new Date(this.to).toISOString(),
-      this.granularity,
-      this.withWeather
+      new Date(this.from()).toISOString(),
+      new Date(this.to()).toISOString(),
+      this.granularity(),
+      this.withWeather()
     ).subscribe({
       next: res => {
-        this.data = res;
-        this.loading = false;
+        this.data.set(res);
+        this.loading.set(false);
       },
       error: err => {
-        this.error = err.error?.error || 'Unable to load data';
-        this.loading = false;
+        this.error.set(err.error?.error || 'Unable to load data');
+        this.loading.set(false);
       }
     });
   }

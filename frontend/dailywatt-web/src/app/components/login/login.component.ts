@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -8,11 +8,11 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrl: './login.component.less'
 })
 export class LoginComponent {
-  error?: string;
-  loading = false;
+  error = signal<string | undefined>(undefined);
+  loading = signal(false);
 
   form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -25,12 +25,12 @@ export class LoginComponent {
     if (this.form.invalid) {
       return;
     }
-    this.loading = true;
+    this.loading.set(true);
     this.auth.login(this.form.value as any).subscribe({
       next: () => this.router.navigate(['/dashboard']),
-      error: err => {
-        this.error = err.error?.error || 'Login failed';
-        this.loading = false;
+      error: (err: any) => {
+        this.error.set(err.error?.error || 'Login failed');
+        this.loading.set(false);
       }
     });
   }

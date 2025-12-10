@@ -1,7 +1,7 @@
 <div class="card">
   <h2>Create account</h2>
-  @if (error) {
-    <p class="status negative">{{ error }}</p>
+  @if (error()) {
+    <p class="status negative">{{ error() }}</p>
   }
   <form [formGroup]="form" (ngSubmit)="submit()">
     <div>
@@ -12,7 +12,7 @@
       <label>Password</label>
       <input type="password" formControlName="password" placeholder="At least 6 characters">
     </div>
-    <button class="btn" type="submit" [disabled]="loading">Register</button>
+    <button class="btn" type="submit" [disabled]="loading()">Register</button>
   </form>
   <p class="status">Already registered? <a routerLink="/login">Sign in</a></p>
 </div>
