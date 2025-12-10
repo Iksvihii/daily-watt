@@ -1,12 +1,14 @@
 import { Component, signal } from "@angular/core";
+import { CommonModule } from "@angular/common";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { EnedisService } from "../../services/enedis.service";
 import { ImportJob, SaveCredentialsRequest } from "../../models/enedis.models";
+import { AddressMapInputComponent } from "../address-map-input/address-map-input.component";
 
 @Component({
   selector: "app-enedis-settings",
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AddressMapInputComponent],
   templateUrl: "./enedis-settings.component.html",
   styleUrl: "./enedis-settings.component.less",
 })
@@ -15,11 +17,21 @@ export class EnedisSettingsComponent {
   job = signal<ImportJob | undefined>(undefined);
   saving = signal(false);
   importing = signal(false);
+  showLocationMap = signal(false);
+
+  selectedCoordinates = signal<{
+    address?: string;
+    latitude?: number;
+    longitude?: number;
+  }>({});
 
   credentialsForm = this.fb.group({
     login: ["", Validators.required],
     password: ["", Validators.required],
     meterNumber: ["", Validators.required],
+    address: [""],
+    latitude: [null as number | null],
+    longitude: [null as number | null],
   });
 
   importForm = this.fb.group({
@@ -28,6 +40,23 @@ export class EnedisSettingsComponent {
   });
 
   constructor(private fb: FormBuilder, private enedis: EnedisService) {}
+
+  toggleLocationMap(): void {
+    this.showLocationMap.update((val) => !val);
+  }
+
+  onLocationSelected(data: {
+    address: string;
+    latitude: number;
+    longitude: number;
+  }): void {
+    this.selectedCoordinates.set(data);
+    this.credentialsForm.patchValue({
+      address: data.address,
+      latitude: data.latitude,
+      longitude: data.longitude,
+    });
+  }
 
   saveCredentials() {
     if (this.credentialsForm.invalid) {
@@ -38,6 +67,7 @@ export class EnedisSettingsComponent {
     this.enedis.saveCredentials(request).subscribe({
       next: () => {
         this.message.set("Credentials saved");
+        this.showLocationMap.set(false);
         this.saving.set(false);
       },
       error: (err: { error?: { error?: string } }) => {

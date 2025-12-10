@@ -16,7 +16,15 @@ public class EnedisCredentialService : IEnedisCredentialService
         _secretProtector = secretProtector;
     }
 
-    public async Task SaveCredentialsAsync(Guid userId, string login, string password, string meterNumber, CancellationToken ct = default)
+    public async Task SaveCredentialsAsync(
+        Guid userId,
+        string login,
+        string password,
+        string meterNumber,
+        string? address = null,
+        double? latitude = null,
+        double? longitude = null,
+        CancellationToken ct = default)
     {
         var entity = await _db.EnedisCredentials.FirstOrDefaultAsync(x => x.UserId == userId, ct);
         if (entity == null)
@@ -28,6 +36,9 @@ public class EnedisCredentialService : IEnedisCredentialService
         entity.LoginEncrypted = _secretProtector.Protect(login);
         entity.PasswordEncrypted = _secretProtector.Protect(password);
         entity.MeterNumber = meterNumber;
+        entity.Address = address;
+        entity.Latitude = latitude;
+        entity.Longitude = longitude;
         entity.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(ct);

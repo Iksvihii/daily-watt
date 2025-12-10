@@ -15,8 +15,43 @@
         <label for="enedisMeter">Linky meter number</label>
         <input id="enedisMeter" type="text" formControlName="meterNumber" placeholder="Meter number">
       </div>
-      <button class="btn" type="submit" [disabled]="saving()">Save</button>
+
+      <!-- Location section -->
+      <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="toggleLocationMap()"
+          style="margin-bottom: 1rem;"
+        >
+          {{ showLocationMap() ? "Hide location" : "Set meter location" }}
+        </button>
+
+        @if (showLocationMap()) {
+          <app-address-map-input
+            [initialAddress]="credentialsForm.get('address')?.value || ''"
+            [initialLatitude]="credentialsForm.get('latitude')?.value || undefined"
+            [initialLongitude]="credentialsForm.get('longitude')?.value || undefined"
+            (addressSelected)="onLocationSelected($event)"
+          ></app-address-map-input>
+        }
+
+        @if (selectedCoordinates().latitude && selectedCoordinates().longitude) {
+          <div class="coordinates-display" style="margin-top: 1rem;">
+            <p class="status positive">
+              📍 {{ selectedCoordinates().address || 'Location selected' }}<br>
+              <small>{{ selectedCoordinates().latitude?.toFixed(4) }}, {{ selectedCoordinates().longitude?.toFixed(4) }}</small>
+            </p>
+          </div>
+        }
+      </div>
+
+      <button class="btn" type="submit" [disabled]="saving()" style="margin-top: 1rem;">Save</button>
     </form>
+
+    @if (message()) {
+      <p class="status" style="margin-top: 1rem;">{{ message() }}</p>
+    }
   </div>
 
   <div class="card">
@@ -43,10 +78,6 @@
           <div class="status negative">{{ job()!.errorMessage }}</div>
         }
       </div>
-    }
-
-    @if (message()) {
-      <p class="status">{{ message() }}</p>
     }
   </div>
 </div>

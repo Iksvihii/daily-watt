@@ -1,0 +1,65 @@
+<div class="address-map-container">
+  <div class="address-input-section">
+    <div class="input-group">
+      <label for="address-input">Address</label>
+      <div class="input-wrapper">
+        <input
+          id="address-input"
+          type="text"
+          [(ngModel)]="addressInput"
+          (input)="onAddressInput()"
+          (keyup.escape)="suggestions.set([])"
+          placeholder="Enter address and press Enter or click on map"
+          class="address-input"
+          [disabled]="isLoadingSuggestions()"
+        />
+        <button
+          type="button"
+          (click)="clearSelection()"
+          class="clear-btn"
+          [disabled]="!addressInput()"
+          title="Clear selection"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- Autocomplete suggestions dropdown -->
+      @if (suggestions().length > 0) {
+        <ul class="suggestions-dropdown">
+          @for (suggestion of suggestions(); track $index) {
+            <li>
+              <button
+                type="button"
+                (click)="selectSuggestion(suggestion)"
+                class="suggestion-item"
+              >
+                {{ suggestion }}
+              </button>
+            </li>
+          }
+        </ul>
+      }
+
+      <!-- Loading indicator -->
+      @if (isLoadingSuggestions()) {
+        <div class="loading-spinner">Loading...</div>
+      }
+
+      <!-- Error message -->
+      @if (errorMessage()) {
+        <div class="error-message">{{ errorMessage() }}</div>
+      }
+    </div>
+
+    <div class="instructions">
+      <p>
+        <strong>Click on the map</strong> to set coordinates, or enter an
+        address to search.
+      </p>
+    </div>
+  </div>
+
+  <!-- Leaflet map -->
+  <div id="address-map" class="address-map"></div>
+</div>

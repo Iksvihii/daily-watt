@@ -2,6 +2,7 @@ using AutoMapper;
 using DailyWatt.Application.DTO.Responses;
 using DailyWatt.Domain.Entities;
 using DailyWatt.Domain.Models;
+using DailyWatt.Domain.Services;
 
 namespace DailyWatt.Application.Mapping;
 
@@ -24,6 +25,8 @@ public class MappingProfile : Profile
     CreateMap<ConsumptionSummary, SummaryDto>();
 
     CreateMap<WeatherDay, WeatherDayDto>();
+
+    CreateMap<WeatherData, WeatherDayDto>();
 
     // Enedis mappings
     CreateMap<ImportJob, ImportJobDto>()

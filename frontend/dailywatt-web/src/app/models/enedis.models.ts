@@ -2,6 +2,9 @@ export interface SaveCredentialsRequest {
   login: string;
   password: string;
   meterNumber: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface CreateImportJobRequest {

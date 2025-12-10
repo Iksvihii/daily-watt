@@ -15,15 +15,18 @@ public class EnedisController : ControllerBase
 {
     private readonly IEnedisCredentialService _credentialsService;
     private readonly IImportJobService _importJobService;
+    private readonly IGeocodingService _geocodingService;
     private readonly IMapper _mapper;
 
     public EnedisController(
         IEnedisCredentialService credentialsService,
         IImportJobService importJobService,
+        IGeocodingService geocodingService,
         IMapper mapper)
     {
         _credentialsService = credentialsService;
         _importJobService = importJobService;
+        _geocodingService = geocodingService;
         _mapper = mapper;
     }
 
@@ -31,7 +34,15 @@ public class EnedisController : ControllerBase
     public async Task<IActionResult> SaveCredentials([FromBody] SaveEnedisCredentialsRequest request, CancellationToken ct)
     {
         var userId = User.GetUserId();
-        await _credentialsService.SaveCredentialsAsync(userId, request.Login, request.Password, request.MeterNumber, ct);
+        await _credentialsService.SaveCredentialsAsync(
+            userId,
+            request.Login,
+            request.Password,
+            request.MeterNumber,
+            request.Address,
+            request.Latitude,
+            request.Longitude,
+            ct);
         return Ok();
     }
 
@@ -81,6 +92,38 @@ public class EnedisController : ControllerBase
         var dto = _mapper.Map<ImportJobDto>(job);
 
         return Ok(dto);
+    }
+
+    [HttpGet("geocode/suggestions")]
+    public async Task<ActionResult<List<string>>> GetAddressSuggestions([FromQuery] string query, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(query) || query.Length < 3)
+        {
+            return BadRequest(new { error = "Query must be at least 3 characters" });
+        }
+
+        var suggestions = await _geocodingService.GetAddressSuggestionsAsync(query, ct);
+        return Ok(suggestions);
+    }
+
+    [HttpPost("geocode")]
+    public async Task<ActionResult<dynamic>> GeocodeAddress([FromBody] dynamic request, CancellationToken ct)
+    {
+        var address = ((System.Text.Json.JsonElement)request).GetProperty("address").GetString();
+
+        if (string.IsNullOrWhiteSpace(address))
+        {
+            return BadRequest(new { error = "Address is required" });
+        }
+
+        var result = await _geocodingService.GeocodeAsync(address, ct);
+
+        if (result == null)
+        {
+            return NotFound(new { error = "Address not found" });
+        }
+
+        return Ok(new { latitude = result.Value.latitude, longitude = result.Value.longitude });
     }
 }
 

@@ -36,6 +36,16 @@ public static class DependencyInjection
             client.Timeout = TimeSpan.FromSeconds(10);
         });
 
+        services.AddHttpClient<IGeocodingService, Services.GeocodingService>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
+
+        services.AddHttpClient<IWeatherProviderService, Services.OpenMeteoWeatherService>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
+
         services.AddScoped<ISecretProtector, Services.SecretProtector>();
         services.AddScoped<IWeatherParser, Services.WeatherParser>();
         services.AddScoped<IEnedisCredentialService, Services.EnedisCredentialService>();
