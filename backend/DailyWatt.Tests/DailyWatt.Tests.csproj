@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="2.7.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.6" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.1" />
+    <PackageReference Include="Moq" Version="4.20.70" />
+    <PackageReference Include="ClosedXML" Version="0.102.1" />
+    <PackageReference Include="EntityFramework" Version="6.4.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DailyWatt.Domain\DailyWatt.Domain.csproj" />
+    <ProjectReference Include="..\DailyWatt.Infrastructure\DailyWatt.Infrastructure.csproj" />
+    <ProjectReference Include="..\DailyWatt.Application\DailyWatt.Application.csproj" />
+    <ProjectReference Include="..\DailyWatt.Worker\DailyWatt.Worker.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="TestData\*.xlsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
