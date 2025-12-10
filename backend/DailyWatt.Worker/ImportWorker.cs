@@ -60,8 +60,8 @@ public class ImportWorker : BackgroundService
                 var password = secretProtector.Unprotect(credentials.PasswordEncrypted);
 
                 await jobService.MarkRunningAsync(job, ct);
-                await using var csvStream = await scraper.DownloadConsumptionCsvAsync(login, password, job.FromUtc, job.ToUtc, ct);
-                var measurements = CsvMeasurementParser.Parse(csvStream, job.UserId, job.FromUtc, job.ToUtc);
+                await using var excelStream = await scraper.DownloadConsumptionCsvAsync(login, password, job.FromUtc, job.ToUtc, ct);
+                var measurements = ExcelMeasurementParser.Parse(excelStream, job.UserId, job.FromUtc, job.ToUtc);
 
                 await db.Measurements
                     .Where(m => m.UserId == job.UserId && m.TimestampUtc >= job.FromUtc && m.TimestampUtc <= job.ToUtc)
