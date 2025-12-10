@@ -19,6 +19,6 @@ public static class DtoMapper
     ErrorCode = job.ErrorCode,
     ErrorMessage = job.ErrorMessage,
     ImportedCount = job.ImportedCount,
-    Status = job.Status
+    Status = job.Status.ToString()
   };
 }

@@ -1,14 +1,14 @@
-import { Component, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { EnedisService } from '../../services/enedis.service';
-import { ImportJob } from '../../models/enedis.models';
+import { Component, signal } from "@angular/core";
+import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
+import { EnedisService } from "../../services/enedis.service";
+import { ImportJob, SaveCredentialsRequest } from "../../models/enedis.models";
 
 @Component({
-  selector: 'app-enedis-settings',
+  selector: "app-enedis-settings",
   standalone: true,
   imports: [ReactiveFormsModule],
-  templateUrl: './enedis-settings.component.html',
-  styleUrl: './enedis-settings.component.less'
+  templateUrl: "./enedis-settings.component.html",
+  styleUrl: "./enedis-settings.component.less",
 })
 export class EnedisSettingsComponent {
   message = signal<string | undefined>(undefined);
@@ -17,13 +17,13 @@ export class EnedisSettingsComponent {
   importing = signal(false);
 
   credentialsForm = this.fb.group({
-    login: ['', Validators.required],
-    password: ['', Validators.required]
+    login: ["", Validators.required],
+    password: ["", Validators.required],
   });
 
   importForm = this.fb.group({
     from: [this.defaultFrom(), Validators.required],
-    to: [new Date().toISOString().slice(0, 16), Validators.required]
+    to: [new Date().toISOString().slice(0, 16), Validators.required],
   });
 
   constructor(private fb: FormBuilder, private enedis: EnedisService) {}
@@ -33,15 +33,16 @@ export class EnedisSettingsComponent {
       return;
     }
     this.saving.set(true);
-    this.enedis.saveCredentials(this.credentialsForm.value as any).subscribe({
+    const request = this.credentialsForm.value as SaveCredentialsRequest;
+    this.enedis.saveCredentials(request).subscribe({
       next: () => {
-        this.message.set('Credentials saved');
+        this.message.set("Credentials saved");
         this.saving.set(false);
       },
-      error: err => {
-        this.message.set(err.error?.error || 'Failed to save credentials');
+      error: (err: { error?: { error?: string } }) => {
+        this.message.set(err.error?.error || "Failed to save credentials");
         this.saving.set(false);
-      }
+      },
     });
   }
 
@@ -52,25 +53,25 @@ export class EnedisSettingsComponent {
     this.importing.set(true);
     const payload = {
       fromUtc: new Date(this.importForm.value.from as string).toISOString(),
-      toUtc: new Date(this.importForm.value.to as string).toISOString()
+      toUtc: new Date(this.importForm.value.to as string).toISOString(),
     };
 
     this.enedis.createImportJob(payload).subscribe({
-      next: job => {
+      next: (job) => {
         this.job.set(job);
         this.pollJob(job.id);
       },
-      error: err => {
-        this.message.set(err.error?.error || 'Failed to start import');
+      error: (err) => {
+        this.message.set(err.error?.error || "Failed to start import");
         this.importing.set(false);
-      }
+      },
     });
   }
 
   private pollJob(id: string) {
-    this.enedis.pollJobUntilDone(id).subscribe(job => {
+    this.enedis.pollJobUntilDone(id).subscribe((job) => {
       this.job.set(job);
-      if (job.status === 'Completed' || job.status === 'Failed') {
+      if (job.status === "Completed" || job.status === "Failed") {
         this.importing.set(false);
       }
     });
