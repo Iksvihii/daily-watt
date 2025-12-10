@@ -27,7 +27,7 @@ export class AuthService {
 
   login(credentials: LoginRequest) {
     return this.http
-      .post<string>(`${environment.apiUrl}/api/auth/login`, credentials)
+      .post(`${environment.apiUrl}/api/auth/login`, credentials, { responseType: 'text' })
       .pipe(
         tap((token: string) => this.setToken(token)),
         map(() => void 0)
@@ -36,7 +36,7 @@ export class AuthService {
 
   register(credentials: RegisterRequest) {
     return this.http
-      .post<string>(`${environment.apiUrl}/api/auth/register`, credentials)
+      .post(`${environment.apiUrl}/api/auth/register`, credentials, { responseType: 'text' })
       .pipe(
         tap((token: string) => this.setToken(token)),
         map(() => void 0)

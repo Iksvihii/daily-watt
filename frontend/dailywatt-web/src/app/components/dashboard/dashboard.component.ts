@@ -33,7 +33,7 @@ export class DashboardComponent implements OnInit {
   private enedis = inject(EnedisService);
   private auth = inject(AuthService);
   private fb = inject(FormBuilder);
-  
+
   from = signal(this.defaultFrom());
   to = signal(new Date().toISOString().slice(0, 16));
   granularity = signal<Granularity>("day");
