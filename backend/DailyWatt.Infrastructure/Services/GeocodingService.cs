@@ -65,13 +65,13 @@ public class GeocodingService : IGeocodingService
         return new List<string>();
 
       var url = $"{NominatimApiUrl}/search?q={Uri.EscapeDataString(query)}&format=json&limit=5&dedupe=1";
-      
+
       // Add country code filter if provided
       if (!string.IsNullOrWhiteSpace(countryCode))
       {
         url += $"&countrycodes={countryCode.ToLower()}";
       }
-      
+
       var response = await _httpClient.GetAsync(url, ct);
 
       if (!response.IsSuccessStatusCode)

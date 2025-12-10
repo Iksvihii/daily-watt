@@ -70,9 +70,12 @@ export class AddressMapInputComponent implements OnInit {
     if (!mapContainer) return;
 
     // Fix Leaflet default icon paths
-    const iconRetinaUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png';
-    const iconUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png';
-    const shadowUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png';
+    const iconRetinaUrl =
+      "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png";
+    const iconUrl =
+      "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png";
+    const shadowUrl =
+      "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png";
     const iconDefault = L.icon({
       iconRetinaUrl,
       iconUrl,
@@ -81,7 +84,7 @@ export class AddressMapInputComponent implements OnInit {
       iconAnchor: [12, 41],
       popupAnchor: [1, -34],
       tooltipAnchor: [16, -28],
-      shadowSize: [41, 41]
+      shadowSize: [41, 41],
     });
     L.Marker.prototype.options.icon = iconDefault;
 
@@ -103,7 +106,7 @@ export class AddressMapInputComponent implements OnInit {
         this.initialLatitude,
         this.initialLongitude,
       ]).addTo(this.map);
-      
+
       if (this.initialAddress) {
         this.selectedMarker.bindPopup(this.initialAddress).openPopup();
       }
@@ -181,7 +184,10 @@ export class AddressMapInputComponent implements OnInit {
       this.map.removeLayer(this.selectedMarker);
     }
 
-    const displayAddress = address || this.addressInput() || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+    const displayAddress =
+      address ||
+      this.addressInput() ||
+      `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
 
     // Add new marker with popup
     this.selectedMarker = L.marker([latitude, longitude])

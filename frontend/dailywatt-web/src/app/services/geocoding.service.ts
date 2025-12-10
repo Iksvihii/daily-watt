@@ -19,9 +19,9 @@ export class GeocodingService {
     return this.http.get<string[]>(
       `${environment.apiUrl}/api/enedis/geocode/suggestions`,
       {
-        params: { 
+        params: {
           query,
-          countryCode: 'FR' // Limit to France only
+          countryCode: "FR", // Limit to France only
         },
       }
     );

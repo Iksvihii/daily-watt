@@ -96,8 +96,8 @@ public class EnedisController : ControllerBase
 
     [HttpGet("geocode/suggestions")]
     public async Task<ActionResult<List<string>>> GetAddressSuggestions(
-        [FromQuery] string query, 
-        [FromQuery] string? countryCode = null, 
+        [FromQuery] string query,
+        [FromQuery] string? countryCode = null,
         CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(query) || query.Length < 3)
