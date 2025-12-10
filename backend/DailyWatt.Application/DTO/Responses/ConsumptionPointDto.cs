@@ -1,4 +1,4 @@
-namespace DailyWatt.Application.DTOs;
+namespace DailyWatt.Application.DTO.Responses;
 
 /// <summary>
 /// Generic consumption point DTO for application layer.

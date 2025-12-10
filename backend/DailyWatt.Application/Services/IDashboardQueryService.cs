@@ -1,3 +1,4 @@
+using DailyWatt.Application.DTO.Responses;
 using DailyWatt.Domain.Enums;
 
 namespace DailyWatt.Application.Services;

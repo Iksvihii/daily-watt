@@ -1,7 +1,7 @@
 using AutoMapper;
 using DailyWatt.Api.Extensions;
-using DailyWatt.Api.Models.Enedis;
-using DailyWatt.Application.DTOs;
+using DailyWatt.Application.DTO.Requests;
+using DailyWatt.Application.DTO.Responses;
 using DailyWatt.Domain.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -36,17 +36,17 @@ public class EnedisController : ControllerBase
     }
 
     [HttpGet("status")]
-    public async Task<ActionResult<EnedisStatusResponse>> GetStatus(CancellationToken ct)
+    public async Task<ActionResult<EnedisStatus>> GetStatus(CancellationToken ct)
     {
         var userId = User.GetUserId();
         var cred = await _credentialsService.GetCredentialsAsync(userId, ct);
 
         if (cred == null)
         {
-            return Ok(new EnedisStatusResponse { Configured = false });
+            return Ok(new EnedisStatus { Configured = false });
         }
 
-        return Ok(new EnedisStatusResponse
+        return Ok(new EnedisStatus
         {
             Configured = true,
             MeterNumber = cred.MeterNumber,
@@ -55,7 +55,7 @@ public class EnedisController : ControllerBase
     }
 
     [HttpPost("import")]
-    public async Task<ActionResult<ImportJobResponse>> CreateImportJob([FromBody] CreateImportJobRequest request, CancellationToken ct)
+    public async Task<ActionResult<ImportJobDto>> CreateImportJob([FromBody] CreateImportJobRequest request, CancellationToken ct)
     {
         if (request.ToUtc <= request.FromUtc)
         {
@@ -66,20 +66,11 @@ public class EnedisController : ControllerBase
         var job = await _importJobService.CreateJobAsync(userId, request.FromUtc.ToUniversalTime(), request.ToUtc.ToUniversalTime(), ct);
         var dto = _mapper.Map<ImportJobDto>(job);
 
-        return Ok(new ImportJobResponse
-        {
-            Id = dto.Id,
-            Status = dto.Status,
-            ImportedCount = dto.ImportedCount,
-            CreatedAt = dto.CreatedAt,
-            CompletedAt = dto.CompletedAt,
-            ErrorCode = dto.ErrorCode,
-            ErrorMessage = dto.ErrorMessage
-        });
+        return Ok(dto);
     }
 
     [HttpGet("import/{jobId:guid}")]
-    public async Task<ActionResult<ImportJobResponse>> GetJob(Guid jobId, CancellationToken ct)
+    public async Task<ActionResult<ImportJobDto>> GetJob(Guid jobId, CancellationToken ct)
     {
         var job = await _importJobService.GetAsync(jobId, ct);
         if (job == null || job.UserId != User.GetUserId())
@@ -89,16 +80,7 @@ public class EnedisController : ControllerBase
 
         var dto = _mapper.Map<ImportJobDto>(job);
 
-        return Ok(new ImportJobResponse
-        {
-            Id = dto.Id,
-            Status = dto.Status,
-            ImportedCount = dto.ImportedCount,
-            CreatedAt = dto.CreatedAt,
-            CompletedAt = dto.CompletedAt,
-            ErrorCode = dto.ErrorCode,
-            ErrorMessage = dto.ErrorMessage
-        });
+        return Ok(dto);
     }
 }
 

@@ -1,8 +1,8 @@
 using AutoMapper;
 using DailyWatt.Api.Extensions;
-using DailyWatt.Api.Models.Auth;
 using DailyWatt.Api.Services;
-using DailyWatt.Application.DTOs;
+using DailyWatt.Application.DTO.Requests;
+using DailyWatt.Application.DTO.Responses;
 using DailyWatt.Application.Services;
 using DailyWatt.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -33,31 +33,29 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<ActionResult<Application.DTOs.AuthResponse>> Register(Models.Auth.RegisterRequest request)
+    public async Task<ActionResult<string>> Register(RegisterRequest request)
     {
-        var appRequest = new Application.Services.RegisterRequest(request.Email, request.Username, request.Password);
-        var (success, errorMessage, user) = await _authService.RegisterAsync(appRequest);
+        var (success, errorMessage, user) = await _authService.RegisterAsync(request);
         if (!success)
         {
             return BadRequest(new { error = errorMessage });
         }
 
         var token = _tokenService.CreateToken(user!);
-        return Ok(new Application.DTOs.AuthResponse { Token = token });
+        return Ok(token);
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<Application.DTOs.AuthResponse>> Login(Models.Auth.LoginRequest request)
+    public async Task<ActionResult<string>> Login(LoginRequest request)
     {
-        var appRequest = new Application.Services.LoginRequest(request.Email, request.Password);
-        var (success, user) = await _authService.AuthenticateAsync(appRequest);
+        var (success, user) = await _authService.AuthenticateAsync(request);
         if (!success)
         {
             return Unauthorized();
         }
 
         var token = _tokenService.CreateToken(user!);
-        return Ok(new Application.DTOs.AuthResponse { Token = token });
+        return Ok(token);
     }
 
     [Authorize]
@@ -75,7 +73,7 @@ public class AuthController : ControllerBase
 
     [Authorize]
     [HttpPut("profile")]
-    public async Task<IActionResult> UpdateProfile(Models.Auth.UpdateProfileRequest request)
+    public async Task<IActionResult> UpdateProfile(UpdateProfileRequest request)
     {
         var user = await _userManager.GetUserAsync(User);
         if (user == null)
@@ -83,8 +81,7 @@ public class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        var appRequest = new Application.Services.UpdateProfileRequest(request.Username);
-        var (success, errorMessage) = await _authService.UpdateProfileAsync(user, appRequest);
+        var (success, errorMessage) = await _authService.UpdateProfileAsync(user, request);
         if (!success)
         {
             return BadRequest(new { error = errorMessage });
@@ -95,7 +92,7 @@ public class AuthController : ControllerBase
 
     [Authorize]
     [HttpPost("change-password")]
-    public async Task<IActionResult> ChangePassword(Models.Auth.ChangePasswordRequest request)
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
     {
         var user = await _userManager.GetUserAsync(User);
         if (user == null)
@@ -103,8 +100,7 @@ public class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        var appRequest = new Application.Services.ChangePasswordRequest(request.CurrentPassword, request.NewPassword);
-        var (success, errorMessage) = await _authService.ChangePasswordAsync(user, appRequest);
+        var (success, errorMessage) = await _authService.ChangePasswordAsync(user, request);
         if (!success)
         {
             return BadRequest(new { errors = new[] { errorMessage } });

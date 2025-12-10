@@ -1,29 +1,20 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace DailyWatt.Api.Models.Enedis;
+namespace DailyWatt.Application.DTO.Requests;
 
 /// <summary>
-/// Request to save Enedis user credentials securely.
+/// Request to save Enedis user credentials.
 /// </summary>
-public class SaveEnedisCredentialsRequest
+public record SaveEnedisCredentialsRequest
 {
-  /// <summary>
-  /// Enedis login username.
-  /// </summary>
   [Required(ErrorMessage = "Login is required")]
   [StringLength(255)]
   public required string Login { get; init; }
 
-  /// <summary>
-  /// Enedis account password.
-  /// </summary>
   [Required(ErrorMessage = "Password is required")]
   [StringLength(255)]
   public required string Password { get; init; }
 
-  /// <summary>
-  /// Linky meter number to pull data from.
-  /// </summary>
   [Required(ErrorMessage = "Meter number is required")]
   [StringLength(64)]
   public required string MeterNumber { get; init; }
@@ -32,17 +23,11 @@ public class SaveEnedisCredentialsRequest
 /// <summary>
 /// Request to create an import job for consumption data from Enedis.
 /// </summary>
-public class CreateImportJobRequest
+public record CreateImportJobRequest
 {
-  /// <summary>
-  /// Start date/time (UTC) for the import range.
-  /// </summary>
   [Required(ErrorMessage = "FromUtc is required")]
   public required DateTime FromUtc { get; init; }
 
-  /// <summary>
-  /// End date/time (UTC) for the import range.
-  /// </summary>
   [Required(ErrorMessage = "ToUtc is required")]
   public required DateTime ToUtc { get; init; }
 }

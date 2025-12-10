@@ -1,3 +1,4 @@
+using DailyWatt.Application.DTO.Requests;
 using DailyWatt.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 

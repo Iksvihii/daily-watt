@@ -1,19 +1,9 @@
 using AutoMapper;
-using DailyWatt.Application.DTOs;
+using DailyWatt.Application.DTO.Responses;
 using DailyWatt.Domain.Enums;
 using DailyWatt.Domain.Services;
 
 namespace DailyWatt.Application.Services;
-
-/// <summary>
-/// Response DTO for time series data.
-/// </summary>
-public class TimeSeriesResponse
-{
-  public List<ConsumptionPointDto> Consumption { get; set; } = new();
-  public List<WeatherDayDto>? Weather { get; set; }
-  public SummaryDto Summary { get; set; } = new();
-}
 
 /// <summary>
 /// Service for composing dashboard queries.

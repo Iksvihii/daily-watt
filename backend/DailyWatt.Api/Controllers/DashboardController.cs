@@ -1,5 +1,6 @@
 using DailyWatt.Api.Extensions;
 using DailyWatt.Api.Helpers;
+using DailyWatt.Application.DTO.Responses;
 using DailyWatt.Application.Services;
 using DailyWatt.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;

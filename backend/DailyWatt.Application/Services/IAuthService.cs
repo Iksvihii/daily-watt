@@ -1,14 +1,7 @@
+using DailyWatt.Application.DTO.Requests;
 using DailyWatt.Domain.Entities;
 
 namespace DailyWatt.Application.Services;
-
-/// <summary>
-/// Request models for authentication operations.
-/// </summary>
-public record RegisterRequest(string Email, string Username, string Password);
-public record LoginRequest(string Email, string Password);
-public record UpdateProfileRequest(string Username);
-public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
 /// <summary>
 /// Interface for authentication business logic operations.

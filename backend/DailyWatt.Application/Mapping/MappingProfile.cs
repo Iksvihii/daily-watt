@@ -1,5 +1,5 @@
 using AutoMapper;
-using DailyWatt.Application.DTOs;
+using DailyWatt.Application.DTO.Responses;
 using DailyWatt.Domain.Entities;
 using DailyWatt.Domain.Models;
 

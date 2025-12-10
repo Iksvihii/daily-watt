@@ -1,4 +1,4 @@
-namespace DailyWatt.Application.DTOs;
+namespace DailyWatt.Application.DTO.Responses;
 
 /// <summary>
 /// Generic user profile DTO for application layer.

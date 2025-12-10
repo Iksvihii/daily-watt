@@ -1,4 +1,4 @@
-namespace DailyWatt.Application.DTOs;
+namespace DailyWatt.Application.DTO.Responses;
 
 /// <summary>
 /// Generic weather day DTO for application layer.
