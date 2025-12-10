@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": ".NET Launch API (Debugging)",
+      "name": ".NET Launch API (HTTP)",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "backend: build solution",
@@ -17,7 +17,28 @@
       },
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "http://localhost:5000"
+        "ASPNETCORE_URLS": "http://localhost:5077"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": ".NET Launch API (HTTPS)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "backend: build solution",
+      "program": "${workspaceFolder}/backend/DailyWatt.Api/bin/Debug/net10.0/DailyWatt.Api.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/backend/DailyWatt.Api",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s",
+        "action": "openExternally"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "https://localhost:7224;http://localhost:5077"
       },
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
@@ -52,14 +73,29 @@
     {
       "name": "🔵 API + Worker (Backend)",
       "configurations": [
-        ".NET Launch API (Debugging)",
+        ".NET Launch API (HTTP)",
+        ".NET Launch Worker (Debugging)"
+      ]
+    },
+    {
+      "name": "🔵 API + Worker (Backend, HTTPS)",
+      "configurations": [
+        ".NET Launch API (HTTPS)",
         ".NET Launch Worker (Debugging)"
       ]
     },
     {
       "name": "🟢 Full Stack (API + Worker + Web)",
       "configurations": [
-        ".NET Launch API (Debugging)",
+        ".NET Launch API (HTTP)",
+        ".NET Launch Worker (Debugging)",
+        "Angular (Chrome)"
+      ]
+    },
+    {
+      "name": "🟢 Full Stack (API HTTPS + Worker + Web)",
+      "configurations": [
+        ".NET Launch API (HTTPS)",
         ".NET Launch Worker (Debugging)",
         "Angular (Chrome)"
       ]
