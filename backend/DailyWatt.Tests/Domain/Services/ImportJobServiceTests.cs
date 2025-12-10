@@ -139,13 +139,13 @@ public class EnedisCredentialServiceMockTests
   {
     // Arrange
     var userId = Guid.NewGuid();
-      var credential = new EnedisCredential
-      {
-        UserId = userId,
-        LoginEncrypted = new byte[] { 1, 2, 3 },
-        PasswordEncrypted = new byte[] { 4, 5, 6 },
-        MeterNumber = "12345678901234"
-      };
+    var credential = new EnedisCredential
+    {
+      UserId = userId,
+      LoginEncrypted = new byte[] { 1, 2, 3 },
+      PasswordEncrypted = new byte[] { 4, 5, 6 },
+      MeterNumber = "12345678901234"
+    };
 
     var mockCredentialService = new Mock<IEnedisCredentialService>();
     mockCredentialService
