@@ -7,11 +7,11 @@
     <div class="links">
       <a routerLink="/dashboard">Dashboard</a>
       <a routerLink="/enedis">Enedis</a>
-      @if (!(isLoggedIn$ | async)) {
+      @if (!loggedIn()) {
         <a routerLink="/login">Login</a>
         <a routerLink="/register">Register</a>
       }
-      @if (isLoggedIn$ | async) {
+      @if (loggedIn()) {
         <button class="btn secondary" (click)="logout()">Logout</button>
       }
     </div>

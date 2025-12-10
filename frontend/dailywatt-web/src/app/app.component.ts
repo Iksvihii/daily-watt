@@ -1,18 +1,17 @@
-import { AsyncPipe } from '@angular/common';
-import { Component } from '@angular/core';
-import { RouterLink, RouterOutlet } from '@angular/router';
-import { AuthService } from './services/auth.service';
+import { Component } from "@angular/core";
+import { RouterLink, RouterOutlet } from "@angular/router";
+import { AuthService } from "./services/auth.service";
 
 @Component({
-  selector: 'app-root',
+  selector: "app-root",
   standalone: true,
-  imports: [RouterOutlet, RouterLink, AsyncPipe],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.less'
+  imports: [RouterOutlet, RouterLink],
+  templateUrl: "./app.component.html",
+  styleUrl: "./app.component.less",
 })
 export class AppComponent {
-  title = 'DailyWatt';
-  isLoggedIn$ = this.authService.isLoggedIn$;
+  title = "DailyWatt";
+  loggedIn = this.authService.isLoggedIn;
 
   constructor(private authService: AuthService) {}
 

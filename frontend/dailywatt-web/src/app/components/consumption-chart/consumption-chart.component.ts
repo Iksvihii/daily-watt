@@ -1,79 +1,93 @@
-import { Component, Input, OnChanges } from '@angular/core';
-import { ChartConfiguration, ChartOptions } from 'chart.js';
-import 'chart.js/auto';
-import { BaseChartDirective } from 'ng2-charts';
-import { ConsumptionPoint, WeatherDay } from '../../models/dashboard.models';
+import { CommonModule } from "@angular/common";
+import { Component, Input, OnChanges } from "@angular/core";
+import { ConsumptionPoint, WeatherDay } from "../../models/dashboard.models";
 
 @Component({
-  selector: 'app-consumption-chart',
+  selector: "app-consumption-chart",
   standalone: true,
-  imports: [BaseChartDirective],
-  templateUrl: './consumption-chart.component.html',
-  styleUrl: './consumption-chart.component.less'
+  imports: [CommonModule],
+  templateUrl: "./consumption-chart.component.html",
+  styleUrl: "./consumption-chart.component.less",
 })
 export class ConsumptionChartComponent implements OnChanges {
   @Input() consumption: ConsumptionPoint[] = [];
   @Input() weather?: WeatherDay[];
 
-  lineChartData: ChartConfiguration<'line'>['data'] = { datasets: [], labels: [] };
-  lineChartOptions: ChartOptions<'line'> = {
-    responsive: true,
-    plugins: {
-      legend: {
-        labels: { color: '#f4f4f6' }
-      }
-    },
-    scales: {
-      x: { ticks: { color: '#9fb3c8' } },
-      y: {
-        position: 'left',
-        title: { display: true, text: 'kWh', color: '#9fb3c8' },
-        ticks: { color: '#9fb3c8' }
-      },
-      y1: {
-        position: 'right',
-        grid: { drawOnChartArea: false },
-        title: { display: true, text: 'Temperature (°C)', color: '#ffb703' },
-        ticks: { color: '#ffb703' }
-      }
-    }
-  };
+  width = 0;
+  height = 220;
+  consumptionPoints = "";
+  temperaturePoints = "";
+  minLabel = "";
+  maxLabel = "";
 
   ngOnChanges(): void {
-    const labels = this.consumption.map(c => new Date(c.timestampUtc).toLocaleString());
-    const consumptionValues = this.consumption.map(c => c.kwh);
+    if (!this.consumption?.length) {
+      this.reset();
+      return;
+    }
 
-    const datasets: ChartConfiguration<'line'>['data']['datasets'] = [
-      {
-        data: consumptionValues,
-        label: 'Consumption',
-        yAxisID: 'y',
-        tension: 0.3,
-        fill: false,
-        borderColor: '#3ad1c5',
-        pointRadius: 0
-      }
-    ];
+    const consumptionValues = this.consumption.map((c) => c.kwh);
+    const min = Math.min(...consumptionValues);
+    const max = Math.max(...consumptionValues);
+    this.minLabel = `${min.toFixed(1)} kWh`;
+    this.maxLabel = `${max.toFixed(1)} kWh`;
+
+    const width = Math.max(this.consumption.length - 1, 1) * 48;
+    this.width = width;
+
+    const scale = (value: number, vmin: number, vmax: number) => {
+      if (vmax === vmin) return 0.5;
+      return (value - vmin) / (vmax - vmin);
+    };
+
+    const yFor = (value: number) => {
+      const norm = scale(value, min, max);
+      return this.height - norm * this.height;
+    };
+
+    const xFor = (index: number) => {
+      const step = width / Math.max(this.consumption.length - 1, 1);
+      return index * step;
+    };
+
+    this.consumptionPoints = this.consumption
+      .map((c, idx) => `${xFor(idx)},${yFor(c.kwh)}`)
+      .join(" ");
 
     if (this.weather && this.weather.length) {
-      const weatherMap = new Map(this.weather.map(w => [w.date, w.tempAvg]));
-      const temps = this.consumption.map(c => {
+      const weatherMap = new Map(this.weather.map((w) => [w.date, w.tempAvg]));
+      const temps = this.consumption.map((c) => {
         const date = new Date(c.timestampUtc).toISOString().substring(0, 10);
         return weatherMap.get(date);
       });
 
-      datasets.push({
-        data: temps as number[],
-        label: 'Temperature',
-        yAxisID: 'y1',
-        tension: 0.2,
-        fill: false,
-        borderColor: '#ffb703',
-        borderDash: [5, 4],
-        pointRadius: 0
-      });
+      const tempValues = temps.filter((t) => t !== undefined) as number[];
+      if (tempValues.length) {
+        const tMin = Math.min(...tempValues);
+        const tMax = Math.max(...tempValues);
+        const yForTemp = (value: number) => {
+          const norm = scale(value, tMin, tMax);
+          return this.height - norm * this.height;
+        };
+        this.temperaturePoints = temps
+          .map((t, idx) =>
+            t === undefined ? "" : `${xFor(idx)},${yForTemp(t)}`
+          )
+          .filter((p) => p)
+          .join(" ");
+      } else {
+        this.temperaturePoints = "";
+      }
+    } else {
+      this.temperaturePoints = "";
     }
+  }
 
-    this.lineChartData = { labels, datasets };
+  private reset() {
+    this.width = 0;
+    this.consumptionPoints = "";
+    this.temperaturePoints = "";
+    this.minLabel = "";
+    this.maxLabel = "";
   }
 }

@@ -4,16 +4,16 @@
     <p class="status">Stored securely with data protection.</p>
     <form [formGroup]="credentialsForm" (ngSubmit)="saveCredentials()">
       <div>
-        <label>Login</label>
-        <input type="text" formControlName="login" placeholder="Enedis login">
+        <label for="enedisLogin">Login</label>
+        <input id="enedisLogin" type="text" formControlName="login" placeholder="Enedis login">
       </div>
       <div>
-        <label>Password</label>
-        <input type="password" formControlName="password" placeholder="Enedis password">
+        <label for="enedisPassword">Password</label>
+        <input id="enedisPassword" type="password" formControlName="password" placeholder="Enedis password">
       </div>
       <div>
-        <label>Linky meter number</label>
-        <input type="text" formControlName="meterNumber" placeholder="Meter number">
+        <label for="enedisMeter">Linky meter number</label>
+        <input id="enedisMeter" type="text" formControlName="meterNumber" placeholder="Meter number">
       </div>
       <button class="btn" type="submit" [disabled]="saving()">Save</button>
     </form>
@@ -23,12 +23,12 @@
     <h3>Import consumption</h3>
     <form [formGroup]="importForm" (ngSubmit)="startImport()">
       <div>
-        <label>From</label>
-        <input type="datetime-local" formControlName="from">
+        <label for="importFrom">From</label>
+        <input id="importFrom" type="datetime-local" formControlName="from">
       </div>
       <div>
-        <label>To</label>
-        <input type="datetime-local" formControlName="to">
+        <label for="importTo">To</label>
+        <input id="importTo" type="datetime-local" formControlName="to">
       </div>
       <button class="btn" type="submit" [disabled]="importing()">Start import</button>
     </form>

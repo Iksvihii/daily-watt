@@ -17,16 +17,16 @@
     <h3>Dashboard</h3>
     <form class="grid two" (ngSubmit)="load()">
       <div>
-        <label>From</label>
-        <input type="datetime-local" [ngModel]="from()" (ngModelChange)="from.set($event)" name="from">
+        <label for="fromDate">From</label>
+        <input id="fromDate" type="datetime-local" [ngModel]="from()" (ngModelChange)="from.set($event)" name="from">
       </div>
       <div>
-        <label>To</label>
-        <input type="datetime-local" [ngModel]="to()" (ngModelChange)="to.set($event)" name="to">
+        <label for="toDate">To</label>
+        <input id="toDate" type="datetime-local" [ngModel]="to()" (ngModelChange)="to.set($event)" name="to">
       </div>
       <div>
-        <label>Granularity</label>
-        <select [ngModel]="granularity()" (ngModelChange)="granularity.set($event)" name="granularity">
+        <label for="granularity">Granularity</label>
+        <select id="granularity" [ngModel]="granularity()" (ngModelChange)="granularity.set($event)" name="granularity">
           <option value="30min">30 minutes</option>
           <option value="hour">Hour</option>
           <option value="day">Day</option>
@@ -80,24 +80,24 @@
   }
   <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="grid two">
     <div>
-      <label>Email</label>
-      <input type="text" [value]="profile()?.email" disabled>
+      <label for="profileEmail">Email</label>
+      <input id="profileEmail" type="text" [value]="profile()?.email" disabled>
     </div>
     <div>
-      <label>Username</label>
-      <input type="text" formControlName="username" placeholder="Votre pseudo">
+      <label for="profileUsername">Username</label>
+      <input id="profileUsername" type="text" formControlName="username" placeholder="Votre pseudo">
     </div>
     <button class="btn" type="submit" [disabled]="profileSaving()">Mettre à jour</button>
   </form>
 
   <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="grid two" style="margin-top:12px;">
     <div>
-      <label>Mot de passe actuel</label>
-      <input type="password" formControlName="currentPassword" placeholder="••••••">
+      <label for="currentPassword">Mot de passe actuel</label>
+      <input id="currentPassword" type="password" formControlName="currentPassword" placeholder="••••••">
     </div>
     <div>
-      <label>Nouveau mot de passe</label>
-      <input type="password" formControlName="newPassword" placeholder="Au moins 6 caractères">
+      <label for="newPassword">Nouveau mot de passe</label>
+      <input id="newPassword" type="password" formControlName="newPassword" placeholder="Au moins 6 caractères">
     </div>
     <button class="btn" type="submit" [disabled]="passwordSaving()">Changer le mot de passe</button>
   </form>

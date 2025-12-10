@@ -1,3 +1,56 @@
-canvas {
-  max-height: 460px;
+.chart-shell {
+  width: 100%;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+svg {
+  width: 100%;
+  height: 240px;
+}
+
+.line {
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.line.consumption {
+  stroke: #3ad1c5;
+}
+
+.line.temperature {
+  stroke: #ffb703;
+  stroke-dasharray: 6 4;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.dot.consumption {
+  background: #3ad1c5;
+}
+
+.dot.temperature {
+  background: #ffb703;
+}
+
+.chart-shell.empty {
+  text-align: center;
+  color: #94a3b8;
+  padding: 32px;
 }

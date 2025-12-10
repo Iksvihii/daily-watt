@@ -13,7 +13,7 @@ import { ConsumptionChartComponent } from "../consumption-chart/consumption-char
 import { EnedisService } from "../../services/enedis.service";
 import { EnedisStatus } from "../../models/enedis.models";
 import { AuthService } from "../../services/auth.service";
-import { UserProfile } from "../../models/auth.models";
+import { ChangePasswordRequest, UserProfile } from "../../models/auth.models";
 
 @Component({
   selector: "app-dashboard",
@@ -156,7 +156,8 @@ export class DashboardComponent implements OnInit {
     if (this.passwordForm.invalid) return;
     this.passwordSaving.set(true);
     this.profileMessage.set(undefined);
-    this.auth.changePassword(this.passwordForm.value as any).subscribe({
+    const payload = this.passwordForm.value as ChangePasswordRequest;
+    this.auth.changePassword(payload).subscribe({
       next: () => {
         this.passwordSaving.set(false);
         this.profileMessage.set("Password updated");
