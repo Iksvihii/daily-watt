@@ -24,7 +24,8 @@ The `DtoMapper` utility class centralizes entity-to-DTO conversions to reduce du
 ### Service Layer
 Business logic is organized into service interfaces and implementations:
 - `IConsumptionService` - Consumption data queries and aggregation
-- `IWeatherService` - Weather data management
+- `IWeatherProviderService` - Real-time weather data from Open-Meteo API
+- `IGeocodingService` - Address geocoding via Nominatim API
 - `IEnedisCredentialService` - Secure credential storage
 - `IImportJobService` - Import job lifecycle
 - `IJwtTokenService` - JWT token generation and validation

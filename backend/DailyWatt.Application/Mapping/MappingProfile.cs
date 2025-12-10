@@ -24,8 +24,6 @@ public class MappingProfile : Profile
 
     CreateMap<ConsumptionSummary, SummaryDto>();
 
-    CreateMap<WeatherDay, WeatherDayDto>();
-
     CreateMap<WeatherData, WeatherDayDto>();
 
     // Enedis mappings

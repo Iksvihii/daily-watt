@@ -32,11 +32,11 @@ The Daily Watt application follows a layered architecture with clean separation 
 │         Service Implementations │ Data Access │ Settings         │
 ├─────────────────────────────────────────────────────────────────┤
 │ • ConsumptionService      │ IConsumptionService                │
-│ • WeatherService          │ IWeatherService                    │
+│ • OpenMeteoWeatherService │ IWeatherProviderService            │
+│ • GeocodingService        │ IGeocodingService                  │
 │ • EnedisCredentialService │ IEnedisCredentialService          │
 │ • ImportJobService        │ IImportJobService                 │
 │ • SecretProtector         │ ISecretProtector                  │
-│ • WeatherParser           │ IWeatherParser                    │
 └─────────────────────────────────┬───────────────────────────────┘
                                   │
                     Entity Framework Core
@@ -46,7 +46,8 @@ The Daily Watt application follows a layered architecture with clean separation 
 │  Service Interfaces │ Entities │ Value Objects │ Enums          │
 ├─────────────────────────────────────────────────────────────────┤
 │ • IConsumptionService                                            │
-│ • IWeatherService                                                │
+│ • IWeatherProviderService                                        │
+│ • IGeocodingService                                              │
 │ • IEnedisCredentialService                                       │
 │ • IImportJobService                                              │
 │ • IEnedisScraper                                                 │
@@ -54,9 +55,8 @@ The Daily Watt application follows a layered architecture with clean separation 
 ├─────────────────────────────────────────────────────────────────┤
 │ Entities:                                                        │
 │ • DailyWattUser      (ASP.NET Identity user)                    │
-│ • EnedisCredential   (User's Enedis credentials)                │
+│ • EnedisCredential   (User's Enedis credentials + location)      │
 │ • Measurement        (Consumption data points)                  │
-│ • WeatherDay         (Daily weather data)                       │
 │ • ImportJob          (Data import job tracking)                 │
 ├─────────────────────────────────────────────────────────────────┤
 │ Value Objects:                                                   │
@@ -120,7 +120,7 @@ DashboardController (Validate parameters)
 DashboardQueryService (Orchestrate queries)
     ├─→ IConsumptionService.GetAggregatedAsync()
     ├─→ IConsumptionService.GetSummaryAsync()
-    └─→ IWeatherService.GetRangeAsync() (if withWeather=true)
+    └─→ IWeatherProviderService.GetHistoricalAsync() (if withWeather=true)
     ↓
 ConsumptionService (Infrastructure)
     ↓
@@ -171,20 +171,7 @@ Measurements
 ├── UserId (GUID, FK → Users)
 ├── TimestampUtc (DateTime)
 ├── Kwh (double)
-├── Granularity (enum: hour, day, week, month, year)
-└── Timestamps (Created, Modified)
-```
-
-### WeatherDays Table
-```
-WeatherDays
-├── Id (GUID, PK)
-├── UserId (GUID, FK → Users)
-├── Date (DateOnly)
-├── TempAvg (double)
-├── TempMin (double)
-├── TempMax (double)
-├── Source (string)
+├── Granularity (enum: 30min, hour, day, month, year)
 └── Timestamps (Created, Modified)
 ```
 
@@ -196,6 +183,9 @@ EnedisCredentials
 ├── EncryptedLogin (string)
 ├── EncryptedPassword (string)
 ├── MeterNumber (string)
+├── Address (string)
+├── Latitude (double)
+├── Longitude (double)
 └── Timestamps (Created, Modified, Updated)
 ```
 

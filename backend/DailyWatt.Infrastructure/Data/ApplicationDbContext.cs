@@ -15,7 +15,6 @@ public class ApplicationDbContext : IdentityDbContext<DailyWattUser, IdentityRol
 
     public DbSet<EnedisCredential> EnedisCredentials => Set<EnedisCredential>();
     public DbSet<Measurement> Measurements => Set<Measurement>();
-    public DbSet<WeatherDay> WeatherDays => Set<WeatherDay>();
     public DbSet<ImportJob> ImportJobs => Set<ImportJob>();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -48,17 +47,6 @@ public class ApplicationDbContext : IdentityDbContext<DailyWattUser, IdentityRol
         var dateConverter = new ValueConverter<DateOnly, DateTime>(
             d => d.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc),
             d => DateOnly.FromDateTime(DateTime.SpecifyKind(d, DateTimeKind.Utc)));
-
-        builder.Entity<WeatherDay>(b =>
-        {
-            b.HasIndex(x => new { x.UserId, x.Date });
-            b.Property(x => x.Date).HasConversion(dateConverter);
-            b.Property(x => x.Source).HasMaxLength(64);
-            b.HasOne(x => x.User)
-                .WithMany(u => u.WeatherDays)
-                .HasForeignKey(x => x.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
 
         builder.Entity<ImportJob>(b =>
         {

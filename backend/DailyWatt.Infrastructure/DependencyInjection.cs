@@ -47,12 +47,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<ISecretProtector, Services.SecretProtector>();
-        services.AddScoped<IWeatherParser, Services.WeatherParser>();
         services.AddScoped<IEnedisCredentialService, Services.EnedisCredentialService>();
-        services.AddScoped<IImportJobService, Services.ImportJobService>();
-        services.AddScoped<IConsumptionService, Services.ConsumptionService>();
-        services.AddScoped<IWeatherService, Services.WeatherService>();
-        services.AddScoped<IEnedisScraper, Services.StubEnedisScraper>();
 
         return services;
     }

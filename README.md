@@ -9,8 +9,8 @@ A comprehensive energy consumption tracking application built with .NET and Angu
 #### Architecture (Clean Architecture with 4 Layers)
 
 - **DailyWatt.Domain** - Domain layer with business logic interfaces and entities
-  - Entities: `DailyWattUser`, `EnedisCredential`, `ImportJob`, `Measurement`, `WeatherDay`
-  - Service interfaces: `IConsumptionService`, `IWeatherService`, `IEnedisCredentialService`, `IImportJobService`, `IEnedisScraper`, `ISecretProtector`
+  - Entities: `DailyWattUser`, `EnedisCredential`, `ImportJob`, `Measurement`
+  - Service interfaces: `IConsumptionService`, `IEnedisCredentialService`, `IImportJobService`, `IEnedisScraper`, `ISecretProtector`, `IGeocodingService`, `IWeatherProviderService`
   - Enums: `Granularity`, `ImportJobStatus`
   - Value objects: `AggregatedConsumptionPoint`, `ConsumptionSummary`
 
@@ -22,7 +22,7 @@ A comprehensive energy consumption tracking application built with .NET and Angu
 
 - **DailyWatt.Application** - Application business logic layer (NEW)
   - Application services: `AuthService`, `DashboardQueryService`
-  - DTOs: `ConsumptionPointDto`, `SummaryDto`, `WeatherDayDto`, `UserProfileDto`, `ImportJobDto`, `AuthResponse`
+  - DTOs: `ConsumptionPointDto`, `SummaryDto`, `WeatherDayDto`, `UserProfileDto`, `ImportJobDto`
   - AutoMapper profiles for entity-to-DTO mapping
   - Request/Response models as records
 

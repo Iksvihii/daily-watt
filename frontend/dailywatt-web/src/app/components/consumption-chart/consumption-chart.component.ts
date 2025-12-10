@@ -106,7 +106,7 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
     return { timestamps, consumptionValues, temperatureValues, labels };
   }
 
-  onTimeScaleChange(event: Event): void {
+  onGranularityChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
     this.granularity.set(target.value as Granularity);
     this.startRangePercent = 0;
