@@ -2,6 +2,188 @@
   margin-top: 0;
 }
 
+.top-section {
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+.status-card {
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 20px;
+  flex: 0 0 auto;
+  min-width: 320px;
+  max-width: 500px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 768px) {
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: auto;
+  }
+}
+
+.status-message {
+  color: #64748b;
+  font-size: 13px;
+  padding: 12px;
+  background: rgba(58, 209, 197, 0.05);
+  border-left: 3px solid #3ad1c5;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  margin: 0 0 16px 0;
+}
+
+.status-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  text-align: center;
+
+  &.unconfigured {
+    .status-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .status-text {
+      .status-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+        margin: 0 0 6px 0;
+      }
+
+      .status-description {
+        font-size: 13px;
+        color: #94a3b8;
+        margin: 0;
+        line-height: 1.4;
+      }
+    }
+  }
+
+  &.configured {
+    align-items: stretch;
+    text-align: left;
+
+    .status-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+
+      @media (max-width: 480px) {
+        grid-template-columns: 1fr;
+      }
+
+      .info-item {
+        display: flex;
+        flex-direction: column;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+
+        .info-label {
+          font-size: 11px;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 4px;
+        }
+
+        .info-value {
+          font-size: 14px;
+          font-weight: 600;
+          color: #f1f5f9;
+          word-break: break-word;
+        }
+      }
+    }
+  }
+}
+
+.btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+
+  &.btn-primary {
+    background: #3ad1c5;
+    color: #0f172a;
+
+    &:hover:not(:disabled) {
+      background: #2ab8ac;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(58, 209, 197, 0.3);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &.btn-secondary {
+    background: rgba(58, 209, 197, 0.1);
+    color: #3ad1c5;
+    border: 1px solid #3ad1c5;
+
+    &:hover {
+      background: rgba(58, 209, 197, 0.2);
+      transform: translateY(-1px);
+    }
+  }
+}
+
+.dashboard-form {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 768px) {
+    flex: 1 1 100%;
+  }
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 16px;
+
+  h3 {
+    margin: 0;
+    flex: 1;
+  }
+
+  .btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -13,4 +195,151 @@
 
 .chart-wrapper {
   min-height: 400px;
+}
+
+// Form layout improvements
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+
+  > .form-group {
+    flex: 1 1 240px;
+    min-width: 200px;
+
+    @media (max-width: 480px) {
+      flex: 1 1 100%;
+      min-width: auto;
+    }
+  }
+
+  > .checkbox-wrapper {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 24px;
+
+    @media (max-width: 480px) {
+      flex: 1 1 100%;
+      padding-top: 0;
+      padding-bottom: 12px;
+    }
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+
+  label {
+    display: block;
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  input, select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(58, 209, 197, 0.1);
+    }
+  }
+}
+
+.checkbox-group {
+  label {
+    margin-bottom: 0;
+    color: var(--text);
+    font-size: 14px;
+    margin: 0;
+    cursor: pointer;
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+
+  .btn {
+    margin-left: auto;
+  }
+
+  @media (max-width: 480px) {
+    justify-content: stretch;
+
+    .btn {
+      margin-left: 0;
+      flex: 1;
+    }
+  }
+}
+
+// Custom select dropdown
+.custom-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%233ad1c5' d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding-right: 36px;
+  
+  option {
+    background: #142c44;
+    color: #f4f4f6;
+    padding: 10px;
+  }
+}
+
+// Custom checkbox styling
+.custom-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #cbd5e1;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    border-color: #94a3b8;
+    background-color: #f8fafc;
+  }
+
+  &:checked {
+    background-color: #3ad1c5;
+    border-color: #3ad1c5;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 14px;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(58, 209, 197, 0.1);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }

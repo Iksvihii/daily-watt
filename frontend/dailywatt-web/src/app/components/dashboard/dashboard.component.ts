@@ -1,19 +1,12 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit, inject, signal } from "@angular/core";
-import {
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators,
-  FormsModule,
-} from "@angular/forms";
+import { FormBuilder, ReactiveFormsModule, FormsModule } from "@angular/forms";
 import { RouterLink } from "@angular/router";
 import { DashboardService } from "../../services/dashboard.service";
 import { Granularity, TimeSeriesResponse } from "../../models/dashboard.models";
 import { ConsumptionChartComponent } from "../consumption-chart/consumption-chart.component";
 import { EnedisService } from "../../services/enedis.service";
 import { EnedisStatus } from "../../models/enedis.models";
-import { AuthService } from "../../services/auth.service";
-import { ChangePasswordRequest, UserProfile } from "../../models/auth.models";
 
 @Component({
   selector: "app-dashboard",
@@ -31,7 +24,6 @@ import { ChangePasswordRequest, UserProfile } from "../../models/auth.models";
 export class DashboardComponent implements OnInit {
   private dashboard = inject(DashboardService);
   private enedis = inject(EnedisService);
-  private auth = inject(AuthService);
   private fb = inject(FormBuilder);
 
   from = signal(this.getStoredFrom() || this.defaultFrom());
@@ -46,25 +38,10 @@ export class DashboardComponent implements OnInit {
   syncing = signal(false);
   statusMessage = signal<string | undefined>(undefined);
 
-  profile = signal<UserProfile | null>(null);
-  profileMessage = signal<string | undefined>(undefined);
-  profileSaving = signal(false);
-  passwordSaving = signal(false);
-
-  profileForm = this.fb.group({
-    username: ["", [Validators.required, Validators.minLength(2)]],
-  });
-
-  passwordForm = this.fb.group({
-    currentPassword: ["", Validators.required],
-    newPassword: ["", [Validators.required, Validators.minLength(6)]],
-  });
-
   private readonly SESSION_STORAGE_PREFIX = "dashboard_";
 
   ngOnInit(): void {
     this.loadStatus();
-    this.loadProfile();
   }
 
   private getStoredFrom(): string | null {
@@ -153,59 +130,6 @@ export class DashboardComponent implements OnInit {
       error: (err) => {
         this.statusMessage.set(err.error?.error || "Failed to start sync");
         this.syncing.set(false);
-      },
-    });
-  }
-
-  loadProfile() {
-    this.auth.getProfile().subscribe({
-      next: (profile) => {
-        this.profile.set(profile);
-        this.profileForm.patchValue({ username: profile.username });
-      },
-      error: () => this.profileMessage.set("Unable to load profile"),
-    });
-  }
-
-  saveProfile() {
-    if (this.profileForm.invalid) return;
-    this.profileSaving.set(true);
-    this.profileMessage.set(undefined);
-    this.auth
-      .updateProfile(this.profileForm.value as { username: string })
-      .subscribe({
-        next: () => {
-          this.profileSaving.set(false);
-          this.profileMessage.set("Profile updated");
-          this.loadProfile();
-        },
-        error: (err) => {
-          this.profileSaving.set(false);
-          this.profileMessage.set(
-            err.error?.errors?.join(", ") || err.error?.error || "Update failed"
-          );
-        },
-      });
-  }
-
-  changePassword() {
-    if (this.passwordForm.invalid) return;
-    this.passwordSaving.set(true);
-    this.profileMessage.set(undefined);
-    const payload = this.passwordForm.value as ChangePasswordRequest;
-    this.auth.changePassword(payload).subscribe({
-      next: () => {
-        this.passwordSaving.set(false);
-        this.profileMessage.set("Password updated");
-        this.passwordForm.reset();
-      },
-      error: (err) => {
-        this.passwordSaving.set(false);
-        this.profileMessage.set(
-          err.error?.errors?.join(", ") ||
-            err.error?.error ||
-            "Password update failed"
-        );
       },
     });
   }

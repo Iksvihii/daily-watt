@@ -8,6 +8,7 @@
       @if (loggedIn()) {
         <a routerLink="/dashboard">Dashboard</a>
         <a routerLink="/enedis">Enedis</a>
+        <a routerLink="/profile">Profile</a>
         <button class="btn secondary" (click)="logout()">Logout</button>
       }
       @if (!loggedIn()) {

@@ -3,6 +3,7 @@ import { LoginComponent } from "./components/login/login.component";
 import { RegisterComponent } from "./components/register/register.component";
 import { EnedisSettingsComponent } from "./components/enedis-settings/enedis-settings.component";
 import { DashboardComponent } from "./components/dashboard/dashboard.component";
+import { UserProfileComponent } from "./components/user-profile/user-profile.component";
 import { authGuard, guestGuard } from "./guards/auth.guard";
 
 export const routes: Routes = [
@@ -16,6 +17,11 @@ export const routes: Routes = [
   {
     path: "dashboard",
     component: DashboardComponent,
+    canActivate: [authGuard],
+  },
+  {
+    path: "profile",
+    component: UserProfileComponent,
     canActivate: [authGuard],
   },
   { path: "", pathMatch: "full", redirectTo: "login" },
