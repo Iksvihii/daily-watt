@@ -10,7 +10,8 @@ namespace DailyWatt.Infrastructure.Services;
 public class OpenMeteoWeatherService : IWeatherProviderService
 {
   private readonly HttpClient _httpClient;
-  private const string ApiUrl = "https://archive-api.open-meteo.com/v1/archive";
+  // Using the public API endpoint - no authentication needed, 10,000 requests/day free
+  private const string ApiUrl = "https://api.open-meteo.com/v1/forecast";
 
   public OpenMeteoWeatherService(HttpClient httpClient)
   {
@@ -26,9 +27,15 @@ public class OpenMeteoWeatherService : IWeatherProviderService
   {
     try
     {
+      // Format coordinates using invariant culture to ensure decimal points (not commas)
+      var latStr = latitude.ToString("G", System.Globalization.CultureInfo.InvariantCulture);
+      var lngStr = longitude.ToString("G", System.Globalization.CultureInfo.InvariantCulture);
+
+      // Use the public forecast API with date range for historical data
+      // This API is free with no authentication needed
       var url = $"{ApiUrl}?" +
-          $"latitude={latitude}&" +
-          $"longitude={longitude}&" +
+          $"latitude={latStr}&" +
+          $"longitude={lngStr}&" +
           $"start_date={fromDate:yyyy-MM-dd}&" +
           $"end_date={toDate:yyyy-MM-dd}&" +
           $"daily=temperature_2m_max,temperature_2m_min,temperature_2m_mean&" +

@@ -39,11 +39,15 @@ public static class DependencyInjection
         services.AddHttpClient<IGeocodingService, Services.GeocodingService>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(10);
+            // Nominatim API requires a User-Agent header with contact information
+            client.DefaultRequestHeaders.Add("User-Agent", "DailyWatt/1.0 (Energy Consumption App)");
         });
 
         services.AddHttpClient<IWeatherProviderService, Services.OpenMeteoWeatherService>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(10);
+            // Open-Meteo requires a User-Agent header
+            client.DefaultRequestHeaders.Add("User-Agent", "DailyWatt/1.0 (Energy Consumption App)");
         });
 
         services.AddScoped<ISecretProtector, Services.SecretProtector>();
