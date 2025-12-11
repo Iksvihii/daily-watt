@@ -70,31 +70,4 @@
       <p class="status" style="margin-top: 1rem;">{{ message() }}</p>
     }
   </div>
-
-  <div class="card">
-    <h3>Import consumption</h3>
-    <form [formGroup]="importForm" (ngSubmit)="startImport()">
-      <div>
-        <label for="importFrom">From</label>
-        <input id="importFrom" type="datetime-local" formControlName="from">
-      </div>
-      <div>
-        <label for="importTo">To</label>
-        <input id="importTo" type="datetime-local" formControlName="to">
-      </div>
-      <button class="btn" type="submit" [disabled]="importing()">Start import</button>
-    </form>
-
-    @if (job()) {
-      <div style="margin-top: 12px;">
-        <div class="status">Job: {{ job()!.id }}</div>
-        <div class="status" [class.positive]="job()!.status === 'Completed'" [class.negative]="job()!.status === 'Failed'">
-          Status: {{ job()!.status }} • Imported: {{ job()!.importedCount }}
-        </div>
-        @if (job()!.errorMessage) {
-          <div class="status negative">{{ job()!.errorMessage }}</div>
-        }
-      </div>
-    }
-  </div>
 </div>

@@ -3,7 +3,6 @@ import { CommonModule } from "@angular/common";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { EnedisService } from "../../services/enedis.service";
 import {
-  ImportJob,
   SaveCredentialsRequest,
   CredentialsResponse,
 } from "../../models/enedis.models";
@@ -21,9 +20,7 @@ export class EnedisSettingsComponent implements OnInit {
   private enedis = inject(EnedisService);
 
   message = signal<string | undefined>(undefined);
-  job = signal<ImportJob | undefined>(undefined);
   saving = signal(false);
-  importing = signal(false);
   loading = signal(true);
   showPassword = signal(false);
   isInitialLoad = signal(true);
@@ -45,19 +42,8 @@ export class EnedisSettingsComponent implements OnInit {
     longitude: [{ value: null as number | null, disabled: true }],
   });
 
-  importForm = this.fb.group({
-    from: [this.defaultFrom(), Validators.required],
-    to: [new Date().toISOString().slice(0, 16), Validators.required],
-  });
-
   ngOnInit(): void {
     this.loadCredentials();
-  }
-
-  private defaultFrom(): string {
-    const date = new Date();
-    date.setDate(date.getDate() - 7);
-    return date.toISOString().slice(0, 16);
   }
 
   private loadCredentials(): void {
@@ -122,37 +108,6 @@ export class EnedisSettingsComponent implements OnInit {
         this.message.set(err.error?.error || "Failed to save credentials");
         this.saving.set(false);
       },
-    });
-  }
-
-  startImport() {
-    if (this.importForm.invalid) {
-      return;
-    }
-    this.importing.set(true);
-    const payload = {
-      fromUtc: new Date(this.importForm.value.from as string).toISOString(),
-      toUtc: new Date(this.importForm.value.to as string).toISOString(),
-    };
-
-    this.enedis.createImportJob(payload).subscribe({
-      next: (job: ImportJob) => {
-        this.job.set(job);
-        this.pollJob(job.id);
-      },
-      error: (err: { error?: { error?: string } }) => {
-        this.message.set(err.error?.error || "Failed to start import");
-        this.importing.set(false);
-      },
-    });
-  }
-
-  private pollJob(id: string) {
-    this.enedis.pollJobUntilDone(id).subscribe((job: ImportJob) => {
-      this.job.set(job);
-      if (job.status === "Completed" || job.status === "Failed") {
-        this.importing.set(false);
-      }
     });
   }
 }
