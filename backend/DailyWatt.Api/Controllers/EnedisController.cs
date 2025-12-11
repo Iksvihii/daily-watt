@@ -46,6 +46,28 @@ public class EnedisController : ControllerBase
         return Ok();
     }
 
+    [HttpGet("credentials")]
+    public async Task<ActionResult<dynamic>> GetCredentials(CancellationToken ct)
+    {
+        var userId = User.GetUserId();
+        var cred = await _credentialsService.GetCredentialsAsync(userId, ct);
+
+        if (cred == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(new
+        {
+            login = cred.LoginEncrypted != null ? System.Text.Encoding.UTF8.GetString(cred.LoginEncrypted) : "",
+            meterNumber = cred.MeterNumber,
+            address = cred.Address,
+            latitude = cred.Latitude,
+            longitude = cred.Longitude,
+            updatedAt = cred.UpdatedAt
+        });
+    }
+
     [HttpGet("status")]
     public async Task<ActionResult<EnedisStatusResponse>> GetStatus(CancellationToken ct)
     {

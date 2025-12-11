@@ -7,6 +7,15 @@ export interface SaveCredentialsRequest {
   longitude?: number;
 }
 
+export interface CredentialsResponse {
+  login: string;
+  meterNumber: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  updatedAt: string;
+}
+
 export interface CreateImportJobRequest {
   fromUtc: string;
   toUtc: string;

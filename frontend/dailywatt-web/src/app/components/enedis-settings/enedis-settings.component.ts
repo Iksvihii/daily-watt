@@ -1,4 +1,4 @@
-import { Component, inject, signal } from "@angular/core";
+import { Component, inject, signal, OnInit } from \"@angular/core\";
 import { CommonModule } from "@angular/common";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { EnedisService } from "../../services/enedis.service";
@@ -12,7 +12,7 @@ import { AddressMapInputComponent } from "../address-map-input/address-map-input
   templateUrl: "./enedis-settings.component.html",
   styleUrl: "./enedis-settings.component.less",
 })
-export class EnedisSettingsComponent {
+export class EnedisSettingsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private enedis = inject(EnedisService);
 
@@ -21,6 +21,8 @@ export class EnedisSettingsComponent {
   saving = signal(false);
   importing = signal(false);
   showLocationMap = signal(false);
+  loading = signal(true);
+  showPassword = signal(false);
 
   selectedCoordinates = signal<{
     address?: string;
@@ -29,9 +31,9 @@ export class EnedisSettingsComponent {
   }>({});
 
   credentialsForm = this.fb.group({
-    login: ["", Validators.required],
-    password: ["", Validators.required],
-    meterNumber: ["", Validators.required],
+    login: ["" as string, Validators.required],
+    password: ["" as string, Validators.required],
+    meterNumber: ["" as string, Validators.required],
     address: [""],
     latitude: [null as number | null],
     longitude: [null as number | null],
@@ -41,6 +43,29 @@ export class EnedisSettingsComponent {
     from: [this.defaultFrom(), Validators.required],
     to: [new Date().toISOString().slice(0, 16), Validators.required],
   });
+
+  ngOnInit(): void {
+    this.loadCredentials();
+  }
+
+  private loadCredentials(): void {
+    this.enedis.getCredentials().subscribe({
+      next: (credentials) => {
+        this.credentialsForm.patchValue({
+          login: credentials.login,
+          meterNumber: credentials.meterNumber,
+          address: credentials.address,
+          latitude: credentials.latitude,
+          longitude: credentials.longitude,
+        });
+        this.loading.set(false);
+      },
+      error: () => {
+        // No credentials saved yet, form stays empty
+        this.loading.set(false);
+      },
+    });
+  }
 
   toggleLocationMap(): void {
     this.showLocationMap.update((val) => !val);

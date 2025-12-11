@@ -4,6 +4,7 @@ import { Observable, interval, switchMap, takeWhile } from "rxjs";
 import { environment } from "../../environments/environment";
 import {
   CreateImportJobRequest,
+  CredentialsResponse,
   EnedisStatus,
   ImportJob,
   SaveCredentialsRequest,
@@ -12,6 +13,12 @@ import {
 @Injectable({ providedIn: "root" })
 export class EnedisService {
   private http = inject(HttpClient);
+
+  getCredentials(): Observable<CredentialsResponse> {
+    return this.http.get<CredentialsResponse>(
+      `${environment.apiUrl}/api/enedis/credentials`
+    );
+  }
 
   saveCredentials(request: SaveCredentialsRequest): Observable<void> {
     return this.http.post<void>(
