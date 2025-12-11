@@ -148,10 +148,36 @@ export class AddressMapInputComponent implements OnInit {
       }
     }
 
-    // Click to set coordinates
-    this.map.on("click", (e: L.LeafletMouseEvent) => {
-      this.setMarker(e.latlng.lat, e.latlng.lng);
+    // Click to set coordinates with reverse geocoding
+    this.map.on("click", async (e: L.LeafletMouseEvent) => {
+      await this.handleMapClick(e.latlng.lat, e.latlng.lng);
     });
+  }
+
+  private async handleMapClick(latitude: number, longitude: number): Promise<void> {
+    this.isLoadingSuggestions.set(true);
+    this.errorMessage.set("");
+    
+    try {
+      // Try to get city name from coordinates
+      const result = await this.geocodingService
+        .reverseGeocodeCoordinates(latitude, longitude)
+        .toPromise();
+
+      if (result?.city) {
+        this.addressInput.set(result.city);
+        this.setMarker(latitude, longitude, result.city);
+      } else {
+        // If no city found, just place the marker without a city name
+        this.setMarker(latitude, longitude);
+      }
+    } catch {
+      // If reverse geocoding fails, just place the marker without a city name
+      this.errorMessage.set("Could not determine city name for these coordinates");
+      this.setMarker(latitude, longitude);
+    } finally {
+      this.isLoadingSuggestions.set(false);
+    }
   }
 
   async onAddressInput(): Promise<void> {

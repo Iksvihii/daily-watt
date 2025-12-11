@@ -156,5 +156,32 @@ public class EnedisController : ControllerBase
 
         return Ok(new { latitude = result.Value.latitude, longitude = result.Value.longitude });
     }
+
+    [HttpPost("reverse-geocode")]
+    public async Task<ActionResult<dynamic>> ReverseGeocodeCoordinates([FromBody] dynamic request, CancellationToken ct)
+    {
+        try
+        {
+            var element = (System.Text.Json.JsonElement)request;
+            if (!double.TryParse(element.GetProperty("latitude").ToString(), System.Globalization.CultureInfo.InvariantCulture, out var latitude) ||
+                !double.TryParse(element.GetProperty("longitude").ToString(), System.Globalization.CultureInfo.InvariantCulture, out var longitude))
+            {
+                return BadRequest(new { error = "Invalid latitude or longitude" });
+            }
+
+            var cityName = await _geocodingService.ReverseGeocodeAsync(latitude, longitude, ct);
+
+            if (string.IsNullOrWhiteSpace(cityName))
+            {
+                return NotFound(new { error = "City not found for these coordinates" });
+            }
+
+            return Ok(new { city = cityName });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = "Invalid request format", details = ex.Message });
+        }
+    }
 }
 

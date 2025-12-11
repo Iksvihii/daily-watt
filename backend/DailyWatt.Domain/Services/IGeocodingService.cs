@@ -24,4 +24,16 @@ public interface IGeocodingService
     Task<List<string>> GetCitySuggestionsAsync(
         string query,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Reverse geocodes coordinates to find the nearest city name.
+    /// </summary>
+    /// <param name="latitude">Latitude coordinate</param>
+    /// <param name="longitude">Longitude coordinate</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>City name with postal code or null if not found</returns>
+    Task<string?> ReverseGeocodeAsync(
+        double latitude,
+        double longitude,
+        CancellationToken ct = default);
 }

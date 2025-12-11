@@ -96,6 +96,61 @@ public class GeocodingService : IGeocodingService
     }
   }
 
+  public async Task<string?> ReverseGeocodeAsync(
+      double latitude,
+      double longitude,
+      CancellationToken ct = default)
+  {
+    try
+    {
+      // Reverse geocoding: convert coordinates to city name
+      var url = $"{NominatimApiUrl}/reverse?format=json&lat={latitude.ToString(CultureInfo.InvariantCulture)}&lon={longitude.ToString(CultureInfo.InvariantCulture)}&zoom=10&addressdetails=1";
+
+      var response = await _httpClient.GetAsync(url, ct);
+
+      if (!response.IsSuccessStatusCode)
+        return null;
+
+      var content = await response.Content.ReadAsStringAsync(ct);
+      var result = System.Text.Json.JsonSerializer.Deserialize<NominatimReverseResult>(content);
+
+      if (result == null)
+        return null;
+
+      // Try to extract city/town/village name from address
+      if (result.Address != null)
+      {
+        // Priority: city > town > village > hamlet
+        if (!string.IsNullOrWhiteSpace(result.Address.City))
+          return FormatCityWithPostalCode(result.Address.City, result.Address.Postcode);
+        
+        if (!string.IsNullOrWhiteSpace(result.Address.Town))
+          return FormatCityWithPostalCode(result.Address.Town, result.Address.Postcode);
+        
+        if (!string.IsNullOrWhiteSpace(result.Address.Village))
+          return FormatCityWithPostalCode(result.Address.Village, result.Address.Postcode);
+        
+        if (!string.IsNullOrWhiteSpace(result.Address.Hamlet))
+          return FormatCityWithPostalCode(result.Address.Hamlet, result.Address.Postcode);
+      }
+
+      return null;
+    }
+    catch (Exception ex)
+    {
+      System.Diagnostics.Debug.WriteLine($"Reverse geocoding error: {ex.Message}");
+      return null;
+    }
+  }
+
+  private string FormatCityWithPostalCode(string city, string? postcode)
+  {
+    if (!string.IsNullOrWhiteSpace(postcode))
+      return $"{city} ({postcode})";
+    
+    return city;
+  }
+
   private string FormatCitySuggestion(NominatimResult result)
   {
     var cityName = result.DisplayName.Split(",")[0].Trim();
@@ -143,5 +198,29 @@ public class GeocodingService : IGeocodingService
 
     [JsonPropertyName("addresstype")]
     public string AddressType { get; set; } = string.Empty;
+  }
+
+  private class NominatimReverseResult
+  {
+    [JsonPropertyName("address")]
+    public NominatimAddress? Address { get; set; }
+  }
+
+  private class NominatimAddress
+  {
+    [JsonPropertyName("city")]
+    public string? City { get; set; }
+
+    [JsonPropertyName("town")]
+    public string? Town { get; set; }
+
+    [JsonPropertyName("village")]
+    public string? Village { get; set; }
+
+    [JsonPropertyName("hamlet")]
+    public string? Hamlet { get; set; }
+
+    [JsonPropertyName("postcode")]
+    public string? Postcode { get; set; }
   }
 }

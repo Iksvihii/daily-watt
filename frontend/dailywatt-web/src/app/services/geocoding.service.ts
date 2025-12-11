@@ -8,6 +8,10 @@ export interface GeocodeResult {
   longitude: number;
 }
 
+export interface ReverseGeocodeResult {
+  city: string;
+}
+
 @Injectable({ providedIn: "root" })
 export class GeocodingService {
   private http = inject(HttpClient);
@@ -31,6 +35,19 @@ export class GeocodingService {
     return this.http.post<GeocodeResult>(
       `${environment.apiUrl}/api/enedis/geocode`,
       { city }
+    );
+  }
+
+  /**
+   * Reverse geocode coordinates to find the nearest city name
+   */
+  reverseGeocodeCoordinates(
+    latitude: number,
+    longitude: number
+  ): Observable<ReverseGeocodeResult> {
+    return this.http.post<ReverseGeocodeResult>(
+      `${environment.apiUrl}/api/enedis/reverse-geocode`,
+      { latitude, longitude }
     );
   }
 }
