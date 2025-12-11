@@ -229,7 +229,11 @@ export class AddressMapInputComponent implements OnInit {
     // Add new marker with popup (always show coordinates in popup)
     this.selectedMarker = L.marker([latitude, longitude])
       .addTo(this.map)
-      .bindPopup(`<strong>Selected city</strong><br/>${displayCity || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`}`)
+      .bindPopup(
+        `<strong>Selected city</strong><br/>${
+          displayCity || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+        }`
+      )
       .openPopup();
 
     // Center map on marker

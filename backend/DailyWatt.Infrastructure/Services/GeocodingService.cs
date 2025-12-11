@@ -100,10 +100,10 @@ public class GeocodingService : IGeocodingService
   {
     var cityName = result.DisplayName.Split(",")[0].Trim();
     var postalCode = ExtractPostalCode(result.DisplayName);
-    
+
     if (!string.IsNullOrWhiteSpace(postalCode))
       return $"{cityName} ({postalCode})";
-    
+
     return cityName;
   }
 
@@ -112,7 +112,7 @@ public class GeocodingService : IGeocodingService
     // displayName format: "CityName, ..., PostalCode, CountryName"
     // Try to extract postal code (typically 5 digits for France)
     var parts = displayName.Split(",");
-    
+
     foreach (var part in parts)
     {
       var trimmed = part.Trim();
@@ -120,7 +120,7 @@ public class GeocodingService : IGeocodingService
       if (System.Text.RegularExpressions.Regex.IsMatch(trimmed, @"^\d{5}$"))
         return trimmed;
     }
-    
+
     return string.Empty;
   }
 

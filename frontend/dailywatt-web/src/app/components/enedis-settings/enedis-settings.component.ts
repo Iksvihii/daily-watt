@@ -79,8 +79,17 @@ export class EnedisSettingsComponent implements OnInit {
     latitude: number;
     longitude: number;
   }): void {
+    // Only set city if it's a valid city name (not coordinates)
+    // Coordinates look like "45.1234, 2.5678" or similar patterns
+    const isCoordinates = data.city && data.city.match(/^-?\d+\.?\d*,\s*-?\d+\.?\d*$/);
+    
     this.selectedCoordinates.set(data);
-    this.credentialsForm.get("city")?.setValue(data.city);
+    
+    // Only set city field if it's not just coordinates
+    if (!isCoordinates) {
+      this.credentialsForm.get("city")?.setValue(data.city);
+    }
+    
     this.credentialsForm.get("latitude")?.setValue(data.latitude);
     this.credentialsForm.get("longitude")?.setValue(data.longitude);
   }
@@ -91,11 +100,16 @@ export class EnedisSettingsComponent implements OnInit {
     }
     this.saving.set(true);
     const formValue = this.credentialsForm.getRawValue();
+    
+    // Only include city if it's a valid name (not coordinates)
+    const city = formValue.city || "";
+    const isCoordinates = city && city.match(/^-?\d+\.?\d*,\s*-?\d+\.?\d*$/);
+    
     const request: SaveCredentialsRequest = {
       login: formValue.login || "",
       password: formValue.password || "",
       meterNumber: formValue.meterNumber || "",
-      city: formValue.city || "",
+      city: isCoordinates ? "" : city,
       latitude: formValue.latitude || 0,
       longitude: formValue.longitude || 0,
     };
