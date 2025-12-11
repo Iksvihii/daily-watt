@@ -154,10 +154,13 @@ export class AddressMapInputComponent implements OnInit {
     });
   }
 
-  private async handleMapClick(latitude: number, longitude: number): Promise<void> {
+  private async handleMapClick(
+    latitude: number,
+    longitude: number
+  ): Promise<void> {
     this.isLoadingSuggestions.set(true);
     this.errorMessage.set("");
-    
+
     try {
       // Try to get city name from coordinates
       const result = await this.geocodingService
@@ -173,7 +176,9 @@ export class AddressMapInputComponent implements OnInit {
       }
     } catch {
       // If reverse geocoding fails, just place the marker without a city name
-      this.errorMessage.set("Could not determine city name for these coordinates");
+      this.errorMessage.set(
+        "Could not determine city name for these coordinates"
+      );
       this.setMarker(latitude, longitude);
     } finally {
       this.isLoadingSuggestions.set(false);

@@ -123,13 +123,13 @@ public class GeocodingService : IGeocodingService
         // Priority: city > town > village > hamlet
         if (!string.IsNullOrWhiteSpace(result.Address.City))
           return FormatCityWithPostalCode(result.Address.City, result.Address.Postcode);
-        
+
         if (!string.IsNullOrWhiteSpace(result.Address.Town))
           return FormatCityWithPostalCode(result.Address.Town, result.Address.Postcode);
-        
+
         if (!string.IsNullOrWhiteSpace(result.Address.Village))
           return FormatCityWithPostalCode(result.Address.Village, result.Address.Postcode);
-        
+
         if (!string.IsNullOrWhiteSpace(result.Address.Hamlet))
           return FormatCityWithPostalCode(result.Address.Hamlet, result.Address.Postcode);
       }
@@ -147,7 +147,7 @@ public class GeocodingService : IGeocodingService
   {
     if (!string.IsNullOrWhiteSpace(postcode))
       return $"{city} ({postcode})";
-    
+
     return city;
   }
 
