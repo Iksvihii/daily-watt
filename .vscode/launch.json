@@ -11,8 +11,9 @@
       "cwd": "${workspaceFolder}/backend/DailyWatt.Api",
       "stopAtEntry": false,
       "serverReadyAction": {
-        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-        "uriFormat": "%s",
+        // Open the HTTP endpoint only (avoids HTTPS cert prompt) and go directly to Scalar UI
+        "pattern": "\\bNow listening on:\\s+(http://\\S+)",
+        "uriFormat": "%s/scalar/v1",
         "action": "openExternally"
       },
       "env": {
@@ -32,8 +33,9 @@
       "cwd": "${workspaceFolder}/backend/DailyWatt.Api",
       "stopAtEntry": false,
       "serverReadyAction": {
+        // Keep HTTPS for this profile, but open Scalar directly
         "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-        "uriFormat": "%s",
+        "uriFormat": "%s/scalar/v1",
         "action": "openExternally"
       },
       "env": {
@@ -59,13 +61,15 @@
       "internalConsoleOptions": "neverOpen"
     },
     {
-      "name": "Angular (Chrome)",
-      "type": "chrome",
+      "name": "Angular (Edge)",
+      "type": "pwa-msedge",
       "request": "launch",
       "preLaunchTask": "frontend: start",
       "url": "http://localhost:4200",
       "webRoot": "${workspaceFolder}/frontend/dailywatt-web/src",
-      "userDataDir": "${workspaceFolder}/.vscode/chrome-profile",
+      "userDataDir": "${workspaceFolder}/.vscode/edge-profile",
+      // If Edge is not in the default location, set runtimeExecutable to the full path of msedge.exe
+      // "runtimeExecutable": "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
       "skipFiles": ["<node_internals>/**"]
     }
   ],
@@ -89,7 +93,7 @@
       "configurations": [
         ".NET Launch API (HTTP)",
         ".NET Launch Worker (Debugging)",
-        "Angular (Chrome)"
+        "Angular (Edge)"
       ]
     },
     {
@@ -97,7 +101,7 @@
       "configurations": [
         ".NET Launch API (HTTPS)",
         ".NET Launch Worker (Debugging)",
-        "Angular (Chrome)"
+        "Angular (Edge)"
       ]
     }
   ]
