@@ -1,8 +1,12 @@
-import { Component, inject, signal, OnInit } from \"@angular/core\";
+import { Component, inject, signal, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { EnedisService } from "../../services/enedis.service";
-import { ImportJob, SaveCredentialsRequest } from "../../models/enedis.models";
+import {
+  ImportJob,
+  SaveCredentialsRequest,
+  CredentialsResponse,
+} from "../../models/enedis.models";
 import { AddressMapInputComponent } from "../address-map-input/address-map-input.component";
 
 @Component({
@@ -50,7 +54,7 @@ export class EnedisSettingsComponent implements OnInit {
 
   private loadCredentials(): void {
     this.enedis.getCredentials().subscribe({
-      next: (credentials) => {
+      next: (credentials: CredentialsResponse) => {
         this.credentialsForm.patchValue({
           login: credentials.login,
           meterNumber: credentials.meterNumber,
@@ -68,7 +72,11 @@ export class EnedisSettingsComponent implements OnInit {
   }
 
   toggleLocationMap(): void {
-    this.showLocationMap.update((val) => !val);
+    this.showLocationMap.update((val: boolean) => !val);
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword.update((val: boolean) => !val);
   }
 
   onLocationSelected(data: {
@@ -114,7 +122,7 @@ export class EnedisSettingsComponent implements OnInit {
     };
 
     this.enedis.createImportJob(payload).subscribe({
-      next: (job) => {
+      next: (job: ImportJob) => {
         this.job.set(job);
         this.pollJob(job.id);
       },
@@ -126,7 +134,7 @@ export class EnedisSettingsComponent implements OnInit {
   }
 
   private pollJob(id: string) {
-    this.enedis.pollJobUntilDone(id).subscribe((job) => {
+    this.enedis.pollJobUntilDone(id).subscribe((job: ImportJob) => {
       this.job.set(job);
       if (job.status === "Completed" || job.status === "Failed") {
         this.importing.set(false);

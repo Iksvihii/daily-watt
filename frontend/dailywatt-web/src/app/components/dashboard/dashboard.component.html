@@ -43,14 +43,11 @@
     }
   </div>
 
-  @if (data()) {
-    @if (data()!.consumption.length === 0) {
-      <div class="card">
-        <p class="status">Aucune donnée disponible. Lancez une synchronisation manuelle.</p>
-        <button class="btn" type="button" (click)="syncNow()" [disabled]="syncing()">Synchroniser</button>
-      </div>
-    } @else {
-      <div class="grid two">
+  <!-- Summary cards and chart: always visible with conditional content -->
+  <div class="chart-wrapper">
+    @if (data() && data()!.consumption.length > 0) {
+      <!-- Data available: show stats and chart -->
+      <div class="grid two" style="margin-bottom: 1rem;">
         <div class="card">
           <div class="status">Total kWh</div>
           <div style="font-size:28px;font-weight:700;">{{ data()!.summary.totalKwh | number:'1.0-2' }}</div>
@@ -66,7 +63,7 @@
         </div>
       </div>
 
-      <div class="chart-wrapper">
+      <div class="card">
         <app-consumption-chart 
           [consumption]="data()!.consumption" 
           [weather]="withWeather() ? data()!.weather : undefined"
@@ -74,8 +71,33 @@
           [dateRangeEnd]="to()">
         </app-consumption-chart>
       </div>
+    } @else if (loading()) {
+      <!-- Loading state -->
+      <div class="card" style="padding: 3rem; text-align: center; color: #94a3b8;">
+        <div style="display: inline-flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 24px; height: 24px; border: 3px solid #334155; border-top-color: #3ad1c5; border-radius: 50%; animation: spin 0.6s linear infinite;"></div>
+          Loading consumption data...
+        </div>
+      </div>
+    } @else {
+      <!-- No data: show empty state with suggestion -->
+      <div class="card" style="padding: 3rem; text-align: center;">
+        <div style="color: #94a3b8; margin-bottom: 1rem;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
+          <p><strong>No data available</strong></p>
+          <p style="font-size: 0.875rem; margin-top: 0.5rem;">
+            No consumption data found for the selected date range.
+          </p>
+        </div>
+        <button class="btn" type="button" (click)="syncNow()" [disabled]="syncing()">
+          Synchronize Now
+        </button>
+        <p style="font-size: 0.875rem; color: #64748b; margin-top: 1rem;">
+          Sync your Linky meter to import consumption data
+        </p>
+      </div>
     }
-  }
+  </div>
 }
 
 <div class="card">

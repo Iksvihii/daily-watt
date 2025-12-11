@@ -198,16 +198,16 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
         },
       },
       grid: {
-        left: 60,
-        right: 20,
-        top: 20,
-        bottom: 60,
+        left: 90,
+        right: 90,
+        top: 40,
+        bottom: 100,
         containLabel: true,
       },
       xAxis: {
         type: "category",
         data: visibleLabels,
-        boundaryGap: false,
+        boundaryGap: true,
         axisLine: { lineStyle: { color: "#334155" } },
         axisLabel: {
           interval: Math.max(0, Math.floor(displayCount / 8)),
@@ -238,14 +238,11 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
       series: [
         {
           name: "Consumption",
-          type: "line",
+          type: "bar",
           data: visibleConsumption,
-          smooth: true,
           itemStyle: { color: "#3ad1c5" },
-          lineStyle: { color: "#3ad1c5", width: 2.5 },
-          areaStyle: { color: "rgba(58, 209, 197, 0.2)" },
           yAxisIndex: 0,
-          symbol: "none",
+          barWidth: "60%",
         },
         {
           name: "Temperature",

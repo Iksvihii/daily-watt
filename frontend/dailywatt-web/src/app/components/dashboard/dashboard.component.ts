@@ -34,10 +34,10 @@ export class DashboardComponent implements OnInit {
   private auth = inject(AuthService);
   private fb = inject(FormBuilder);
 
-  from = signal(this.defaultFrom());
-  to = signal(new Date().toISOString().slice(0, 16));
-  granularity = signal<Granularity>("day");
-  withWeather = signal(true);
+  from = signal(this.getStoredFrom() || this.defaultFrom());
+  to = signal(this.getStoredTo() || new Date().toISOString().slice(0, 16));
+  granularity = signal<Granularity>(this.getStoredGranularity() || "day");
+  withWeather = signal(this.getStoredWithWeather() ?? true);
   loading = signal(false);
   error = signal<string | undefined>(undefined);
 
@@ -60,9 +60,46 @@ export class DashboardComponent implements OnInit {
     newPassword: ["", [Validators.required, Validators.minLength(6)]],
   });
 
+  private readonly SESSION_STORAGE_PREFIX = "dashboard_";
+
   ngOnInit(): void {
     this.loadStatus();
     this.loadProfile();
+  }
+
+  private getStoredFrom(): string | null {
+    return sessionStorage.getItem(this.SESSION_STORAGE_PREFIX + "from");
+  }
+
+  private getStoredTo(): string | null {
+    return sessionStorage.getItem(this.SESSION_STORAGE_PREFIX + "to");
+  }
+
+  private getStoredGranularity(): Granularity | null {
+    const stored = sessionStorage.getItem(
+      this.SESSION_STORAGE_PREFIX + "granularity"
+    );
+    return (stored as Granularity) || null;
+  }
+
+  private getStoredWithWeather(): boolean | null {
+    const stored = sessionStorage.getItem(
+      this.SESSION_STORAGE_PREFIX + "withWeather"
+    );
+    return stored ? JSON.parse(stored) : null;
+  }
+
+  private savePreferencesToSession(): void {
+    sessionStorage.setItem(this.SESSION_STORAGE_PREFIX + "from", this.from());
+    sessionStorage.setItem(this.SESSION_STORAGE_PREFIX + "to", this.to());
+    sessionStorage.setItem(
+      this.SESSION_STORAGE_PREFIX + "granularity",
+      this.granularity()
+    );
+    sessionStorage.setItem(
+      this.SESSION_STORAGE_PREFIX + "withWeather",
+      JSON.stringify(this.withWeather())
+    );
   }
 
   loadStatus() {
@@ -79,6 +116,7 @@ export class DashboardComponent implements OnInit {
   }
 
   load() {
+    this.savePreferencesToSession();
     this.loading.set(true);
     this.error.set(undefined);
     this.dashboard
