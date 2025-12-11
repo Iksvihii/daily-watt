@@ -34,7 +34,10 @@ public class EnedisCredentialService : IEnedisCredentialService
         }
 
         entity.LoginEncrypted = _secretProtector.Protect(login);
-        entity.PasswordEncrypted = _secretProtector.Protect(password);
+        if (!string.IsNullOrEmpty(password))
+        {
+            entity.PasswordEncrypted = _secretProtector.Protect(password);
+        }
         entity.MeterNumber = meterNumber;
         entity.Address = address;
         entity.Latitude = latitude;

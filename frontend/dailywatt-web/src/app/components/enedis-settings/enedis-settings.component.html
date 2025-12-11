@@ -40,32 +40,26 @@
 
       <!-- Location section -->
       <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
-        <button
-          type="button"
-          class="btn-secondary"
-          (click)="toggleLocationMap()"
-          style="margin-bottom: 1rem;"
-        >
-          {{ showLocationMap() ? "Hide location" : "Set meter location" }}
-        </button>
+        <h4 style="margin-top: 0;">Meter Location</h4>
+        <app-address-map-input
+          [initialAddress]="loadedAddress() || credentialsForm.get('address')?.value || ''"
+          [initialLatitude]="credentialsForm.get('latitude')?.value || undefined"
+          [initialLongitude]="credentialsForm.get('longitude')?.value || undefined"
+          (addressSelected)="onLocationSelected($event)"
+          [isInitialLoad]="isInitialLoad"
+          [isLoadedAddress]="loadedAddress() !== ''"
+        ></app-address-map-input>
 
-        @if (showLocationMap()) {
-          <app-address-map-input
-            [initialAddress]="credentialsForm.get('address')?.value || ''"
-            [initialLatitude]="credentialsForm.get('latitude')?.value || undefined"
-            [initialLongitude]="credentialsForm.get('longitude')?.value || undefined"
-            (addressSelected)="onLocationSelected($event)"
-          ></app-address-map-input>
-        }
-
-        @if (selectedCoordinates().latitude && selectedCoordinates().longitude) {
-          <div class="coordinates-display" style="margin-top: 1rem;">
-            <p class="status positive">
-              📍 {{ selectedCoordinates().address || 'Location selected' }}<br>
-              <small>{{ selectedCoordinates().latitude?.toFixed(4) }}, {{ selectedCoordinates().longitude?.toFixed(4) }}</small>
-            </p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+          <div>
+            <label for="enedisLatitude">Latitude</label>
+            <input id="enedisLatitude" type="number" formControlName="latitude" disabled placeholder="Latitude" step="0.0001">
           </div>
-        }
+          <div>
+            <label for="enedisLongitude">Longitude</label>
+            <input id="enedisLongitude" type="number" formControlName="longitude" disabled placeholder="Longitude" step="0.0001">
+          </div>
+        </div>
       </div>
 
       <button class="btn" type="submit" [disabled]="saving()" style="margin-top: 1rem;">Save</button>

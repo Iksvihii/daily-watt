@@ -7,6 +7,8 @@ import {
   inject,
   signal,
   CUSTOM_ELEMENTS_SCHEMA,
+  input,
+  effect,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
@@ -23,9 +25,13 @@ import { GeocodingService } from "../../services/geocoding.service";
 })
 export class AddressMapInputComponent implements OnInit {
   private geocodingService = inject(GeocodingService);
-  @Input() initialAddress = "";
-  @Input() initialLatitude?: number;
-  @Input() initialLongitude?: number;
+
+  // Input signals (reactive to parent changes)
+  initialAddress = input<string>("");
+  initialLatitude = input<number | undefined>(undefined);
+  initialLongitude = input<number | undefined>(undefined);
+  isInitialLoad = input<boolean>(true);
+  isLoadedAddress = input<boolean>(false);
 
   @Output() addressSelected = new EventEmitter<{
     address: string;
@@ -47,21 +53,50 @@ export class AddressMapInputComponent implements OnInit {
 
   constructor() {
     // Initialize address from input
-    this.addressInput.set(this.initialAddress);
+    this.addressInput.set(this.initialAddress());
 
     // If initial coordinates are provided, update map center
-    if (this.initialLatitude && this.initialLongitude) {
+    if (this.initialLatitude() && this.initialLongitude()) {
       this.mapCenter = {
-        lat: this.initialLatitude,
-        lng: this.initialLongitude,
+        lat: this.initialLatitude()!,
+        lng: this.initialLongitude()!,
       };
     }
+
+    // React to changes in initialAddress (when parent updates it)
+    effect(() => {
+      const address = this.initialAddress();
+      if (address) {
+        this.addressInput.set(address);
+      }
+    });
+
+    // React to changes in initial coordinates - update map center for next initialization
+    effect(() => {
+      const lat = this.initialLatitude();
+      const lng = this.initialLongitude();
+      if (lat && lng) {
+        this.mapCenter = { lat, lng };
+        // If map already exists, recenter it
+        if (this.map) {
+          this.map.setView([lat, lng], 13);
+        }
+      }
+    });
   }
 
   ngOnInit(): void {
     // Initialize map after view loads
     setTimeout(() => {
       this.initializeMap();
+
+      // After map is initialized, ensure it's centered on the initial coordinates
+      if (this.initialLatitude() && this.initialLongitude() && this.map) {
+        this.map.setView(
+          [this.initialLatitude()!, this.initialLongitude()!],
+          13
+        );
+      }
     }, 100);
   }
 
@@ -101,14 +136,14 @@ export class AddressMapInputComponent implements OnInit {
     }).addTo(this.map);
 
     // Add initial marker if coordinates exist
-    if (this.initialLatitude && this.initialLongitude) {
-      this.selectedMarker = L.marker([
-        this.initialLatitude,
-        this.initialLongitude,
-      ]).addTo(this.map);
+    const initialLat = this.initialLatitude();
+    const initialLng = this.initialLongitude();
+    if (initialLat && initialLng) {
+      this.selectedMarker = L.marker([initialLat, initialLng]).addTo(this.map);
 
-      if (this.initialAddress) {
-        this.selectedMarker.bindPopup(this.initialAddress).openPopup();
+      const address = this.initialAddress();
+      if (address) {
+        this.selectedMarker.bindPopup(address).openPopup();
       }
     }
 
@@ -121,6 +156,11 @@ export class AddressMapInputComponent implements OnInit {
   async onAddressInput(): Promise<void> {
     const query = this.addressInput();
     this.errorMessage.set("");
+
+    // Don't search if this is a loaded address (from initial load)
+    if (this.isLoadedAddress()) {
+      return;
+    }
 
     // Clear previous timeout
     if (this.searchTimeout) {

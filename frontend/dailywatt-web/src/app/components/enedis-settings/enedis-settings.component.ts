@@ -24,9 +24,9 @@ export class EnedisSettingsComponent implements OnInit {
   job = signal<ImportJob | undefined>(undefined);
   saving = signal(false);
   importing = signal(false);
-  showLocationMap = signal(false);
   loading = signal(true);
   showPassword = signal(false);
+  isInitialLoad = signal(true);
 
   selectedCoordinates = signal<{
     address?: string;
@@ -34,13 +34,15 @@ export class EnedisSettingsComponent implements OnInit {
     longitude?: number;
   }>({});
 
+  loadedAddress = signal<string>("");
+
   credentialsForm = this.fb.group({
     login: ["" as string, Validators.required],
-    password: ["" as string, Validators.required],
+    password: [""],
     meterNumber: ["" as string, Validators.required],
     address: [""],
-    latitude: [null as number | null],
-    longitude: [null as number | null],
+    latitude: [{ value: null as number | null, disabled: true }],
+    longitude: [{ value: null as number | null, disabled: true }],
   });
 
   importForm = this.fb.group({
@@ -50,6 +52,12 @@ export class EnedisSettingsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCredentials();
+  }
+
+  private defaultFrom(): string {
+    const date = new Date();
+    date.setDate(date.getDate() - 7);
+    return date.toISOString().slice(0, 16);
   }
 
   private loadCredentials(): void {
@@ -62,17 +70,18 @@ export class EnedisSettingsComponent implements OnInit {
           latitude: credentials.latitude,
           longitude: credentials.longitude,
         });
+        if (credentials.address) {
+          this.loadedAddress.set(credentials.address);
+        }
         this.loading.set(false);
+        this.isInitialLoad.set(false);
       },
       error: () => {
         // No credentials saved yet, form stays empty
         this.loading.set(false);
+        this.isInitialLoad.set(false);
       },
     });
-  }
-
-  toggleLocationMap(): void {
-    this.showLocationMap.update((val: boolean) => !val);
   }
 
   togglePasswordVisibility(): void {
@@ -85,11 +94,9 @@ export class EnedisSettingsComponent implements OnInit {
     longitude: number;
   }): void {
     this.selectedCoordinates.set(data);
-    this.credentialsForm.patchValue({
-      address: data.address,
-      latitude: data.latitude,
-      longitude: data.longitude,
-    });
+    this.credentialsForm.get("address")?.setValue(data.address);
+    this.credentialsForm.get("latitude")?.setValue(data.latitude);
+    this.credentialsForm.get("longitude")?.setValue(data.longitude);
   }
 
   saveCredentials() {
@@ -97,11 +104,18 @@ export class EnedisSettingsComponent implements OnInit {
       return;
     }
     this.saving.set(true);
-    const request = this.credentialsForm.value as SaveCredentialsRequest;
+    const formValue = this.credentialsForm.getRawValue();
+    const request: SaveCredentialsRequest = {
+      login: formValue.login || "",
+      password: formValue.password || "",
+      meterNumber: formValue.meterNumber || "",
+      address: formValue.address || "",
+      latitude: formValue.latitude || 0,
+      longitude: formValue.longitude || 0,
+    };
     this.enedis.saveCredentials(request).subscribe({
       next: () => {
         this.message.set("Credentials saved");
-        this.showLocationMap.set(false);
         this.saving.set(false);
       },
       error: (err: { error?: { error?: string } }) => {
@@ -140,11 +154,5 @@ export class EnedisSettingsComponent implements OnInit {
         this.importing.set(false);
       }
     });
-  }
-
-  private defaultFrom(): string {
-    const d = new Date();
-    d.setDate(d.getDate() - 2);
-    return d.toISOString().slice(0, 16);
   }
 }

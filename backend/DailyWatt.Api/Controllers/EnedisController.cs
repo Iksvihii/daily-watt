@@ -16,17 +16,20 @@ public class EnedisController : ControllerBase
     private readonly IEnedisCredentialService _credentialsService;
     private readonly IImportJobService _importJobService;
     private readonly IGeocodingService _geocodingService;
+    private readonly ISecretProtector _secretProtector;
     private readonly IMapper _mapper;
 
     public EnedisController(
         IEnedisCredentialService credentialsService,
         IImportJobService importJobService,
         IGeocodingService geocodingService,
+        ISecretProtector secretProtector,
         IMapper mapper)
     {
         _credentialsService = credentialsService;
         _importJobService = importJobService;
         _geocodingService = geocodingService;
+        _secretProtector = secretProtector;
         _mapper = mapper;
     }
 
@@ -57,9 +60,13 @@ public class EnedisController : ControllerBase
             return NotFound();
         }
 
+        var decryptedLogin = cred.LoginEncrypted != null && cred.LoginEncrypted.Length > 0
+            ? _secretProtector.Unprotect(cred.LoginEncrypted)
+            : "";
+
         return Ok(new
         {
-            login = cred.LoginEncrypted != null ? System.Text.Encoding.UTF8.GetString(cred.LoginEncrypted) : "",
+            login = decryptedLogin,
             meterNumber = cred.MeterNumber,
             address = cred.Address,
             latitude = cred.Latitude,

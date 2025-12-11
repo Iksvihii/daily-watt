@@ -12,9 +12,8 @@ public record SaveEnedisCredentialsRequest
   [StringLength(255)]
   public required string Login { get; init; }
 
-  [Required(ErrorMessage = "Password is required")]
   [StringLength(255)]
-  public required string Password { get; init; }
+  public string Password { get; init; } = string.Empty;
 
   [Required(ErrorMessage = "Meter number is required")]
   [StringLength(64)]
