@@ -105,12 +105,11 @@
           </div>
         </div>
 
-        <div class="card">
-          <app-consumption-chart 
-            [consumption]="data()!.consumption" 
-            [weather]="withWeather() ? data()!.weather : undefined">
-          </app-consumption-chart>
-        </div>
+        <app-consumption-chart 
+          [consumption]="data()!.consumption"
+          [granularity]="granularity()"
+          [weather]="withWeather() ? data()!.weather : undefined">
+        </app-consumption-chart>
       } @else if (loading()) {
         <!-- Loading state -->
         <div class="card" style="padding: 3rem; text-align: center; color: #94a3b8;">

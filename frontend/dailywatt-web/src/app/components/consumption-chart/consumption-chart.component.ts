@@ -2,6 +2,7 @@ import {
   Component,
   Input,
   OnChanges,
+  SimpleChanges,
   inject,
   signal,
   CUSTOM_ELEMENTS_SCHEMA,
@@ -39,8 +40,8 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
   private dashboardService = inject(DashboardService);
   @Input() consumption: ConsumptionPoint[] = [];
   @Input() weather?: WeatherDay[];
+  @Input() granularity: Granularity = "day";
 
-  granularity = signal<Granularity>("day");
   chartData: ChartData | null = null;
   startRangePercent = 0;
   endRangePercent = 100;
@@ -66,10 +67,13 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
       });
   }
 
-  ngOnChanges(): void {
-    if (this.consumption?.length) {
-      this.chartData = this.buildChartData(this.consumption, this.weather);
-      this.updateChart();
+  ngOnChanges(changes: SimpleChanges): void {
+    // Only rebuild chart if consumption or weather data changes, not if just granularity changes
+    if (changes["consumption"] || changes["weather"]) {
+      if (this.consumption?.length) {
+        this.chartData = this.buildChartData(this.consumption, this.weather);
+        this.updateChart();
+      }
     }
   }
 
@@ -95,23 +99,64 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
 
     const labels = consumption.map((c) => {
       const d = new Date(c.timestampUtc);
-      return d.toLocaleString("en-US", {
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      return this.formatDateByGranularity(d, this.granularity);
     });
 
     return { timestamps, consumptionValues, temperatureValues, labels };
   }
 
+  private formatDateByGranularity(
+    date: Date,
+    granularity: Granularity
+  ): string {
+    switch (granularity) {
+      case "30min":
+        // Full date + hours and minutes
+        return date.toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      case "hour":
+        // Full date + hours
+        return date.toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+        });
+      case "day":
+        // Just date (month day)
+        return date.toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+        });
+      case "month":
+        // Just month and year
+        return date.toLocaleString("en-US", {
+          month: "short",
+          year: "numeric",
+        });
+      case "year":
+        // Just year
+        return date.toLocaleString("en-US", {
+          year: "numeric",
+        });
+      default:
+        return date.toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+        });
+    }
+  }
+
   onGranularityChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
-    this.granularity.set(target.value as Granularity);
+    this.granularity = target.value as Granularity;
     this.startRangePercent = 0;
     this.endRangePercent = 100;
-    this.rangeChange$.next();
+    // Do nothing - wait for LOAD button to be clicked
+    // The chart will update automatically when new data arrives via ngOnChanges
   }
 
   onStartRangeInput(event: Event): void {
@@ -198,8 +243,8 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
         },
       },
       grid: {
-        left: 90,
-        right: 90,
+        left: 60,
+        right: 60,
         top: 40,
         bottom: 100,
         containLabel: true,
