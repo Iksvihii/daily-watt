@@ -172,21 +172,21 @@ public class EnedisCredentialServiceMockTests
     const string login = "login";
     const string password = "password";
     const string meterNumber = "12345678901234";
-    const string address = "10 rue des fleurs";
+    const string city = "Paris";
     const double latitude = 48.8566;
     const double longitude = 2.3522;
 
     var mockCredentialService = new Mock<IEnedisCredentialService>();
     mockCredentialService
-        .Setup(s => s.SaveCredentialsAsync(userId, login, password, meterNumber, address, latitude, longitude, It.IsAny<CancellationToken>()))
+        .Setup(s => s.SaveCredentialsAsync(userId, login, password, meterNumber, city, latitude, longitude, It.IsAny<CancellationToken>()))
         .Returns(Task.CompletedTask);
 
     // Act
-    await mockCredentialService.Object.SaveCredentialsAsync(userId, login, password, meterNumber, address, latitude, longitude);
+    await mockCredentialService.Object.SaveCredentialsAsync(userId, login, password, meterNumber, city, latitude, longitude);
 
     // Assert
     mockCredentialService.Verify(
-        s => s.SaveCredentialsAsync(userId, login, password, meterNumber, address, latitude, longitude, It.IsAny<CancellationToken>()),
+        s => s.SaveCredentialsAsync(userId, login, password, meterNumber, city, latitude, longitude, It.IsAny<CancellationToken>()),
         Times.Once);
   }
 }

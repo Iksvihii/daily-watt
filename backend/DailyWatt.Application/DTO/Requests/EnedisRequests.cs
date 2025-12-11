@@ -4,7 +4,7 @@ namespace DailyWatt.Application.DTO.Requests;
 
 /// <summary>
 /// Request to save Enedis user credentials.
-/// Includes geographic coordinates for the Linky meter location.
+/// Includes city name and geographic coordinates for the Linky meter location.
 /// </summary>
 public record SaveEnedisCredentialsRequest
 {
@@ -19,8 +19,8 @@ public record SaveEnedisCredentialsRequest
   [StringLength(64)]
   public required string MeterNumber { get; init; }
 
-  [StringLength(500)]
-  public string? Address { get; init; }
+  [StringLength(255)]
+  public string? City { get; init; }
 
   [Range(-90, 90, ErrorMessage = "Latitude must be between -90 and 90")]
   public double? Latitude { get; init; }

@@ -54,7 +54,7 @@ public static class DbSeeder
         LoginEncrypted = System.Text.Encoding.UTF8.GetBytes("demo_login"),
         PasswordEncrypted = System.Text.Encoding.UTF8.GetBytes("demo_password"),
         MeterNumber = "DEMO123456789",
-        Address = "123 Demo Street, Demo City, 75000",
+        City = "Paris",
         Latitude = 48.8566,
         Longitude = 2.3522,
         UpdatedAt = DateTime.UtcNow

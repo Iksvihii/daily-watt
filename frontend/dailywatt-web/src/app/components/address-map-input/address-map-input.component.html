@@ -1,15 +1,15 @@
 <div class="address-map-container">
   <div class="address-input-section">
     <div class="input-group">
-      <label for="address-input">Address</label>
+      <label for="city-input">City (France only)</label>
       <div class="input-wrapper">
         <input
-          id="address-input"
+          id="city-input"
           type="text"
           [(ngModel)]="addressInput"
           (input)="onAddressInput()"
           (keyup.escape)="suggestions.set([])"
-          placeholder="Enter address and press Enter or click on map"
+          placeholder="Enter city name and press Enter or click on map"
           class="address-input"
         />
         <button
@@ -53,8 +53,7 @@
 
     <div class="instructions">
       <p>
-        <strong>Click on the map</strong> to set coordinates, or enter an
-        address to search.
+        <strong>Click on the map</strong> to position the marker on a city center, or search for a French city name above.
       </p>
     </div>
   </div>

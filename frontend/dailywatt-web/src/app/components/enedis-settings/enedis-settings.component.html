@@ -42,12 +42,12 @@
       <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
         <h4 style="margin-top: 0;">Meter Location</h4>
         <app-address-map-input
-          [initialAddress]="loadedAddress() || credentialsForm.get('address')?.value || ''"
+          [initialAddress]="loadedCity()"
           [initialLatitude]="credentialsForm.get('latitude')?.value || undefined"
           [initialLongitude]="credentialsForm.get('longitude')?.value || undefined"
           (addressSelected)="onLocationSelected($event)"
           [isInitialLoad]="isInitialLoad"
-          [isLoadedAddress]="loadedAddress() !== ''"
+          [isLoadedAddress]="loadedCity() !== ''"
         ></app-address-map-input>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">

@@ -34,18 +34,19 @@ export class AddressMapInputComponent implements OnInit {
   isLoadedAddress = input<boolean>(false);
 
   @Output() addressSelected = new EventEmitter<{
-    address: string;
+    city: string;
     latitude: number;
     longitude: number;
   }>();
 
-  addressInput = signal("");
+  addressInput = signal(""); // Repurposed for city input
   suggestions = signal<string[]>([]);
   selectedMarker: L.Marker | null = null;
   map: L.Map | null = null;
   isLoadingSuggestions = signal(false);
   errorMessage = signal("");
   private searchTimeout: any = null;
+  private hasUserModifiedInput = false; // Track if user has edited the input field
 
   // Map options
   mapCenter = { lat: 48.8566, lng: 2.3522 }; // Default: Paris
@@ -157,10 +158,8 @@ export class AddressMapInputComponent implements OnInit {
     const query = this.addressInput();
     this.errorMessage.set("");
 
-    // Don't search if this is a loaded address (from initial load)
-    if (this.isLoadedAddress()) {
-      return;
-    }
+    // Mark that user has modified the input
+    this.hasUserModifiedInput = true;
 
     // Clear previous timeout
     if (this.searchTimeout) {
@@ -177,11 +176,11 @@ export class AddressMapInputComponent implements OnInit {
       this.isLoadingSuggestions.set(true);
       try {
         const result = await this.geocodingService
-          .getAddressSuggestions(query)
+          .getCitySuggestions(query)
           .toPromise();
         this.suggestions.set(result || []);
       } catch {
-        this.errorMessage.set("Unable to fetch address suggestions");
+        this.errorMessage.set("Unable to fetch city suggestions");
         this.suggestions.set([]);
       } finally {
         this.isLoadingSuggestions.set(false);
@@ -189,34 +188,34 @@ export class AddressMapInputComponent implements OnInit {
     }, 400);
   }
 
-  async selectSuggestion(address: string): Promise<void> {
-    this.addressInput.set(address);
+  async selectSuggestion(suggestion: string): Promise<void> {
+    // Extract city name (remove postal code if present)
+    // Format: "CityName (PostalCode)" or "CityName"
+    const city = suggestion.includes("(")
+      ? suggestion.substring(0, suggestion.indexOf("(")).trim()
+      : suggestion;
+
+    this.addressInput.set(suggestion);
     this.suggestions.set([]);
     this.errorMessage.set("");
 
     this.isLoadingSuggestions.set(true);
     try {
-      const result = await this.geocodingService
-        .geocodeAddress(address)
-        .toPromise();
+      const result = await this.geocodingService.geocodeCity(city).toPromise();
 
       if (result) {
-        this.setMarker(result.latitude, result.longitude, address);
+        this.setMarker(result.latitude, result.longitude, suggestion);
       } else {
-        this.errorMessage.set("Address could not be found");
+        this.errorMessage.set("City could not be found");
       }
     } catch {
-      this.errorMessage.set("Error geocoding address");
+      this.errorMessage.set("Error geocoding city");
     } finally {
       this.isLoadingSuggestions.set(false);
     }
   }
 
-  private setMarker(
-    latitude: number,
-    longitude: number,
-    address?: string
-  ): void {
+  private setMarker(latitude: number, longitude: number, city?: string): void {
     if (!this.map) return;
 
     // Remove existing marker
@@ -224,26 +223,26 @@ export class AddressMapInputComponent implements OnInit {
       this.map.removeLayer(this.selectedMarker);
     }
 
-    const displayAddress =
-      address ||
-      this.addressInput() ||
-      `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+    // IMPORTANT: Only emit city name if provided, never emit coordinates as city
+    const displayCity = city || this.addressInput();
 
-    // Add new marker with popup
+    // Add new marker with popup (always show coordinates in popup)
     this.selectedMarker = L.marker([latitude, longitude])
       .addTo(this.map)
-      .bindPopup(`<strong>Selected location</strong><br/>${displayAddress}`)
+      .bindPopup(`<strong>Selected city</strong><br/>${displayCity || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`}`)
       .openPopup();
 
     // Center map on marker
     this.map.setView([latitude, longitude], this.mapZoom);
 
-    // Emit result
-    this.addressSelected.emit({
-      address: displayAddress,
-      latitude,
-      longitude,
-    });
+    // Only emit if we have a valid city name (not just coordinates)
+    if (displayCity && !displayCity.match(/^-?\d+\.?\d*,\s*-?\d+\.?\d*$/)) {
+      this.addressSelected.emit({
+        city: displayCity,
+        latitude,
+        longitude,
+      });
+    }
   }
 
   clearSelection(): void {

@@ -13,27 +13,24 @@ export class GeocodingService {
   private http = inject(HttpClient);
 
   /**
-   * Get address suggestions for autocomplete (limited to metropolitan France)
+   * Get city name suggestions for autocomplete (limited to France)
    */
-  getAddressSuggestions(query: string): Observable<string[]> {
+  getCitySuggestions(query: string): Observable<string[]> {
     return this.http.get<string[]>(
       `${environment.apiUrl}/api/enedis/geocode/suggestions`,
       {
-        params: {
-          query,
-          countryCode: "FR", // Limit to France only
-        },
+        params: { query },
       }
     );
   }
 
   /**
-   * Geocode an address to coordinates
+   * Geocode a city name to coordinates (returns city center)
    */
-  geocodeAddress(address: string): Observable<GeocodeResult> {
+  geocodeCity(city: string): Observable<GeocodeResult> {
     return this.http.post<GeocodeResult>(
       `${environment.apiUrl}/api/enedis/geocode`,
-      { address }
+      { city }
     );
   }
 }

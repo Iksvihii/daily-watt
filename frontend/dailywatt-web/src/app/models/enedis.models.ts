@@ -2,7 +2,7 @@ export interface SaveCredentialsRequest {
   login: string;
   password: string;
   meterNumber: string;
-  address?: string;
+  city?: string;
   latitude?: number;
   longitude?: number;
 }
@@ -10,7 +10,7 @@ export interface SaveCredentialsRequest {
 export interface CredentialsResponse {
   login: string;
   meterNumber: string;
-  address?: string;
+  city?: string;
   latitude?: number;
   longitude?: number;
   updatedAt: string;

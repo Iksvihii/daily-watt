@@ -42,7 +42,7 @@ public class EnedisController : ControllerBase
             request.Login,
             request.Password,
             request.MeterNumber,
-            request.Address,
+            request.City,
             request.Latitude,
             request.Longitude,
             ct);
@@ -68,7 +68,7 @@ public class EnedisController : ControllerBase
         {
             login = decryptedLogin,
             meterNumber = cred.MeterNumber,
-            address = cred.Address,
+            city = cred.City,
             latitude = cred.Latitude,
             longitude = cred.Longitude,
             updatedAt = cred.UpdatedAt
@@ -124,35 +124,34 @@ public class EnedisController : ControllerBase
     }
 
     [HttpGet("geocode/suggestions")]
-    public async Task<ActionResult<List<string>>> GetAddressSuggestions(
+    public async Task<ActionResult<List<string>>> GetCitySuggestions(
         [FromQuery] string query,
-        [FromQuery] string? countryCode = null,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(query) || query.Length < 3)
+        if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
         {
-            return BadRequest(new { error = "Query must be at least 3 characters" });
+            return BadRequest(new { error = "Query must be at least 2 characters" });
         }
 
-        var suggestions = await _geocodingService.GetAddressSuggestionsAsync(query, countryCode, ct);
+        var suggestions = await _geocodingService.GetCitySuggestionsAsync(query, ct);
         return Ok(suggestions);
     }
 
     [HttpPost("geocode")]
-    public async Task<ActionResult<dynamic>> GeocodeAddress([FromBody] dynamic request, CancellationToken ct)
+    public async Task<ActionResult<dynamic>> GeocodeCity([FromBody] dynamic request, CancellationToken ct)
     {
-        var address = ((System.Text.Json.JsonElement)request).GetProperty("address").GetString();
+        var city = ((System.Text.Json.JsonElement)request).GetProperty("city").GetString();
 
-        if (string.IsNullOrWhiteSpace(address))
+        if (string.IsNullOrWhiteSpace(city))
         {
-            return BadRequest(new { error = "Address is required" });
+            return BadRequest(new { error = "City is required" });
         }
 
-        var result = await _geocodingService.GeocodeAsync(address, ct);
+        var result = await _geocodingService.GeocodeAsync(city, ct);
 
         if (result == null)
         {
-            return NotFound(new { error = "Address not found" });
+            return NotFound(new { error = "City not found" });
         }
 
         return Ok(new { latitude = result.Value.latitude, longitude = result.Value.longitude });

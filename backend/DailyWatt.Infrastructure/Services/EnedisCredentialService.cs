@@ -21,7 +21,7 @@ public class EnedisCredentialService : IEnedisCredentialService
         string login,
         string password,
         string meterNumber,
-        string? address = null,
+        string? city = null,
         double? latitude = null,
         double? longitude = null,
         CancellationToken ct = default)
@@ -39,7 +39,7 @@ public class EnedisCredentialService : IEnedisCredentialService
             entity.PasswordEncrypted = _secretProtector.Protect(password);
         }
         entity.MeterNumber = meterNumber;
-        entity.Address = address;
+        entity.City = city;
         entity.Latitude = latitude;
         entity.Longitude = longitude;
         entity.UpdatedAt = DateTime.UtcNow;

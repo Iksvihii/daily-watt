@@ -6,7 +6,7 @@ namespace DailyWatt.Infrastructure.Services;
 
 /// <summary>
 /// Geocoding service using OpenStreetMap Nominatim API.
-/// Converts addresses to geographic coordinates.
+/// Searches for French cities and converts them to geographic coordinates.
 /// </summary>
 public class GeocodingService : IGeocodingService
 {
@@ -21,15 +21,16 @@ public class GeocodingService : IGeocodingService
   }
 
   public async Task<(double latitude, double longitude)?> GeocodeAsync(
-      string address,
+      string city,
       CancellationToken ct = default)
   {
     try
     {
-      if (string.IsNullOrWhiteSpace(address))
+      if (string.IsNullOrWhiteSpace(city))
         return null;
 
-      var url = $"{NominatimApiUrl}/search?q={Uri.EscapeDataString(address)}&format=json&limit=1";
+      // Search for French cities only
+      var url = $"{NominatimApiUrl}/search?q={Uri.EscapeDataString(city)}&format=json&limit=1&countrycodes=fr&extratags=1";
       var response = await _httpClient.GetAsync(url, ct);
 
       if (!response.IsSuccessStatusCode)
@@ -54,23 +55,20 @@ public class GeocodingService : IGeocodingService
     }
   }
 
-  public async Task<List<string>> GetAddressSuggestionsAsync(
+  public async Task<List<string>> GetCitySuggestionsAsync(
       string query,
-      string? countryCode = null,
       CancellationToken ct = default)
   {
     try
     {
-      if (string.IsNullOrWhiteSpace(query) || query.Length < 3)
+      if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
         return new List<string>();
 
-      var url = $"{NominatimApiUrl}/search?q={Uri.EscapeDataString(query)}&format=json&limit=5&dedupe=1";
-
-      // Add country code filter if provided
-      if (!string.IsNullOrWhiteSpace(countryCode))
-      {
-        url += $"&countrycodes={countryCode.ToLower()}";
-      }
+      // Search for French cities with viewbox to focus on France
+      // viewbox format: left,top,right,bottom (lon,lat,lon,lat)
+      // France approximate bounds: left=-8, top=51, right=8, bottom=41
+      // Remove bounded=1 to allow variations like "Fontenille" and "Fontenilles"
+      var url = $"{NominatimApiUrl}/search?q={Uri.EscapeDataString(query)}&format=json&limit=50&countrycodes=fr&viewbox=-8,51,8,41&extratags=1&namedetails=1";
 
       var response = await _httpClient.GetAsync(url, ct);
 
@@ -80,16 +78,50 @@ public class GeocodingService : IGeocodingService
       var content = await response.Content.ReadAsStringAsync(ct);
       var results = System.Text.Json.JsonSerializer.Deserialize<List<NominatimResult>>(content);
 
-      return results?
-          .Select(r => r.DisplayName)
-          .Take(5)
+      // Filter to only cities, towns, and villages by addresstype
+      // Nominatim returns cities as boundary/administrative with addresstype=city/town/village
+      var suggestions = results?
+          .Where(r => r.AddressType == "city" || r.AddressType == "town" || r.AddressType == "village")
+          .Select(r => FormatCitySuggestion(r))
+          .Distinct()
+          .Take(10)
           .ToList() ?? new List<string>();
+
+      return suggestions;
     }
     catch (Exception ex)
     {
-      System.Diagnostics.Debug.WriteLine($"Address suggestions error: {ex.Message}");
+      System.Diagnostics.Debug.WriteLine($"City suggestions error: {ex.Message}");
       return new List<string>();
     }
+  }
+
+  private string FormatCitySuggestion(NominatimResult result)
+  {
+    var cityName = result.DisplayName.Split(",")[0].Trim();
+    var postalCode = ExtractPostalCode(result.DisplayName);
+    
+    if (!string.IsNullOrWhiteSpace(postalCode))
+      return $"{cityName} ({postalCode})";
+    
+    return cityName;
+  }
+
+  private string ExtractPostalCode(string displayName)
+  {
+    // displayName format: "CityName, ..., PostalCode, CountryName"
+    // Try to extract postal code (typically 5 digits for France)
+    var parts = displayName.Split(",");
+    
+    foreach (var part in parts)
+    {
+      var trimmed = part.Trim();
+      // Match French postal codes (5 digits)
+      if (System.Text.RegularExpressions.Regex.IsMatch(trimmed, @"^\d{5}$"))
+        return trimmed;
+    }
+    
+    return string.Empty;
   }
 
   private class NominatimResult
@@ -102,5 +134,14 @@ public class GeocodingService : IGeocodingService
 
     [JsonPropertyName("display_name")]
     public string DisplayName { get; set; } = string.Empty;
+
+    [JsonPropertyName("class")]
+    public string Class { get; set; } = string.Empty;
+
+    [JsonPropertyName("type")]
+    public string Type { get; set; } = string.Empty;
+
+    [JsonPropertyName("addresstype")]
+    public string AddressType { get; set; } = string.Empty;
   }
 }

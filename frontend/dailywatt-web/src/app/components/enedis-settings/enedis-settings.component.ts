@@ -26,18 +26,18 @@ export class EnedisSettingsComponent implements OnInit {
   isInitialLoad = signal(true);
 
   selectedCoordinates = signal<{
-    address?: string;
+    city?: string;
     latitude?: number;
     longitude?: number;
   }>({});
 
-  loadedAddress = signal<string>("");
+  loadedCity = signal<string>("");
 
   credentialsForm = this.fb.group({
     login: ["" as string, Validators.required],
     password: [""],
     meterNumber: ["" as string, Validators.required],
-    address: [""],
+    city: [""],
     latitude: [{ value: null as number | null, disabled: true }],
     longitude: [{ value: null as number | null, disabled: true }],
   });
@@ -52,12 +52,12 @@ export class EnedisSettingsComponent implements OnInit {
         this.credentialsForm.patchValue({
           login: credentials.login,
           meterNumber: credentials.meterNumber,
-          address: credentials.address,
+          city: credentials.city,
           latitude: credentials.latitude,
           longitude: credentials.longitude,
         });
-        if (credentials.address) {
-          this.loadedAddress.set(credentials.address);
+        if (credentials.city) {
+          this.loadedCity.set(credentials.city);
         }
         this.loading.set(false);
         this.isInitialLoad.set(false);
@@ -75,12 +75,12 @@ export class EnedisSettingsComponent implements OnInit {
   }
 
   onLocationSelected(data: {
-    address: string;
+    city: string;
     latitude: number;
     longitude: number;
   }): void {
     this.selectedCoordinates.set(data);
-    this.credentialsForm.get("address")?.setValue(data.address);
+    this.credentialsForm.get("city")?.setValue(data.city);
     this.credentialsForm.get("latitude")?.setValue(data.latitude);
     this.credentialsForm.get("longitude")?.setValue(data.longitude);
   }
@@ -95,7 +95,7 @@ export class EnedisSettingsComponent implements OnInit {
       login: formValue.login || "",
       password: formValue.password || "",
       meterNumber: formValue.meterNumber || "",
-      address: formValue.address || "",
+      city: formValue.city || "",
       latitude: formValue.latitude || 0,
       longitude: formValue.longitude || 0,
     };

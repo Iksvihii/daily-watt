@@ -1,29 +1,27 @@
 namespace DailyWatt.Domain.Services;
 
 /// <summary>
-/// Service for converting addresses to geographic coordinates (geocoding).
+/// Service for finding cities and converting them to geographic coordinates.
 /// </summary>
 public interface IGeocodingService
 {
     /// <summary>
-    /// Geocodes an address to latitude and longitude coordinates.
+    /// Geocodes a city name to latitude and longitude coordinates of the city center.
     /// </summary>
-    /// <param name="address">The address to geocode</param>
+    /// <param name="city">The city name (French cities only)</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Tuple of (latitude, longitude) or null if not found</returns>
     Task<(double latitude, double longitude)?> GeocodeAsync(
-        string address,
+        string city,
         CancellationToken ct = default);
 
     /// <summary>
-    /// Gets autocomplete suggestions for an address.
+    /// Gets autocomplete suggestions for French city names.
     /// </summary>
-    /// <param name="query">Partial address query</param>
-    /// <param name="countryCode">Optional country code to filter results (e.g., 'FR' for France)</param>
+    /// <param name="query">Partial city name query</param>
     /// <param name="ct">Cancellation token</param>
-    /// <returns>List of address suggestions</returns>
-    Task<List<string>> GetAddressSuggestionsAsync(
+    /// <returns>List of French city name suggestions</returns>
+    Task<List<string>> GetCitySuggestionsAsync(
         string query,
-        string? countryCode = null,
         CancellationToken ct = default);
 }
