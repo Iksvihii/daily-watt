@@ -16,6 +16,7 @@ public class ApplicationDbContext : IdentityDbContext<DailyWattUser, IdentityRol
     public DbSet<EnedisCredential> EnedisCredentials => Set<EnedisCredential>();
     public DbSet<Measurement> Measurements => Set<Measurement>();
     public DbSet<ImportJob> ImportJobs => Set<ImportJob>();
+    public DbSet<WeatherDay> WeatherDays => Set<WeatherDay>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -47,6 +48,26 @@ public class ApplicationDbContext : IdentityDbContext<DailyWattUser, IdentityRol
         var dateConverter = new ValueConverter<DateOnly, DateTime>(
             d => d.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc),
             d => DateOnly.FromDateTime(DateTime.SpecifyKind(d, DateTimeKind.Utc)));
+
+        builder.Entity<WeatherDay>(b =>
+        {
+            b.HasKey(x => new { x.UserId, x.Date });
+            b.Property(x => x.Date)
+                .HasConversion(dateConverter)
+                .IsRequired();
+            b.Property(x => x.TempAvg).IsRequired();
+            b.Property(x => x.TempMin).IsRequired();
+            b.Property(x => x.TempMax).IsRequired();
+            b.Property(x => x.Source).HasMaxLength(64).IsRequired();
+            b.Property(x => x.Latitude).IsRequired();
+            b.Property(x => x.Longitude).IsRequired();
+            b.Property(x => x.CreatedAtUtc).IsRequired();
+
+            b.HasOne(x => x.User)
+                .WithMany(u => u.WeatherDays)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
         builder.Entity<ImportJob>(b =>
         {

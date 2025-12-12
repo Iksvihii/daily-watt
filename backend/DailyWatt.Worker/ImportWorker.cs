@@ -41,6 +41,7 @@ public class ImportWorker : BackgroundService
         var scraper = scope.ServiceProvider.GetRequiredService<IEnedisScraper>();
         var secretProtector = scope.ServiceProvider.GetRequiredService<ISecretProtector>();
         var consumptionService = scope.ServiceProvider.GetRequiredService<IConsumptionService>();
+        var weatherSyncService = scope.ServiceProvider.GetRequiredService<IWeatherSyncService>();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         var jobs = await jobService.GetPendingJobsAsync(ct);
@@ -68,6 +69,20 @@ public class ImportWorker : BackgroundService
                     .ExecuteDeleteAsync(ct);
 
                 await consumptionService.BulkInsertAsync(measurements, ct);
+
+                if (credentials.Latitude.HasValue && credentials.Longitude.HasValue)
+                {
+                    var fromDate = DateOnly.FromDateTime(job.FromUtc);
+                    var toDate = DateOnly.FromDateTime(job.ToUtc);
+                    await weatherSyncService.EnsureWeatherAsync(
+                        job.UserId,
+                        credentials.Latitude.Value,
+                        credentials.Longitude.Value,
+                        fromDate,
+                        toDate,
+                        ct);
+                }
+
                 await jobService.MarkCompletedAsync(job, measurements.Count, ct);
             }
             catch (TaskCanceledException)

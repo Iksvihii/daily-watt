@@ -190,6 +190,42 @@ namespace DailyWatt.Infrastructure.Migrations
                     b.ToTable("Measurements");
                 });
 
+            modelBuilder.Entity("DailyWatt.Domain.Entities.WeatherDay", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("TempAvg")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("TempMax")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("TempMin")
+                        .HasColumnType("REAL");
+
+                    b.HasKey("UserId", "Date");
+
+                    b.ToTable("WeatherDays");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
                 {
                     b.Property<Guid>("Id")
@@ -349,6 +385,17 @@ namespace DailyWatt.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DailyWatt.Domain.Entities.WeatherDay", b =>
+                {
+                    b.HasOne("DailyWatt.Domain.Entities.DailyWattUser", "User")
+                        .WithMany("WeatherDays")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -407,6 +454,8 @@ namespace DailyWatt.Infrastructure.Migrations
                     b.Navigation("ImportJobs");
 
                     b.Navigation("Measurements");
+
+                    b.Navigation("WeatherDays");
                 });
 #pragma warning restore 612, 618
         }

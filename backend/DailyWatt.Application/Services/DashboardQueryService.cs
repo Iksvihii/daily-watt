@@ -12,18 +12,21 @@ namespace DailyWatt.Application.Services;
 public class DashboardQueryService : IDashboardQueryService
 {
   private readonly IConsumptionService _consumptionService;
-  private readonly IWeatherProviderService _weatherProviderService;
+  private readonly IWeatherSyncService _weatherSyncService;
+  private readonly IWeatherDataService _weatherDataService;
   private readonly IEnedisCredentialService _enedisCredentialService;
   private readonly IMapper _mapper;
 
   public DashboardQueryService(
       IConsumptionService consumptionService,
-      IWeatherProviderService weatherProviderService,
+      IWeatherSyncService weatherSyncService,
+      IWeatherDataService weatherDataService,
       IEnedisCredentialService enedisCredentialService,
       IMapper mapper)
   {
     _consumptionService = consumptionService;
-    _weatherProviderService = weatherProviderService;
+    _weatherSyncService = weatherSyncService;
+    _weatherDataService = weatherDataService;
     _enedisCredentialService = enedisCredentialService;
     _mapper = mapper;
   }
@@ -68,19 +71,27 @@ public class DashboardQueryService : IDashboardQueryService
 
       if (credentials?.Latitude.HasValue == true && credentials.Longitude.HasValue == true)
       {
-        var fromDate = DateOnly.FromDateTime(queryStartDate);
-        var toDate = DateOnly.FromDateTime(queryEndDate);
+        var measurementRange = await _consumptionService.GetMeasurementRangeAsync(userId, ct);
 
-        // Fetch real-time weather data from external provider
-        var weatherData = await _weatherProviderService.GetWeatherAsync(
-            credentials.Latitude.Value,
-            credentials.Longitude.Value,
-            fromDate,
-            toDate,
-            ct);
+        if (measurementRange.MinTimestampUtc.HasValue && measurementRange.MaxTimestampUtc.HasValue)
+        {
+          var dataRangeStart = DateOnly.FromDateTime(measurementRange.MinTimestampUtc.Value);
+          var dataRangeEnd = DateOnly.FromDateTime(measurementRange.MaxTimestampUtc.Value);
 
-        // Map to DTOs
-        response.Weather = _mapper.Map<List<WeatherDayDto>>(weatherData);
+          await _weatherSyncService.EnsureWeatherAsync(
+              userId,
+              credentials.Latitude.Value,
+              credentials.Longitude.Value,
+              dataRangeStart,
+              dataRangeEnd,
+              ct);
+
+          var requestedFrom = DateOnly.FromDateTime(queryStartDate);
+          var requestedTo = DateOnly.FromDateTime(queryEndDate);
+          var weatherForResponse = await _weatherDataService.GetAsync(userId, requestedFrom, requestedTo, ct);
+
+          response.Weather = _mapper.Map<List<WeatherDayDto>>(weatherForResponse);
+        }
       }
     }
 

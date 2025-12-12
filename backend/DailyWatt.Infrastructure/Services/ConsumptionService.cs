@@ -98,4 +98,14 @@ public class ConsumptionService : IConsumptionService
         await _db.Measurements.AddRangeAsync(measurements, ct);
         await _db.SaveChangesAsync(ct);
     }
+
+    public async Task<(DateTime? MinTimestampUtc, DateTime? MaxTimestampUtc)> GetMeasurementRangeAsync(Guid userId, CancellationToken ct = default)
+    {
+        var query = _db.Measurements.AsNoTracking().Where(x => x.UserId == userId);
+
+        var min = await query.MinAsync(x => (DateTime?)x.TimestampUtc, ct);
+        var max = await query.MaxAsync(x => (DateTime?)x.TimestampUtc, ct);
+
+        return (min, max);
+    }
 }

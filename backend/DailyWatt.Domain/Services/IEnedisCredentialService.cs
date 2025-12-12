@@ -9,10 +9,12 @@ public interface IEnedisCredentialService
         string login,
         string password,
         string meterNumber,
-        string? address = null,
+        string? city = null,
         double? latitude = null,
         double? longitude = null,
         CancellationToken ct = default);
 
     Task<EnedisCredential?> GetCredentialsAsync(Guid userId, CancellationToken ct = default);
+
+    Task DeleteCredentialsAsync(Guid userId, CancellationToken ct = default);
 }

@@ -55,6 +55,8 @@ public static class DependencyInjection
         services.AddScoped<IConsumptionService, Services.ConsumptionService>();
         services.AddScoped<IImportJobService, Services.ImportJobService>();
         services.AddScoped<IEnedisScraper, Services.StubEnedisScraper>();
+        services.AddScoped<IWeatherDataService, Services.WeatherDataService>();
+        services.AddScoped<IWeatherSyncService, Services.WeatherSyncService>();
 
         return services;
     }

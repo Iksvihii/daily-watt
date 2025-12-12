@@ -25,6 +25,8 @@ public class MappingProfile : Profile
     CreateMap<ConsumptionSummary, SummaryDto>();
 
     CreateMap<WeatherData, WeatherDayDto>();
+    CreateMap<WeatherDay, WeatherDayDto>()
+      .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.Date.ToString("yyyy-MM-dd")));
 
     // Enedis mappings
     CreateMap<ImportJob, ImportJobDto>()

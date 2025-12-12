@@ -75,6 +75,14 @@ public class EnedisController : ControllerBase
         });
     }
 
+    [HttpDelete("credentials")]
+    public async Task<IActionResult> DeleteCredentials(CancellationToken ct)
+    {
+        var userId = User.GetUserId();
+        await _credentialsService.DeleteCredentialsAsync(userId, ct);
+        return NoContent();
+    }
+
     [HttpGet("status")]
     public async Task<ActionResult<EnedisStatusResponse>> GetStatus(CancellationToken ct)
     {
