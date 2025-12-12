@@ -14,7 +14,16 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDataProtection();
+        // Configure data protection with a persistent key storage location shared by API and Worker
+        var dataProtectionKeysPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "DailyWatt",
+            "data-protection-keys");
+        Directory.CreateDirectory(dataProtectionKeysPath);
+
+        services.AddDataProtection()
+            .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath))
+            .SetApplicationName("DailyWatt");
 
         services.Configure<WeatherOptions>(configuration.GetSection(WeatherOptions.SectionName));
 
