@@ -18,7 +18,9 @@ public static class ExcelMeasurementParser
   private const string HeaderPlageHoraire = "Plage horaire";
   private const string HeaderDebut = "Début";
   private const string HeaderFin = "Fin";
-  private const string HeaderConsommation = "Valeur (en kW)"; public static List<Measurement> Parse(Stream excelStream, Guid userId, DateTime fromUtc, DateTime toUtc)
+  private const string HeaderConsommation = "Valeur (en kW)";
+
+  public static List<Measurement> Parse(Stream excelStream, Guid userId, Guid meterId, DateTime fromUtc, DateTime toUtc)
   {
     var results = new List<Measurement>();
     excelStream.Seek(0, SeekOrigin.Begin);
@@ -101,6 +103,7 @@ public static class ExcelMeasurementParser
       {
         Id = Guid.NewGuid(),
         UserId = userId,
+        MeterId = meterId,
         TimestampUtc = timestamp,
         Kwh = kwh,
         Source = "enedis"

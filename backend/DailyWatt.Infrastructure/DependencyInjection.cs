@@ -52,6 +52,7 @@ public static class DependencyInjection
 
         services.AddScoped<ISecretProtector, Services.SecretProtector>();
         services.AddScoped<IEnedisCredentialService, Services.EnedisCredentialService>();
+        services.AddScoped<IEnedisMeterService, Services.EnedisMeterService>();
         services.AddScoped<IConsumptionService, Services.ConsumptionService>();
         services.AddScoped<IImportJobService, Services.ImportJobService>();
         services.AddScoped<IEnedisScraper, Services.StubEnedisScraper>();

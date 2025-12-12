@@ -19,6 +19,7 @@ public class WeatherSyncService : IWeatherSyncService
 
   public async Task EnsureWeatherAsync(
       Guid userId,
+      Guid meterId,
       double latitude,
       double longitude,
       DateOnly fromDate,
@@ -30,7 +31,7 @@ public class WeatherSyncService : IWeatherSyncService
       return;
     }
 
-    var cached = await _weatherDataService.GetAsync(userId, fromDate, toDate, ct);
+    var cached = await _weatherDataService.GetAsync(userId, meterId, fromDate, toDate, ct);
     var missingIntervals = GetMissingIntervals(fromDate, toDate, cached.Select(x => x.Date));
 
     if (missingIntervals.Count == 0)
@@ -49,6 +50,7 @@ public class WeatherSyncService : IWeatherSyncService
         toPersist.Add(new WeatherDay
         {
           UserId = userId,
+          MeterId = meterId,
           Date = DateOnly.ParseExact(weather.Date, "yyyy-MM-dd"),
           TempAvg = weather.TempAvg,
           TempMin = weather.TempMin,
@@ -63,7 +65,7 @@ public class WeatherSyncService : IWeatherSyncService
 
     if (toPersist.Count > 0)
     {
-      await _weatherDataService.UpsertAsync(userId, toPersist, ct);
+      await _weatherDataService.UpsertAsync(userId, meterId, toPersist, ct);
     }
   }
 

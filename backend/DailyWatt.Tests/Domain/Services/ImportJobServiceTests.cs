@@ -125,8 +125,7 @@ public class EnedisCredentialServiceMockTests
     {
       UserId = userId,
       LoginEncrypted = new byte[] { 1, 2, 3 },
-      PasswordEncrypted = new byte[] { 4, 5, 6 },
-      MeterNumber = "12345678901234"
+      PasswordEncrypted = new byte[] { 4, 5, 6 }
     };
 
     var mockCredentialService = new Mock<IEnedisCredentialService>();
@@ -140,7 +139,6 @@ public class EnedisCredentialServiceMockTests
     // Assert
     Assert.NotNull(result);
     Assert.Equal(userId, result.UserId);
-    Assert.Equal("12345678901234", result.MeterNumber);
     mockCredentialService.Verify(
         s => s.GetCredentialsAsync(userId, It.IsAny<CancellationToken>()),
         Times.Once);
@@ -171,22 +169,18 @@ public class EnedisCredentialServiceMockTests
     var userId = Guid.NewGuid();
     const string login = "login";
     const string password = "password";
-    const string meterNumber = "12345678901234";
-    const string city = "Paris";
-    const double latitude = 48.8566;
-    const double longitude = 2.3522;
 
     var mockCredentialService = new Mock<IEnedisCredentialService>();
     mockCredentialService
-        .Setup(s => s.SaveCredentialsAsync(userId, login, password, meterNumber, city, latitude, longitude, It.IsAny<CancellationToken>()))
+        .Setup(s => s.SaveCredentialsAsync(userId, login, password, It.IsAny<CancellationToken>()))
         .Returns(Task.CompletedTask);
 
     // Act
-    await mockCredentialService.Object.SaveCredentialsAsync(userId, login, password, meterNumber, city, latitude, longitude);
+    await mockCredentialService.Object.SaveCredentialsAsync(userId, login, password);
 
     // Assert
     mockCredentialService.Verify(
-        s => s.SaveCredentialsAsync(userId, login, password, meterNumber, city, latitude, longitude, It.IsAny<CancellationToken>()),
+        s => s.SaveCredentialsAsync(userId, login, password, It.IsAny<CancellationToken>()),
         Times.Once);
   }
 }

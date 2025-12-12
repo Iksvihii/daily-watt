@@ -54,12 +54,25 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
     using var dbContext = _fixture.CreateContext();
     var userId = await CreateTestUserAsync(dbContext);
 
+    // Create EnedisMeter
+    var meterId = Guid.NewGuid();
+    var meter = new EnedisMeter
+    {
+      Id = meterId,
+      UserId = userId,
+      Prm = "12345678901234",
+      CreatedAtUtc = DateTime.UtcNow,
+      UpdatedAtUtc = DateTime.UtcNow
+    };
+    dbContext.EnedisMeters.Add(meter);
+    await dbContext.SaveChangesAsync();
+
     // Insert test data directly
     dbContext.Measurements.AddRange(
-      new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc), Kwh = 0.31 },
-      new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 0, 30, 0, DateTimeKind.Utc), Kwh = 0.22 },
-      new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 1, 0, 0, DateTimeKind.Utc), Kwh = 0.28 },
-      new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 1, 30, 0, DateTimeKind.Utc), Kwh = 0.25 }
+      new Measurement { Id = Guid.NewGuid(), UserId = userId, MeterId = meterId, TimestampUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc), Kwh = 0.31 },
+      new Measurement { Id = Guid.NewGuid(), UserId = userId, MeterId = meterId, TimestampUtc = new DateTime(2025, 12, 1, 0, 30, 0, DateTimeKind.Utc), Kwh = 0.22 },
+      new Measurement { Id = Guid.NewGuid(), UserId = userId, MeterId = meterId, TimestampUtc = new DateTime(2025, 12, 1, 1, 0, 0, DateTimeKind.Utc), Kwh = 0.28 },
+      new Measurement { Id = Guid.NewGuid(), UserId = userId, MeterId = meterId, TimestampUtc = new DateTime(2025, 12, 1, 1, 30, 0, DateTimeKind.Utc), Kwh = 0.25 }
     );
     await dbContext.SaveChangesAsync();
 
@@ -69,7 +82,7 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
     var toUtc = new DateTime(2025, 12, 1, 23, 59, 59, DateTimeKind.Utc);
 
     // Act
-    var result = await consumptionService.GetAggregatedAsync(userId, fromUtc, toUtc, Granularity.Hour);
+    var result = await consumptionService.GetAggregatedAsync(userId, meterId, fromUtc, toUtc, Granularity.Hour);
 
     // Assert
     Assert.NotEmpty(result);
@@ -92,6 +105,19 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
     using var dbContext = _fixture.CreateContext();
     var userId = await CreateTestUserAsync(dbContext);
 
+    // Create EnedisMeter
+    var meterId = Guid.NewGuid();
+    var meter = new EnedisMeter
+    {
+      Id = meterId,
+      UserId = userId,
+      Prm = "12345678901234",
+      CreatedAtUtc = DateTime.UtcNow,
+      UpdatedAtUtc = DateTime.UtcNow
+    };
+    dbContext.EnedisMeters.Add(meter);
+    await dbContext.SaveChangesAsync();
+
     // Insert 48 measurements for a full day (30-min intervals)
     var measurements = new List<Measurement>();
     for (int i = 0; i < 48; i++)
@@ -100,6 +126,7 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
       {
         Id = Guid.NewGuid(),
         UserId = userId,
+        MeterId = meterId,
         TimestampUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc).AddMinutes(i * 30),
         Kwh = 0.5
       });
@@ -113,7 +140,7 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
     var toUtc = new DateTime(2025, 12, 1, 23, 59, 59, DateTimeKind.Utc);
 
     // Act
-    var result = await consumptionService.GetAggregatedAsync(userId, fromUtc, toUtc, Granularity.Day);
+    var result = await consumptionService.GetAggregatedAsync(userId, meterId, fromUtc, toUtc, Granularity.Day);
 
     // Assert
     Assert.Single(result);
@@ -129,11 +156,24 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
     using var dbContext = _fixture.CreateContext();
     var userId = await CreateTestUserAsync(dbContext);
 
+    // Create EnedisMeter
+    var meterId = Guid.NewGuid();
+    var meter = new EnedisMeter
+    {
+      Id = meterId,
+      UserId = userId,
+      Prm = "12345678901234",
+      CreatedAtUtc = DateTime.UtcNow,
+      UpdatedAtUtc = DateTime.UtcNow
+    };
+    dbContext.EnedisMeters.Add(meter);
+    await dbContext.SaveChangesAsync();
+
     // Insert test data
     dbContext.Measurements.AddRange(
-      new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc), Kwh = 10 },
-      new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 2, 0, 0, 0, DateTimeKind.Utc), Kwh = 15 },
-      new Measurement { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = new DateTime(2025, 12, 3, 0, 0, 0, DateTimeKind.Utc), Kwh = 20 }
+      new Measurement { Id = Guid.NewGuid(), UserId = userId, MeterId = meterId, TimestampUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc), Kwh = 10 },
+      new Measurement { Id = Guid.NewGuid(), UserId = userId, MeterId = meterId, TimestampUtc = new DateTime(2025, 12, 2, 0, 0, 0, DateTimeKind.Utc), Kwh = 15 },
+      new Measurement { Id = Guid.NewGuid(), UserId = userId, MeterId = meterId, TimestampUtc = new DateTime(2025, 12, 3, 0, 0, 0, DateTimeKind.Utc), Kwh = 20 }
     );
     await dbContext.SaveChangesAsync();
 
@@ -143,7 +183,7 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
     var toUtc = new DateTime(2025, 12, 3, 23, 59, 59, DateTimeKind.Utc);
 
     // Act
-    var result = await consumptionService.GetSummaryAsync(userId, fromUtc, toUtc);
+    var result = await consumptionService.GetSummaryAsync(userId, meterId, fromUtc, toUtc);
 
     // Assert
     Assert.NotNull(result);
@@ -159,11 +199,24 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
     using var dbContext = _fixture.CreateContext();
     var userId = await CreateTestUserAsync(dbContext);
 
+    // Create EnedisMeter
+    var meterId = Guid.NewGuid();
+    var meter = new EnedisMeter
+    {
+      Id = meterId,
+      UserId = userId,
+      Prm = "12345678901234",
+      CreatedAtUtc = DateTime.UtcNow,
+      UpdatedAtUtc = DateTime.UtcNow
+    };
+    dbContext.EnedisMeters.Add(meter);
+    await dbContext.SaveChangesAsync();
+
     var measurements = new List<Measurement>
         {
-            new() { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = DateTime.UtcNow.AddHours(-2), Kwh = 0.5 },
-            new() { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = DateTime.UtcNow.AddHours(-1), Kwh = 0.6 },
-            new() { Id = Guid.NewGuid(), UserId = userId, TimestampUtc = DateTime.UtcNow, Kwh = 0.7 },
+            new() { Id = Guid.NewGuid(), UserId = userId, MeterId = meterId, TimestampUtc = DateTime.UtcNow.AddHours(-2), Kwh = 0.5 },
+            new() { Id = Guid.NewGuid(), UserId = userId, MeterId = meterId, TimestampUtc = DateTime.UtcNow.AddHours(-1), Kwh = 0.6 },
+            new() { Id = Guid.NewGuid(), UserId = userId, MeterId = meterId, TimestampUtc = DateTime.UtcNow, Kwh = 0.7 },
         };
 
     var consumptionService = new ConsumptionService(dbContext);
@@ -182,6 +235,7 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
   {
     // Arrange
     var userId = Guid.NewGuid();
+    var meterId = Guid.NewGuid();
     using var dbContext = _fixture.CreateContext();
     var consumptionService = new ConsumptionService(dbContext);
 
@@ -189,7 +243,7 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
     var toUtc = new DateTime(2025, 12, 8, 23, 59, 59, DateTimeKind.Utc);
 
     // Act
-    var result = await consumptionService.GetAggregatedAsync(userId, fromUtc, toUtc, Granularity.Day);
+    var result = await consumptionService.GetAggregatedAsync(userId, meterId, fromUtc, toUtc, Granularity.Day);
 
     // Assert
     Assert.Empty(result);
@@ -202,6 +256,19 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
     using var dbContext = _fixture.CreateContext();
     var userId = await CreateTestUserAsync(dbContext);
 
+    // Create EnedisMeter
+    var meterId = Guid.NewGuid();
+    var meter = new EnedisMeter
+    {
+      Id = meterId,
+      UserId = userId,
+      Prm = "12345678901234",
+      CreatedAtUtc = DateTime.UtcNow,
+      UpdatedAtUtc = DateTime.UtcNow
+    };
+    dbContext.EnedisMeters.Add(meter);
+    await dbContext.SaveChangesAsync();
+
     // Insert test data for 14 days
     var measurements = new List<Measurement>();
     for (int day = 1; day <= 14; day++)
@@ -210,6 +277,7 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
       {
         Id = Guid.NewGuid(),
         UserId = userId,
+        MeterId = meterId,
         TimestampUtc = new DateTime(2025, 12, day, 12, 0, 0, DateTimeKind.Utc),
         Kwh = day * 1.0 // Different value per day
       });
@@ -223,7 +291,7 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
     var toUtc = new DateTime(2025, 12, 14, 23, 59, 59, DateTimeKind.Utc);
 
     // Act
-    var result = await consumptionService.GetAggregatedAsync(userId, fromUtc, toUtc, Granularity.Month);
+    var result = await consumptionService.GetAggregatedAsync(userId, meterId, fromUtc, toUtc, Granularity.Month);
 
     // Assert
     Assert.Single(result); // All in same month (Dec)

@@ -14,25 +14,26 @@ public class DashboardQueryService : IDashboardQueryService
   private readonly IConsumptionService _consumptionService;
   private readonly IWeatherSyncService _weatherSyncService;
   private readonly IWeatherDataService _weatherDataService;
-  private readonly IEnedisCredentialService _enedisCredentialService;
+  private readonly IEnedisMeterService _enedisMeterService;
   private readonly IMapper _mapper;
 
   public DashboardQueryService(
       IConsumptionService consumptionService,
       IWeatherSyncService weatherSyncService,
       IWeatherDataService weatherDataService,
-      IEnedisCredentialService enedisCredentialService,
+      IEnedisMeterService enedisMeterService,
       IMapper mapper)
   {
     _consumptionService = consumptionService;
     _weatherSyncService = weatherSyncService;
     _weatherDataService = weatherDataService;
-    _enedisCredentialService = enedisCredentialService;
+    _enedisMeterService = enedisMeterService;
     _mapper = mapper;
   }
 
   public async Task<TimeSeriesResponse> GetTimeSeriesAsync(
       Guid userId,
+      Guid? meterId,
       DateTime from,
       DateTime to,
       Granularity granularity,
@@ -42,9 +43,19 @@ public class DashboardQueryService : IDashboardQueryService
     var queryStartDate = from.ToUniversalTime();
     var queryEndDate = to.ToUniversalTime();
 
+    var meter = meterId.HasValue
+      ? await _enedisMeterService.GetAsync(userId, meterId.Value, ct)
+      : await _enedisMeterService.GetDefaultMeterAsync(userId, ct);
+
+    if (meter == null)
+    {
+      return new TimeSeriesResponse();
+    }
+
     // Fetch aggregated consumption data
     var consumption = await _consumptionService.GetAggregatedAsync(
         userId,
+        meter.Id,
         queryStartDate,
         queryEndDate,
         granularity,
@@ -53,6 +64,7 @@ public class DashboardQueryService : IDashboardQueryService
     // Fetch summary statistics
     var summary = await _consumptionService.GetSummaryAsync(
         userId,
+        meter.Id,
         queryStartDate,
         queryEndDate,
         ct);
@@ -67,11 +79,9 @@ public class DashboardQueryService : IDashboardQueryService
     // Optionally fetch weather data from external provider
     if (withWeather)
     {
-      var credentials = await _enedisCredentialService.GetCredentialsAsync(userId, ct);
-
-      if (credentials?.Latitude.HasValue == true && credentials.Longitude.HasValue == true)
+      if (meter.Latitude.HasValue && meter.Longitude.HasValue)
       {
-        var measurementRange = await _consumptionService.GetMeasurementRangeAsync(userId, ct);
+        var measurementRange = await _consumptionService.GetMeasurementRangeAsync(userId, meter.Id, ct);
 
         if (measurementRange.MinTimestampUtc.HasValue && measurementRange.MaxTimestampUtc.HasValue)
         {
@@ -80,15 +90,16 @@ public class DashboardQueryService : IDashboardQueryService
 
           await _weatherSyncService.EnsureWeatherAsync(
               userId,
-              credentials.Latitude.Value,
-              credentials.Longitude.Value,
+              meter.Id,
+              meter.Latitude.Value,
+              meter.Longitude.Value,
               dataRangeStart,
               dataRangeEnd,
               ct);
 
           var requestedFrom = DateOnly.FromDateTime(queryStartDate);
           var requestedTo = DateOnly.FromDateTime(queryEndDate);
-          var weatherForResponse = await _weatherDataService.GetAsync(userId, requestedFrom, requestedTo, ct);
+          var weatherForResponse = await _weatherDataService.GetAsync(userId, meter.Id, requestedFrom, requestedTo, ct);
 
           response.Weather = _mapper.Map<List<WeatherDayDto>>(weatherForResponse);
         }

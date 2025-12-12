@@ -3,8 +3,8 @@ using System.ComponentModel.DataAnnotations;
 namespace DailyWatt.Application.DTO.Requests;
 
 /// <summary>
-/// Request to save Enedis user credentials.
-/// Includes city name and geographic coordinates for the Linky meter location.
+/// Request to save Enedis user credentials (login and password only).
+/// Meter information is managed separately via meter CRUD endpoints.
 /// </summary>
 public record SaveEnedisCredentialsRequest
 {
@@ -12,21 +12,9 @@ public record SaveEnedisCredentialsRequest
   [StringLength(255)]
   public required string Login { get; init; }
 
+  [Required(ErrorMessage = "Password is required")]
   [StringLength(255)]
-  public string Password { get; init; } = string.Empty;
-
-  [Required(ErrorMessage = "Meter number is required")]
-  [StringLength(64)]
-  public required string MeterNumber { get; init; }
-
-  [StringLength(255)]
-  public string? City { get; init; }
-
-  [Range(-90, 90, ErrorMessage = "Latitude must be between -90 and 90")]
-  public double? Latitude { get; init; }
-
-  [Range(-180, 180, ErrorMessage = "Longitude must be between -180 and 180")]
-  public double? Longitude { get; init; }
+  public required string Password { get; init; }
 }
 
 /// <summary>
@@ -34,6 +22,9 @@ public record SaveEnedisCredentialsRequest
 /// </summary>
 public record CreateImportJobRequest
 {
+  [Required(ErrorMessage = "MeterId is required")]
+  public required Guid MeterId { get; init; }
+
   [Required(ErrorMessage = "FromUtc is required")]
   public required DateTime FromUtc { get; init; }
 

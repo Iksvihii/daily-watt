@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace DailyWatt.Application.DTO.Requests;
@@ -20,4 +21,6 @@ public record GetTimeSeriesRequest
   public required string Granularity { get; init; }
 
   public bool WithWeather { get; init; }
+
+  public Guid? MeterId { get; init; }
 }

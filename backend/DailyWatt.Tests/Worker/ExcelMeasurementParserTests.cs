@@ -21,13 +21,14 @@ public class ExcelMeasurementParserTests
   {
     // Arrange
     var userId = Guid.NewGuid();
+    var meterId = Guid.NewGuid();
     var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
     var toUtc = new DateTime(2025, 12, 8, 23, 59, 59, DateTimeKind.Utc);
 
     using var stream = File.OpenRead(_testDataPath);
 
     // Act
-    var measurements = ExcelMeasurementParser.Parse(stream, userId, fromUtc, toUtc);
+    var measurements = ExcelMeasurementParser.Parse(stream, userId, meterId, fromUtc, toUtc);
 
     // Assert
     Assert.NotEmpty(measurements);
@@ -45,13 +46,14 @@ public class ExcelMeasurementParserTests
   {
     // Arrange
     var userId = Guid.NewGuid();
+    var meterId = Guid.NewGuid();
     var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
     var toUtc = new DateTime(2025, 12, 1, 2, 0, 0, DateTimeKind.Utc);
 
     using var stream = File.OpenRead(_testDataPath);
 
     // Act
-    var measurements = ExcelMeasurementParser.Parse(stream, userId, fromUtc, toUtc);
+    var measurements = ExcelMeasurementParser.Parse(stream, userId, meterId, fromUtc, toUtc);
 
     // Assert
     // Data exists - get first measurement and verify conversion
@@ -68,13 +70,14 @@ public class ExcelMeasurementParserTests
   {
     // Arrange
     var userId = Guid.NewGuid();
+    var meterId = Guid.NewGuid();
     var fromUtc = new DateTime(2025, 12, 2, 0, 0, 0, DateTimeKind.Utc); // 2 Dec
     var toUtc = new DateTime(2025, 12, 3, 23, 59, 59, DateTimeKind.Utc);   // 3 Dec
 
     using var stream = File.OpenRead(_testDataPath);
 
     // Act
-    var measurements = ExcelMeasurementParser.Parse(stream, userId, fromUtc, toUtc);
+    var measurements = ExcelMeasurementParser.Parse(stream, userId, meterId, fromUtc, toUtc);
 
     // Assert
     Assert.All(measurements, m =>
@@ -89,13 +92,14 @@ public class ExcelMeasurementParserTests
   {
     // Arrange
     var userId = Guid.NewGuid();
+    var meterId = Guid.NewGuid();
     var fromUtc = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc); // Future date
     var toUtc = new DateTime(2026, 1, 2, 23, 59, 59, DateTimeKind.Utc);
 
     using var stream = File.OpenRead(_testDataPath);
 
     // Act
-    var measurements = ExcelMeasurementParser.Parse(stream, userId, fromUtc, toUtc);
+    var measurements = ExcelMeasurementParser.Parse(stream, userId, meterId, fromUtc, toUtc);
 
     // Assert
     Assert.Empty(measurements);
@@ -106,13 +110,14 @@ public class ExcelMeasurementParserTests
   {
     // Arrange
     var userId = Guid.NewGuid();
+    var meterId = Guid.NewGuid();
     var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
     var toUtc = new DateTime(2025, 12, 8, 23, 59, 59, DateTimeKind.Utc);
 
     using var stream = File.OpenRead(_testDataPath);
 
     // Act
-    var measurements = ExcelMeasurementParser.Parse(stream, userId, fromUtc, toUtc);
+    var measurements = ExcelMeasurementParser.Parse(stream, userId, meterId, fromUtc, toUtc);
 
     // Assert
     Assert.All(measurements, m =>
@@ -126,13 +131,14 @@ public class ExcelMeasurementParserTests
   {
     // Arrange
     var userId = Guid.NewGuid();
+    var meterId = Guid.NewGuid();
     var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
     var toUtc = new DateTime(2025, 12, 8, 23, 59, 59, DateTimeKind.Utc);
 
     using var stream = File.OpenRead(_testDataPath);
 
     // Act
-    var measurements = ExcelMeasurementParser.Parse(stream, userId, fromUtc, toUtc);
+    var measurements = ExcelMeasurementParser.Parse(stream, userId, meterId, fromUtc, toUtc);
 
     // Assert
     // File has 8 days of data, 48 30-minute intervals per day = 384 intervals expected
@@ -147,12 +153,13 @@ public class ExcelMeasurementParserTests
     // Arrange
     using var emptyStream = new MemoryStream();
     var userId = Guid.NewGuid();
+    var meterId = Guid.NewGuid();
     var fromUtc = DateTime.UtcNow.AddDays(-1);
     var toUtc = DateTime.UtcNow;
 
     // Act & Assert
     // ClosedXML throws FileFormatException when stream is empty
-    Assert.Throws<System.IO.FileFormatException>(() => ExcelMeasurementParser.Parse(emptyStream, userId, fromUtc, toUtc));
+    Assert.Throws<System.IO.FileFormatException>(() => ExcelMeasurementParser.Parse(emptyStream, userId, meterId, fromUtc, toUtc));
   }
 
   [Fact]
@@ -175,12 +182,13 @@ public class ExcelMeasurementParserTests
 
       using var stream = File.OpenRead(tempFile);
       var userId = Guid.NewGuid();
+      var meterId = Guid.NewGuid();
       var fromUtc = DateTime.UtcNow.AddDays(-1);
       var toUtc = DateTime.UtcNow;
 
       // Act & Assert
       var ex = Assert.Throws<InvalidOperationException>(() =>
-          ExcelMeasurementParser.Parse(stream, userId, fromUtc, toUtc));
+          ExcelMeasurementParser.Parse(stream, userId, meterId, fromUtc, toUtc));
 
       Assert.Contains("not found", ex.Message);
     }

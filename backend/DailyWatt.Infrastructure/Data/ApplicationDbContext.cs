@@ -14,6 +14,7 @@ public class ApplicationDbContext : IdentityDbContext<DailyWattUser, IdentityRol
     }
 
     public DbSet<EnedisCredential> EnedisCredentials => Set<EnedisCredential>();
+    public DbSet<EnedisMeter> EnedisMeters => Set<EnedisMeter>();
     public DbSet<Measurement> Measurements => Set<Measurement>();
     public DbSet<ImportJob> ImportJobs => Set<ImportJob>();
     public DbSet<WeatherDay> WeatherDays => Set<WeatherDay>();
@@ -31,17 +32,35 @@ public class ApplicationDbContext : IdentityDbContext<DailyWattUser, IdentityRol
                 .OnDelete(DeleteBehavior.Cascade);
             b.Property(x => x.LoginEncrypted).IsRequired();
             b.Property(x => x.PasswordEncrypted).IsRequired();
-            b.Property(x => x.MeterNumber).HasMaxLength(64).IsRequired();
             b.Property(x => x.UpdatedAt).IsRequired();
+        });
+
+        builder.Entity<EnedisMeter>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Prm).HasMaxLength(64).IsRequired();
+            b.Property(x => x.Label).HasMaxLength(128);
+            b.Property(x => x.City).HasMaxLength(255);
+            b.Property(x => x.CreatedAtUtc).IsRequired();
+            b.Property(x => x.UpdatedAtUtc).IsRequired();
+            b.HasIndex(x => new { x.UserId, x.Prm }).IsUnique();
+            b.HasOne(x => x.User)
+                .WithMany(u => u.EnedisMeters)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<Measurement>(b =>
         {
-            b.HasIndex(x => new { x.UserId, x.TimestampUtc });
+            b.HasIndex(x => new { x.UserId, x.MeterId, x.TimestampUtc });
             b.Property(x => x.Source).HasMaxLength(64);
             b.HasOne(x => x.User)
                 .WithMany(u => u.Measurements)
                 .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.Meter)
+                .WithMany()
+                .HasForeignKey(x => x.MeterId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -51,7 +70,7 @@ public class ApplicationDbContext : IdentityDbContext<DailyWattUser, IdentityRol
 
         builder.Entity<WeatherDay>(b =>
         {
-            b.HasKey(x => new { x.UserId, x.Date });
+            b.HasKey(x => new { x.UserId, x.MeterId, x.Date });
             b.Property(x => x.Date)
                 .HasConversion(dateConverter)
                 .IsRequired();
@@ -67,6 +86,11 @@ public class ApplicationDbContext : IdentityDbContext<DailyWattUser, IdentityRol
                 .WithMany(u => u.WeatherDays)
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            b.HasOne(x => x.Meter)
+                .WithMany()
+                .HasForeignKey(x => x.MeterId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<ImportJob>(b =>
@@ -81,6 +105,10 @@ public class ApplicationDbContext : IdentityDbContext<DailyWattUser, IdentityRol
             b.HasOne(x => x.User)
                 .WithMany(u => u.ImportJobs)
                 .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.Meter)
+                .WithMany()
+                .HasForeignKey(x => x.MeterId)
                 .OnDelete(DeleteBehavior.Cascade);
             b.HasIndex(x => new { x.Status, x.CreatedAt });
         });

@@ -32,6 +32,7 @@ public class DashboardController : ControllerBase
         // Delegate to service for data composition
         var response = await _dashboardQueryService.GetTimeSeriesAsync(
             userId,
+            request.MeterId,
             request.From,
             request.To,
             granularityValue,

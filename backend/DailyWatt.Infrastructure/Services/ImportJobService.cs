@@ -15,12 +15,13 @@ public class ImportJobService : IImportJobService
         _db = db;
     }
 
-    public async Task<ImportJob> CreateJobAsync(Guid userId, DateTime fromUtc, DateTime toUtc, CancellationToken ct = default)
+    public async Task<ImportJob> CreateJobAsync(Guid userId, Guid meterId, DateTime fromUtc, DateTime toUtc, CancellationToken ct = default)
     {
         var job = new ImportJob
         {
             Id = Guid.NewGuid(),
             UserId = userId,
+            MeterId = meterId,
             CreatedAt = DateTime.UtcNow,
             Status = ImportJobStatus.Pending,
             FromUtc = fromUtc,

@@ -14,6 +14,7 @@ public interface IDashboardQueryService
   /// </summary>
   Task<TimeSeriesResponse> GetTimeSeriesAsync(
       Guid userId,
+      Guid? meterId,
       DateTime from,
       DateTime to,
       Granularity granularity,

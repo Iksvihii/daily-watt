@@ -8,6 +8,7 @@ public interface IWeatherSyncService
 {
   Task EnsureWeatherAsync(
       Guid userId,
+      Guid meterId,
       double latitude,
       double longitude,
       DateOnly fromDate,

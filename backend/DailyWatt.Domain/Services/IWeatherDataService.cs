@@ -7,9 +7,11 @@ namespace DailyWatt.Domain.Services;
 /// </summary>
 public interface IWeatherDataService
 {
-  Task<IReadOnlyList<WeatherDay>> GetAsync(Guid userId, DateOnly fromDate, DateOnly toDate, CancellationToken ct = default);
+  Task<IReadOnlyList<WeatherDay>> GetAsync(Guid userId, Guid meterId, DateOnly fromDate, DateOnly toDate, CancellationToken ct = default);
 
-  Task UpsertAsync(Guid userId, IEnumerable<WeatherDay> weatherDays, CancellationToken ct = default);
+  Task UpsertAsync(Guid userId, Guid meterId, IEnumerable<WeatherDay> weatherDays, CancellationToken ct = default);
 
-  Task DeleteAllAsync(Guid userId, CancellationToken ct = default);
+  Task DeleteAllAsync(Guid userId, Guid meterId, CancellationToken ct = default);
+
+  Task DeleteAllForUserAsync(Guid userId, CancellationToken ct = default);
 }

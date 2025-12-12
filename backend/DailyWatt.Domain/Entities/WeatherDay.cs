@@ -6,6 +6,7 @@ namespace DailyWatt.Domain.Entities;
 public class WeatherDay
 {
   public Guid UserId { get; set; }
+  public Guid MeterId { get; set; }
   public DateOnly Date { get; set; }
   public double TempAvg { get; set; }
   public double TempMin { get; set; }
@@ -16,4 +17,5 @@ public class WeatherDay
   public DateTime CreatedAtUtc { get; set; }
 
   public DailyWattUser? User { get; set; }
+  public EnedisMeter? Meter { get; set; }
 }

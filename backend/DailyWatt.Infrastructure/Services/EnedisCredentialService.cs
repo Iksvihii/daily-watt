@@ -22,15 +22,9 @@ public class EnedisCredentialService : IEnedisCredentialService
         Guid userId,
         string login,
         string password,
-        string meterNumber,
-        string? city = null,
-        double? latitude = null,
-        double? longitude = null,
         CancellationToken ct = default)
     {
         var entity = await _db.EnedisCredentials.FirstOrDefaultAsync(x => x.UserId == userId, ct);
-        var locationChanged = entity != null &&
-            (entity.City != city || !Nullable.Equals(entity.Latitude, latitude) || !Nullable.Equals(entity.Longitude, longitude));
         if (entity == null)
         {
             entity = new EnedisCredential { UserId = userId };
@@ -42,18 +36,9 @@ public class EnedisCredentialService : IEnedisCredentialService
         {
             entity.PasswordEncrypted = _secretProtector.Protect(password);
         }
-        entity.MeterNumber = meterNumber;
-        entity.City = city;
-        entity.Latitude = latitude;
-        entity.Longitude = longitude;
         entity.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(ct);
-
-        if (locationChanged)
-        {
-            await _weatherDataService.DeleteAllAsync(userId, ct);
-        }
     }
 
     public async Task DeleteCredentialsAsync(Guid userId, CancellationToken ct = default)
@@ -66,11 +51,15 @@ public class EnedisCredentialService : IEnedisCredentialService
 
         _db.EnedisCredentials.Remove(credential);
 
-        // Remove related measurements for this user (single meter per user)
-        await _db.Measurements.Where(m => m.UserId == userId).ExecuteDeleteAsync(ct);
+        // Remove meters (cascade removes measurements/weather/imports)
+        var meters = await _db.EnedisMeters.Where(m => m.UserId == userId).ToListAsync(ct);
+        if (meters.Count > 0)
+        {
+            _db.EnedisMeters.RemoveRange(meters);
+        }
 
-        // Remove cached weather
-        await _weatherDataService.DeleteAllAsync(userId, ct);
+        // Remove cached weather not linked to meter (safety)
+        await _weatherDataService.DeleteAllForUserAsync(userId, ct);
 
         await _db.SaveChangesAsync(ct);
     }

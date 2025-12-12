@@ -14,6 +14,7 @@ namespace DailyWatt.Api.Controllers;
 public class EnedisController : ControllerBase
 {
     private readonly IEnedisCredentialService _credentialsService;
+    private readonly IEnedisMeterService _meterService;
     private readonly IImportJobService _importJobService;
     private readonly IGeocodingService _geocodingService;
     private readonly ISecretProtector _secretProtector;
@@ -21,12 +22,14 @@ public class EnedisController : ControllerBase
 
     public EnedisController(
         IEnedisCredentialService credentialsService,
+        IEnedisMeterService meterService,
         IImportJobService importJobService,
         IGeocodingService geocodingService,
         ISecretProtector secretProtector,
         IMapper mapper)
     {
         _credentialsService = credentialsService;
+        _meterService = meterService;
         _importJobService = importJobService;
         _geocodingService = geocodingService;
         _secretProtector = secretProtector;
@@ -41,10 +44,6 @@ public class EnedisController : ControllerBase
             userId,
             request.Login,
             request.Password,
-            request.MeterNumber,
-            request.City,
-            request.Latitude,
-            request.Longitude,
             ct);
         return Ok();
     }
@@ -67,10 +66,6 @@ public class EnedisController : ControllerBase
         return Ok(new
         {
             login = decryptedLogin,
-            meterNumber = cred.MeterNumber,
-            city = cred.City,
-            latitude = cred.Latitude,
-            longitude = cred.Longitude,
             updatedAt = cred.UpdatedAt
         });
     }
@@ -97,9 +92,121 @@ public class EnedisController : ControllerBase
         return Ok(new EnedisStatusResponse
         {
             Configured = true,
-            MeterNumber = cred.MeterNumber,
             UpdatedAt = cred.UpdatedAt
         });
+    }
+
+    // Meter CRUD endpoints
+    [HttpGet("meters")]
+    public async Task<ActionResult<List<dynamic>>> GetMeters(CancellationToken ct)
+    {
+        var userId = User.GetUserId();
+        var meters = await _meterService.GetMetersAsync(userId, ct);
+
+        var result = meters.Select(m => new
+        {
+            id = m.Id,
+            prm = m.Prm,
+            label = m.Label,
+            city = m.City,
+            latitude = m.Latitude,
+            longitude = m.Longitude,
+            isFavorite = m.IsFavorite,
+            createdAt = m.CreatedAtUtc,
+            updatedAt = m.UpdatedAtUtc
+        }).ToList();
+
+        return Ok(result);
+    }
+
+    [HttpPost("meters")]
+    public async Task<ActionResult<dynamic>> CreateMeter(
+        [FromBody] CreateMeterRequest request,
+        CancellationToken ct)
+    {
+        var userId = User.GetUserId();
+
+        try
+        {
+            var meter = await _meterService.CreateAsync(
+                userId,
+                request.Prm,
+                request.Label,
+                request.City,
+                request.Latitude,
+                request.Longitude,
+                request.IsFavorite,
+                ct);
+
+            return Ok(new
+            {
+                id = meter.Id,
+                prm = meter.Prm,
+                label = meter.Label,
+                city = meter.City,
+                latitude = meter.Latitude,
+                longitude = meter.Longitude,
+                isFavorite = meter.IsFavorite,
+                createdAt = meter.CreatedAtUtc,
+                updatedAt = meter.UpdatedAtUtc
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpPut("meters/{meterId:guid}")]
+    public async Task<IActionResult> UpdateMeter(
+        Guid meterId,
+        [FromBody] UpdateMeterRequest request,
+        CancellationToken ct)
+    {
+        var userId = User.GetUserId();
+
+        try
+        {
+            await _meterService.UpdateAsync(
+                userId,
+                meterId,
+                request.Prm,
+                request.Label,
+                request.City,
+                request.Latitude,
+                request.Longitude,
+                ct);
+
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpDelete("meters/{meterId:guid}")]
+    public async Task<IActionResult> DeleteMeter(Guid meterId, CancellationToken ct)
+    {
+        var userId = User.GetUserId();
+        await _meterService.DeleteAsync(userId, meterId, ct);
+        return NoContent();
+    }
+
+    [HttpPost("meters/{meterId:guid}/favorite")]
+    public async Task<IActionResult> SetFavoriteMeter(Guid meterId, CancellationToken ct)
+    {
+        var userId = User.GetUserId();
+
+        try
+        {
+            await _meterService.SetFavoriteAsync(userId, meterId, ct);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpPost("import")]
@@ -111,7 +218,7 @@ public class EnedisController : ControllerBase
         }
 
         var userId = User.GetUserId();
-        var job = await _importJobService.CreateJobAsync(userId, request.FromUtc.ToUniversalTime(), request.ToUtc.ToUniversalTime(), ct);
+        var job = await _importJobService.CreateJobAsync(userId, request.MeterId, request.FromUtc.ToUniversalTime(), request.ToUtc.ToUniversalTime(), ct);
         var dto = _mapper.Map<ImportJobDto>(job);
 
         return Ok(dto);

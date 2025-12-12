@@ -1,22 +1,15 @@
 export interface SaveCredentialsRequest {
   login: string;
   password: string;
-  meterNumber: string;
-  city?: string;
-  latitude?: number;
-  longitude?: number;
 }
 
 export interface CredentialsResponse {
   login: string;
-  meterNumber: string;
-  city?: string;
-  latitude?: number;
-  longitude?: number;
   updatedAt: string;
 }
 
 export interface CreateImportJobRequest {
+  meterId: string;
   fromUtc: string;
   toUtc: string;
 }
@@ -37,4 +30,29 @@ export interface EnedisStatus {
   configured: boolean;
   meterNumber?: string;
   updatedAt?: string;
+}
+
+export interface EnedisMeter {
+  id: string;
+  prm: string;
+  label?: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+  isFavorite: boolean;
+}
+
+export interface CreateMeterRequest {
+  prm: string;
+  label?: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface UpdateMeterRequest {
+  label?: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
 }

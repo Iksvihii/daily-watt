@@ -53,22 +53,35 @@ public static class DbSeeder
         UserId = demoUser.Id,
         LoginEncrypted = System.Text.Encoding.UTF8.GetBytes("demo_login"),
         PasswordEncrypted = System.Text.Encoding.UTF8.GetBytes("demo_password"),
-        MeterNumber = "DEMO123456789",
-        City = "Paris",
-        Latitude = 48.8566,
-        Longitude = 2.3522,
         UpdatedAt = DateTime.UtcNow
       };
 
       await context.EnedisCredentials.AddAsync(enedisCredential);
 
+      // Create a demo meter for the user
+      var demoMeter = new EnedisMeter
+      {
+        Id = Guid.NewGuid(),
+        UserId = demoUser.Id,
+        Prm = "DEMO123456789",
+        Label = "Home Meter",
+        City = "Paris",
+        Latitude = 48.8566,
+        Longitude = 2.3522,
+        IsFavorite = true,
+        CreatedAtUtc = DateTime.UtcNow,
+        UpdatedAtUtc = DateTime.UtcNow
+      };
+
+      await context.EnedisMeters.AddAsync(demoMeter);
+
       // Generate realistic consumption data
-      var measurements = GenerateRealisticConsumptionData(demoUser.Id);
+      var measurements = GenerateRealisticConsumptionData(demoUser.Id, demoMeter.Id);
 
       await context.Measurements.AddRangeAsync(measurements);
       await context.SaveChangesAsync();
 
-      logger.LogInformation("Successfully seeded Enedis credentials and {Count} measurements for demo user", measurements.Count);
+      logger.LogInformation("Successfully seeded Enedis credentials, meter, and {Count} measurements for demo user", measurements.Count);
     }
     catch (Exception ex)
     {
@@ -76,7 +89,7 @@ public static class DbSeeder
     }
   }
 
-  private static List<Measurement> GenerateRealisticConsumptionData(Guid userId)
+  private static List<Measurement> GenerateRealisticConsumptionData(Guid userId, Guid meterId)
   {
     var measurements = new List<Measurement>();
     var random = new Random(42); // Fixed seed for reproducibility
@@ -92,6 +105,7 @@ public static class DbSeeder
       {
         Id = Guid.NewGuid(),
         UserId = userId,
+        MeterId = meterId,
         TimestampUtc = DateTime.SpecifyKind(date, DateTimeKind.Utc),
         Kwh = kwh,
         Source = "demo"

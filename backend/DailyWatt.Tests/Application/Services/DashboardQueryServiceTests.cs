@@ -16,8 +16,17 @@ public class DashboardQueryServiceTests
     public async Task GetTimeSeriesAsync_ReturnsConsumptionData()
     {
         var userId = Guid.NewGuid();
+        var meterId = Guid.NewGuid();
         var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
         var toUtc = new DateTime(2025, 12, 8, 23, 59, 59, DateTimeKind.Utc);
+
+        var meter = new EnedisMeter
+        {
+            Id = meterId,
+            UserId = userId,
+            Prm = "123",
+            CreatedAtUtc = DateTime.UtcNow
+        };
 
         var aggregatedPoints = new List<AggregatedConsumptionPoint>
         {
@@ -29,19 +38,20 @@ public class DashboardQueryServiceTests
 
         var mockConsumptionService = new Mock<IConsumptionService>();
         mockConsumptionService
-            .Setup(s => s.GetAggregatedAsync(userId, fromUtc, toUtc, Granularity.Day, It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetAggregatedAsync(userId, meterId, fromUtc, toUtc, Granularity.Day, It.IsAny<CancellationToken>()))
             .ReturnsAsync(aggregatedPoints);
 
         mockConsumptionService
-            .Setup(s => s.GetSummaryAsync(userId, fromUtc, toUtc, It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetSummaryAsync(userId, meterId, fromUtc, toUtc, It.IsAny<CancellationToken>()))
             .ReturnsAsync(summary);
+
+        var mockMeterService = new Mock<IEnedisMeterService>();
+        mockMeterService
+            .Setup(s => s.GetDefaultMeterAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(meter);
 
         var mockWeatherDataService = new Mock<IWeatherDataService>();
         var mockWeatherSyncService = new Mock<IWeatherSyncService>();
-        mockWeatherSyncService
-            .Setup(s => s.EnsureWeatherAsync(It.IsAny<Guid>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-        var mockCredentialService = new Mock<IEnedisCredentialService>();
         var mockMapper = new Mock<IMapper>();
 
         mockMapper
@@ -60,10 +70,10 @@ public class DashboardQueryServiceTests
             mockConsumptionService.Object,
             mockWeatherSyncService.Object,
             mockWeatherDataService.Object,
-            mockCredentialService.Object,
+            mockMeterService.Object,
             mockMapper.Object);
 
-        var result = await service.GetTimeSeriesAsync(userId, fromUtc, toUtc, Granularity.Day, false);
+        var result = await service.GetTimeSeriesAsync(userId, null, fromUtc, toUtc, Granularity.Day, false);
 
         Assert.NotNull(result);
         Assert.Equal(2, result.Consumption.Count);
@@ -75,28 +85,37 @@ public class DashboardQueryServiceTests
     public async Task GetTimeSeriesAsync_WithWeatherFalse_DoesNotFetchWeather()
     {
         var userId = Guid.NewGuid();
+        var meterId = Guid.NewGuid();
         var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
         var toUtc = new DateTime(2025, 12, 8, 23, 59, 59, DateTimeKind.Utc);
+
+        var meter = new EnedisMeter
+        {
+            Id = meterId,
+            UserId = userId,
+            Prm = "123",
+            CreatedAtUtc = DateTime.UtcNow
+        };
 
         var aggregatedPoints = new List<AggregatedConsumptionPoint>();
         var summary = new ConsumptionSummary(0, 0, 0, null);
 
         var mockConsumptionService = new Mock<IConsumptionService>();
         mockConsumptionService
-            .Setup(s => s.GetAggregatedAsync(userId, fromUtc, toUtc, Granularity.Hour, It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetAggregatedAsync(userId, meterId, fromUtc, toUtc, Granularity.Hour, It.IsAny<CancellationToken>()))
             .ReturnsAsync(aggregatedPoints);
 
         mockConsumptionService
-            .Setup(s => s.GetSummaryAsync(userId, fromUtc, toUtc, It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetSummaryAsync(userId, meterId, fromUtc, toUtc, It.IsAny<CancellationToken>()))
             .ReturnsAsync(summary);
 
         var mockWeatherService = new Mock<IWeatherProviderService>();
         var mockWeatherDataService = new Mock<IWeatherDataService>();
         var mockWeatherSyncService = new Mock<IWeatherSyncService>();
-        mockWeatherSyncService
-            .Setup(s => s.EnsureWeatherAsync(It.IsAny<Guid>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-        var mockCredentialService = new Mock<IEnedisCredentialService>();
+        var mockMeterService = new Mock<IEnedisMeterService>();
+        mockMeterService
+            .Setup(s => s.GetDefaultMeterAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(meter);
         var mockMapper = new Mock<IMapper>();
 
         mockMapper
@@ -111,25 +130,26 @@ public class DashboardQueryServiceTests
             mockConsumptionService.Object,
             mockWeatherSyncService.Object,
             mockWeatherDataService.Object,
-            mockCredentialService.Object,
+            mockMeterService.Object,
             mockMapper.Object);
 
-        var result = await service.GetTimeSeriesAsync(userId, fromUtc, toUtc, Granularity.Hour, false);
+        var result = await service.GetTimeSeriesAsync(userId, null, fromUtc, toUtc, Granularity.Hour, false);
 
         Assert.NotNull(result);
-        mockWeatherSyncService.Verify(s => s.EnsureWeatherAsync(It.IsAny<Guid>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()), Times.Never);
+        mockWeatherSyncService.Verify(s => s.EnsureWeatherAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task GetTimeSeriesAsync_WithWeatherTrue_FetchesWeatherIfCredentialsExist()
     {
         var userId = Guid.NewGuid();
+        var meterId = Guid.NewGuid();
         var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
         var toUtc = new DateTime(2025, 12, 8, 23, 59, 59, DateTimeKind.Utc);
 
         var aggregatedPoints = new List<AggregatedConsumptionPoint>();
         var summary = new ConsumptionSummary(0, 0, 0, null);
-        var credential = new EnedisCredential { UserId = userId, Latitude = 48.8566, Longitude = 2.3522 };
+        var meter = new EnedisMeter { Id = meterId, UserId = userId, Latitude = 48.8566, Longitude = 2.3522, Prm = "123", CreatedAtUtc = DateTime.UtcNow };
         var cachedWeather = new List<WeatherDay>();
         var storedWeather = new List<WeatherDay>
         {
@@ -149,31 +169,31 @@ public class DashboardQueryServiceTests
 
         var mockConsumptionService = new Mock<IConsumptionService>();
         mockConsumptionService
-            .Setup(s => s.GetAggregatedAsync(userId, fromUtc, toUtc, Granularity.Hour, It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetAggregatedAsync(userId, meterId, fromUtc, toUtc, Granularity.Hour, It.IsAny<CancellationToken>()))
             .ReturnsAsync(aggregatedPoints);
 
         mockConsumptionService
-            .Setup(s => s.GetSummaryAsync(userId, fromUtc, toUtc, It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetSummaryAsync(userId, meterId, fromUtc, toUtc, It.IsAny<CancellationToken>()))
             .ReturnsAsync(summary);
 
         mockConsumptionService
-            .Setup(s => s.GetMeasurementRangeAsync(userId, It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetMeasurementRangeAsync(userId, meterId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((fromUtc, toUtc));
 
         var mockWeatherSyncService = new Mock<IWeatherSyncService>();
         mockWeatherSyncService
-            .Setup(s => s.EnsureWeatherAsync(It.IsAny<Guid>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.EnsureWeatherAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         var mockWeatherDataService = new Mock<IWeatherDataService>();
         mockWeatherDataService
-            .SetupSequence(w => w.GetAsync(userId, It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
+            .SetupSequence(w => w.GetAsync(userId, meterId, It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(cachedWeather)
             .ReturnsAsync(storedWeather);
 
-        var mockCredentialService = new Mock<IEnedisCredentialService>();
-        mockCredentialService
-            .Setup(c => c.GetCredentialsAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(credential);
+        var mockMeterService = new Mock<IEnedisMeterService>();
+        mockMeterService
+            .Setup(s => s.GetDefaultMeterAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(meter);
 
         var mockMapper = new Mock<IMapper>();
         mockMapper
@@ -192,14 +212,14 @@ public class DashboardQueryServiceTests
             mockConsumptionService.Object,
             mockWeatherSyncService.Object,
             mockWeatherDataService.Object,
-            mockCredentialService.Object,
+            mockMeterService.Object,
             mockMapper.Object);
 
-        var result = await service.GetTimeSeriesAsync(userId, fromUtc, toUtc, Granularity.Hour, true);
+        var result = await service.GetTimeSeriesAsync(userId, null, fromUtc, toUtc, Granularity.Hour, true);
 
         Assert.NotNull(result);
         mockWeatherSyncService.Verify(
-            s => s.EnsureWeatherAsync(userId, 48.8566, 2.3522, It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()),
+                s => s.EnsureWeatherAsync(userId, meterId, 48.8566, 2.3522, It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -207,12 +227,13 @@ public class DashboardQueryServiceTests
     public async Task GetTimeSeriesAsync_WithCachedWeather_SkipsSyncFetch()
     {
         var userId = Guid.NewGuid();
+        var meterId = Guid.NewGuid();
         var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
         var toUtc = new DateTime(2025, 12, 3, 23, 59, 59, DateTimeKind.Utc);
 
         var aggregatedPoints = new List<AggregatedConsumptionPoint>();
         var summary = new ConsumptionSummary(0, 0, 0, null);
-        var credential = new EnedisCredential { UserId = userId, Latitude = 48.8566, Longitude = 2.3522 };
+        var meter = new EnedisMeter { Id = meterId, UserId = userId, Latitude = 48.8566, Longitude = 2.3522, Prm = "123", CreatedAtUtc = DateTime.UtcNow };
 
         var cachedWeather = new List<WeatherDay>
     {
@@ -232,32 +253,32 @@ public class DashboardQueryServiceTests
 
         var mockConsumptionService = new Mock<IConsumptionService>();
         mockConsumptionService
-            .Setup(s => s.GetAggregatedAsync(userId, fromUtc, toUtc, Granularity.Day, It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetAggregatedAsync(userId, meterId, fromUtc, toUtc, Granularity.Day, It.IsAny<CancellationToken>()))
             .ReturnsAsync(aggregatedPoints);
 
         mockConsumptionService
-            .Setup(s => s.GetSummaryAsync(userId, fromUtc, toUtc, It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetSummaryAsync(userId, meterId, fromUtc, toUtc, It.IsAny<CancellationToken>()))
             .ReturnsAsync(summary);
 
         mockConsumptionService
-            .Setup(s => s.GetMeasurementRangeAsync(userId, It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetMeasurementRangeAsync(userId, meterId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((fromUtc, toUtc));
 
         var mockWeatherDataService = new Mock<IWeatherDataService>();
         mockWeatherDataService
-            .SetupSequence(w => w.GetAsync(userId, It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
+            .SetupSequence(w => w.GetAsync(userId, meterId, It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(cachedWeather)
             .ReturnsAsync(cachedWeather);
 
         var mockWeatherSyncService = new Mock<IWeatherSyncService>();
         mockWeatherSyncService
-            .Setup(s => s.EnsureWeatherAsync(It.IsAny<Guid>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.EnsureWeatherAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var mockCredentialService = new Mock<IEnedisCredentialService>();
-        mockCredentialService
-            .Setup(c => c.GetCredentialsAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(credential);
+        var mockMeterService = new Mock<IEnedisMeterService>();
+        mockMeterService
+            .Setup(s => s.GetDefaultMeterAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(meter);
 
         var mockMapper = new Mock<IMapper>();
         mockMapper
@@ -276,15 +297,15 @@ public class DashboardQueryServiceTests
             mockConsumptionService.Object,
             mockWeatherSyncService.Object,
             mockWeatherDataService.Object,
-            mockCredentialService.Object,
+            mockMeterService.Object,
             mockMapper.Object);
 
-        var result = await service.GetTimeSeriesAsync(userId, fromUtc, toUtc, Granularity.Day, true);
+        var result = await service.GetTimeSeriesAsync(userId, null, fromUtc, toUtc, Granularity.Day, true);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Weather);
         mockWeatherSyncService.Verify(
-            s => s.EnsureWeatherAsync(userId, 48.8566, 2.3522, It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()),
+                s => s.EnsureWeatherAsync(userId, meterId, 48.8566, 2.3522, It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -292,28 +313,31 @@ public class DashboardQueryServiceTests
     public async Task GetTimeSeriesAsync_WithEmptyData_ReturnsEmptyResponse()
     {
         var userId = Guid.NewGuid();
+        var meterId = Guid.NewGuid();
         var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
         var toUtc = new DateTime(2025, 12, 8, 23, 59, 59, DateTimeKind.Utc);
+
+        var meter = new EnedisMeter { Id = meterId, UserId = userId, Prm = "123", CreatedAtUtc = DateTime.UtcNow };
 
         var aggregatedPoints = new List<AggregatedConsumptionPoint>();
         var summary = new ConsumptionSummary(0, 0, 0, null);
 
         var mockConsumptionService = new Mock<IConsumptionService>();
         mockConsumptionService
-            .Setup(s => s.GetAggregatedAsync(userId, fromUtc, toUtc, Granularity.Day, It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetAggregatedAsync(userId, meterId, fromUtc, toUtc, Granularity.Day, It.IsAny<CancellationToken>()))
             .ReturnsAsync(aggregatedPoints);
 
         mockConsumptionService
-            .Setup(s => s.GetSummaryAsync(userId, fromUtc, toUtc, It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetSummaryAsync(userId, meterId, fromUtc, toUtc, It.IsAny<CancellationToken>()))
             .ReturnsAsync(summary);
 
         var mockWeatherService = new Mock<IWeatherProviderService>();
         var mockWeatherDataService = new Mock<IWeatherDataService>();
         var mockWeatherSyncService = new Mock<IWeatherSyncService>();
-        mockWeatherSyncService
-            .Setup(s => s.EnsureWeatherAsync(It.IsAny<Guid>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-        var mockCredentialService = new Mock<IEnedisCredentialService>();
+        var mockMeterService = new Mock<IEnedisMeterService>();
+        mockMeterService
+            .Setup(s => s.GetDefaultMeterAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(meter);
         var mockMapper = new Mock<IMapper>();
 
         mockMapper
@@ -328,10 +352,10 @@ public class DashboardQueryServiceTests
             mockConsumptionService.Object,
             mockWeatherSyncService.Object,
             mockWeatherDataService.Object,
-            mockCredentialService.Object,
+            mockMeterService.Object,
             mockMapper.Object);
 
-        var result = await service.GetTimeSeriesAsync(userId, fromUtc, toUtc, Granularity.Day, false);
+        var result = await service.GetTimeSeriesAsync(userId, null, fromUtc, toUtc, Granularity.Day, false);
 
         Assert.NotNull(result);
         Assert.Empty(result.Consumption);

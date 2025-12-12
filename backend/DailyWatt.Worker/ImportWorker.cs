@@ -37,6 +37,7 @@ public class ImportWorker : BackgroundService
     {
         using var scope = _scopeFactory.CreateScope();
         var jobService = scope.ServiceProvider.GetRequiredService<IImportJobService>();
+        var meterService = scope.ServiceProvider.GetRequiredService<IEnedisMeterService>();
         var credentialService = scope.ServiceProvider.GetRequiredService<IEnedisCredentialService>();
         var scraper = scope.ServiceProvider.GetRequiredService<IEnedisScraper>();
         var secretProtector = scope.ServiceProvider.GetRequiredService<ISecretProtector>();
@@ -47,9 +48,17 @@ public class ImportWorker : BackgroundService
         var jobs = await jobService.GetPendingJobsAsync(ct);
         foreach (var job in jobs)
         {
-            _logger.LogInformation("Processing import job {JobId} for user {UserId}", job.Id, job.UserId);
+            _logger.LogInformation("Processing import job {JobId} for user {UserId} meter {MeterId}", job.Id, job.UserId, job.MeterId);
             try
             {
+                // Verify meter belongs to user
+                var meter = await meterService.GetAsync(job.UserId, job.MeterId, ct);
+                if (meter == null)
+                {
+                    await jobService.MarkFailedAsync(job, "METER_NOT_FOUND", "Meter not found for user", ct);
+                    continue;
+                }
+
                 var credentials = await credentialService.GetCredentialsAsync(job.UserId, ct);
                 if (credentials == null)
                 {
@@ -62,22 +71,23 @@ public class ImportWorker : BackgroundService
 
                 await jobService.MarkRunningAsync(job, ct);
                 await using var excelStream = await scraper.DownloadConsumptionCsvAsync(login, password, job.FromUtc, job.ToUtc, ct);
-                var measurements = ExcelMeasurementParser.Parse(excelStream, job.UserId, job.FromUtc, job.ToUtc);
+                var measurements = ExcelMeasurementParser.Parse(excelStream, job.UserId, job.MeterId, job.FromUtc, job.ToUtc);
 
                 await db.Measurements
-                    .Where(m => m.UserId == job.UserId && m.TimestampUtc >= job.FromUtc && m.TimestampUtc <= job.ToUtc)
+                    .Where(m => m.UserId == job.UserId && m.MeterId == job.MeterId && m.TimestampUtc >= job.FromUtc && m.TimestampUtc <= job.ToUtc)
                     .ExecuteDeleteAsync(ct);
 
                 await consumptionService.BulkInsertAsync(measurements, ct);
 
-                if (credentials.Latitude.HasValue && credentials.Longitude.HasValue)
+                if (meter.Latitude.HasValue && meter.Longitude.HasValue)
                 {
                     var fromDate = DateOnly.FromDateTime(job.FromUtc);
                     var toDate = DateOnly.FromDateTime(job.ToUtc);
                     await weatherSyncService.EnsureWeatherAsync(
                         job.UserId,
-                        credentials.Latitude.Value,
-                        credentials.Longitude.Value,
+                        job.MeterId,
+                        meter.Latitude.Value,
+                        meter.Longitude.Value,
                         fromDate,
                         toDate,
                         ct);

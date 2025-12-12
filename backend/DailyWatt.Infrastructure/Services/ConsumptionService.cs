@@ -16,19 +16,19 @@ public class ConsumptionService : IConsumptionService
         _db = db;
     }
 
-    public async Task<IReadOnlyList<Measurement>> GetMeasurementsAsync(Guid userId, DateTime fromUtc, DateTime toUtc, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Measurement>> GetMeasurementsAsync(Guid userId, Guid meterId, DateTime fromUtc, DateTime toUtc, CancellationToken ct = default)
     {
         return await _db.Measurements
             .AsNoTracking()
-            .Where(x => x.UserId == userId && x.TimestampUtc >= fromUtc && x.TimestampUtc <= toUtc)
+            .Where(x => x.UserId == userId && x.MeterId == meterId && x.TimestampUtc >= fromUtc && x.TimestampUtc <= toUtc)
             .OrderBy(x => x.TimestampUtc)
             .ToListAsync(ct);
     }
 
-    public async Task<IReadOnlyList<AggregatedConsumptionPoint>> GetAggregatedAsync(Guid userId, DateTime fromUtc, DateTime toUtc, Granularity granularity, CancellationToken ct = default)
+    public async Task<IReadOnlyList<AggregatedConsumptionPoint>> GetAggregatedAsync(Guid userId, Guid meterId, DateTime fromUtc, DateTime toUtc, Granularity granularity, CancellationToken ct = default)
     {
         var query = _db.Measurements.AsNoTracking()
-            .Where(x => x.UserId == userId && x.TimestampUtc >= fromUtc && x.TimestampUtc <= toUtc);
+            .Where(x => x.UserId == userId && x.MeterId == meterId && x.TimestampUtc >= fromUtc && x.TimestampUtc <= toUtc);
 
         switch (granularity)
         {
@@ -79,10 +79,10 @@ public class ConsumptionService : IConsumptionService
         }
     }
 
-    public async Task<ConsumptionSummary> GetSummaryAsync(Guid userId, DateTime fromUtc, DateTime toUtc, CancellationToken ct = default)
+    public async Task<ConsumptionSummary> GetSummaryAsync(Guid userId, Guid meterId, DateTime fromUtc, DateTime toUtc, CancellationToken ct = default)
     {
         var daily = await _db.Measurements.AsNoTracking()
-            .Where(x => x.UserId == userId && x.TimestampUtc >= fromUtc && x.TimestampUtc <= toUtc)
+            .Where(x => x.UserId == userId && x.MeterId == meterId && x.TimestampUtc >= fromUtc && x.TimestampUtc <= toUtc)
             .GroupBy(x => new DateTime(x.TimestampUtc.Year, x.TimestampUtc.Month, x.TimestampUtc.Day, 0, 0, 0, DateTimeKind.Utc))
             .Select(g => new { Date = g.Key, Total = g.Sum(m => m.Kwh) })
             .ToListAsync(ct);
@@ -99,9 +99,9 @@ public class ConsumptionService : IConsumptionService
         await _db.SaveChangesAsync(ct);
     }
 
-    public async Task<(DateTime? MinTimestampUtc, DateTime? MaxTimestampUtc)> GetMeasurementRangeAsync(Guid userId, CancellationToken ct = default)
+    public async Task<(DateTime? MinTimestampUtc, DateTime? MaxTimestampUtc)> GetMeasurementRangeAsync(Guid userId, Guid meterId, CancellationToken ct = default)
     {
-        var query = _db.Measurements.AsNoTracking().Where(x => x.UserId == userId);
+        var query = _db.Measurements.AsNoTracking().Where(x => x.UserId == userId && x.MeterId == meterId);
 
         var min = await query.MinAsync(x => (DateTime?)x.TimestampUtc, ct);
         var max = await query.MaxAsync(x => (DateTime?)x.TimestampUtc, ct);

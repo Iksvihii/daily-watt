@@ -17,16 +17,16 @@ public class WeatherDataService : IWeatherDataService
     _db = db;
   }
 
-  public async Task<IReadOnlyList<WeatherDay>> GetAsync(Guid userId, DateOnly fromDate, DateOnly toDate, CancellationToken ct = default)
+  public async Task<IReadOnlyList<WeatherDay>> GetAsync(Guid userId, Guid meterId, DateOnly fromDate, DateOnly toDate, CancellationToken ct = default)
   {
     return await _db.WeatherDays
         .AsNoTracking()
-        .Where(x => x.UserId == userId && x.Date >= fromDate && x.Date <= toDate)
+        .Where(x => x.UserId == userId && x.MeterId == meterId && x.Date >= fromDate && x.Date <= toDate)
         .OrderBy(x => x.Date)
         .ToListAsync(ct);
   }
 
-  public async Task UpsertAsync(Guid userId, IEnumerable<WeatherDay> weatherDays, CancellationToken ct = default)
+  public async Task UpsertAsync(Guid userId, Guid meterId, IEnumerable<WeatherDay> weatherDays, CancellationToken ct = default)
   {
     var dayList = weatherDays.ToList();
     if (dayList.Count == 0)
@@ -37,7 +37,7 @@ public class WeatherDataService : IWeatherDataService
     var dates = dayList.Select(x => x.Date).ToHashSet();
 
     var existing = await _db.WeatherDays
-        .Where(x => x.UserId == userId && dates.Contains(x.Date))
+        .Where(x => x.UserId == userId && x.MeterId == meterId && dates.Contains(x.Date))
         .ToListAsync(ct);
 
     if (existing.Count > 0)
@@ -49,7 +49,19 @@ public class WeatherDataService : IWeatherDataService
     await _db.SaveChangesAsync(ct);
   }
 
-  public async Task DeleteAllAsync(Guid userId, CancellationToken ct = default)
+  public async Task DeleteAllAsync(Guid userId, Guid meterId, CancellationToken ct = default)
+  {
+    var records = await _db.WeatherDays.Where(x => x.UserId == userId && x.MeterId == meterId).ToListAsync(ct);
+    if (records.Count == 0)
+    {
+      return;
+    }
+
+    _db.WeatherDays.RemoveRange(records);
+    await _db.SaveChangesAsync(ct);
+  }
+
+  public async Task DeleteAllForUserAsync(Guid userId, CancellationToken ct = default)
   {
     var records = await _db.WeatherDays.Where(x => x.UserId == userId).ToListAsync(ct);
     if (records.Count == 0)

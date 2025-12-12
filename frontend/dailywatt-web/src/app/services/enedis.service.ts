@@ -4,10 +4,13 @@ import { Observable, interval, switchMap, takeWhile } from "rxjs";
 import { environment } from "../../environments/environment";
 import {
   CreateImportJobRequest,
+  CreateMeterRequest,
   CredentialsResponse,
+  EnedisMeter,
   EnedisStatus,
   ImportJob,
   SaveCredentialsRequest,
+  UpdateMeterRequest,
 } from "../models/enedis.models";
 
 @Injectable({ providedIn: "root" })
@@ -53,6 +56,40 @@ export class EnedisService {
         (job) => job.status === "Pending" || job.status === "Running",
         true
       )
+    );
+  }
+
+  // Meter management
+  getMeters(): Observable<EnedisMeter[]> {
+    return this.http.get<EnedisMeter[]>(
+      `${environment.apiUrl}/api/enedis/meters`
+    );
+  }
+
+  createMeter(request: CreateMeterRequest): Observable<EnedisMeter> {
+    return this.http.post<EnedisMeter>(
+      `${environment.apiUrl}/api/enedis/meters`,
+      request
+    );
+  }
+
+  updateMeter(id: string, request: UpdateMeterRequest): Observable<void> {
+    return this.http.put<void>(
+      `${environment.apiUrl}/api/enedis/meters/${id}`,
+      request
+    );
+  }
+
+  deleteMeter(id: string): Observable<void> {
+    return this.http.delete<void>(
+      `${environment.apiUrl}/api/enedis/meters/${id}`
+    );
+  }
+
+  setFavoriteMeter(id: string): Observable<void> {
+    return this.http.post<void>(
+      `${environment.apiUrl}/api/enedis/meters/${id}/favorite`,
+      {}
     );
   }
 }
