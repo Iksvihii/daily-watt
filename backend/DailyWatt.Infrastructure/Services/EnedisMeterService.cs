@@ -9,11 +9,15 @@ public class EnedisMeterService : IEnedisMeterService
 {
   private readonly ApplicationDbContext _db;
   private readonly IWeatherDataService _weatherDataService;
+  private readonly IWeatherSyncService _weatherSyncService;
+  private readonly IConsumptionService _consumptionService;
 
-  public EnedisMeterService(ApplicationDbContext db, IWeatherDataService weatherDataService)
+  public EnedisMeterService(ApplicationDbContext db, IWeatherDataService weatherDataService, IWeatherSyncService weatherSyncService, IConsumptionService consumptionService)
   {
     _db = db;
     _weatherDataService = weatherDataService;
+    _weatherSyncService = weatherSyncService;
+    _consumptionService = consumptionService;
   }
 
   public async Task<IReadOnlyList<EnedisMeter>> GetMetersAsync(Guid userId, CancellationToken ct = default)
@@ -81,6 +85,9 @@ public class EnedisMeterService : IEnedisMeterService
       throw new InvalidOperationException("Meter not found");
     }
 
+    // Check if geolocation has changed
+    var geolocationChanged = meter.Latitude != latitude || meter.Longitude != longitude;
+
     meter.Prm = prm;
     meter.Label = label;
     meter.City = city;
@@ -90,6 +97,28 @@ public class EnedisMeterService : IEnedisMeterService
 
     _db.EnedisMeters.Update(meter);
     await _db.SaveChangesAsync(ct);
+
+    // If geolocation changed, delete old weather data and regenerate
+    if (geolocationChanged && latitude.HasValue && longitude.HasValue)
+    {
+      await _weatherDataService.DeleteAllAsync(userId, meterId, ct);
+
+      var measurementRange = await _consumptionService.GetMeasurementRangeAsync(userId, meterId, ct);
+      if (measurementRange.MinTimestampUtc.HasValue && measurementRange.MaxTimestampUtc.HasValue)
+      {
+        var dataRangeStart = DateOnly.FromDateTime(measurementRange.MinTimestampUtc.Value);
+        var dataRangeEnd = DateOnly.FromDateTime(measurementRange.MaxTimestampUtc.Value);
+
+        await _weatherSyncService.EnsureWeatherAsync(
+            userId,
+            meterId,
+            latitude.Value,
+            longitude.Value,
+            dataRangeStart,
+            dataRangeEnd,
+            ct);
+      }
+    }
   }
 
   public async Task DeleteAsync(Guid userId, Guid meterId, CancellationToken ct = default)

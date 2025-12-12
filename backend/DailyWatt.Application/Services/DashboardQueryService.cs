@@ -76,33 +76,16 @@ public class DashboardQueryService : IDashboardQueryService
       Summary = _mapper.Map<SummaryDto>(summary)
     };
 
-    // Optionally fetch weather data from external provider
+    // Optionally fetch weather data that has been cached
     if (withWeather)
     {
       if (meter.Latitude.HasValue && meter.Longitude.HasValue)
       {
-        var measurementRange = await _consumptionService.GetMeasurementRangeAsync(userId, meter.Id, ct);
+        var requestedFrom = DateOnly.FromDateTime(queryStartDate);
+        var requestedTo = DateOnly.FromDateTime(queryEndDate);
+        var weatherForResponse = await _weatherDataService.GetAsync(userId, meter.Id, requestedFrom, requestedTo, ct);
 
-        if (measurementRange.MinTimestampUtc.HasValue && measurementRange.MaxTimestampUtc.HasValue)
-        {
-          var dataRangeStart = DateOnly.FromDateTime(measurementRange.MinTimestampUtc.Value);
-          var dataRangeEnd = DateOnly.FromDateTime(measurementRange.MaxTimestampUtc.Value);
-
-          await _weatherSyncService.EnsureWeatherAsync(
-              userId,
-              meter.Id,
-              meter.Latitude.Value,
-              meter.Longitude.Value,
-              dataRangeStart,
-              dataRangeEnd,
-              ct);
-
-          var requestedFrom = DateOnly.FromDateTime(queryStartDate);
-          var requestedTo = DateOnly.FromDateTime(queryEndDate);
-          var weatherForResponse = await _weatherDataService.GetAsync(userId, meter.Id, requestedFrom, requestedTo, ct);
-
-          response.Weather = _mapper.Map<List<WeatherDayDto>>(weatherForResponse);
-        }
+        response.Weather = _mapper.Map<List<WeatherDayDto>>(weatherForResponse);
       }
     }
 

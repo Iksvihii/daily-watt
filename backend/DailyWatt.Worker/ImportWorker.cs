@@ -81,6 +81,13 @@ public class ImportWorker : BackgroundService
 
                 if (meter.Latitude.HasValue && meter.Longitude.HasValue)
                 {
+                    // Delete all existing weather data for the meter and date range before regenerating
+                    await db.WeatherDays
+                        .Where(w => w.UserId == job.UserId && w.MeterId == job.MeterId &&
+                                    w.Date >= DateOnly.FromDateTime(job.FromUtc) &&
+                                    w.Date <= DateOnly.FromDateTime(job.ToUtc))
+                        .ExecuteDeleteAsync(ct);
+
                     var fromDate = DateOnly.FromDateTime(job.FromUtc);
                     var toDate = DateOnly.FromDateTime(job.ToUtc);
                     await weatherSyncService.EnsureWeatherAsync(

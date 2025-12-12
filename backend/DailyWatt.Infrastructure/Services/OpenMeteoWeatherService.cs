@@ -56,12 +56,16 @@ public class OpenMeteoWeatherService : IWeatherProviderService
       var weatherData = new List<WeatherData>();
       for (int i = 0; i < result.Daily.Times.Count; i++)
       {
+        // Skip entries with missing temperature data
+        if (!result.Daily.TempMean[i].HasValue || !result.Daily.TempMin[i].HasValue || !result.Daily.TempMax[i].HasValue)
+          continue;
+
         var date = DateOnly.ParseExact(result.Daily.Times[i], "yyyy-MM-dd");
         weatherData.Add(new WeatherData(
             date.ToString("yyyy-MM-dd"),
-            result.Daily.TempMean[i],
-            result.Daily.TempMin[i],
-            result.Daily.TempMax[i],
+            result.Daily.TempMean[i]!.Value,
+            result.Daily.TempMin[i]!.Value,
+            result.Daily.TempMax[i]!.Value,
             "open-meteo"
         ));
       }
@@ -87,12 +91,12 @@ public class OpenMeteoWeatherService : IWeatherProviderService
     public List<string> Times { get; set; } = new();
 
     [JsonPropertyName("temperature_2m_max")]
-    public List<double> TempMax { get; set; } = new();
+    public List<double?> TempMax { get; set; } = new();
 
     [JsonPropertyName("temperature_2m_min")]
-    public List<double> TempMin { get; set; } = new();
+    public List<double?> TempMin { get; set; } = new();
 
     [JsonPropertyName("temperature_2m_mean")]
-    public List<double> TempMean { get; set; } = new();
+    public List<double?> TempMean { get; set; } = new();
   }
 }
