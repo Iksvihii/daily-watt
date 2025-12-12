@@ -8,6 +8,7 @@ import {
 } from "@angular/forms";
 import { EnedisService } from "../../services/enedis.service";
 import { ToastService } from "../../services/toast.service";
+import { ImportJobNotificationService } from "../../services/import-job-notification.service";
 import {
   EnedisMeter,
   CreateMeterRequest,
@@ -31,7 +32,7 @@ export class EnedisSettingsComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private enedis = inject(EnedisService);
   private toast = inject(ToastService);
-  private activePolls = new Map<string, any>();
+  private importNotification = inject(ImportJobNotificationService);
 
   message = signal<string | undefined>(undefined);
   loading = signal(true);
@@ -65,9 +66,7 @@ export class EnedisSettingsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Clear all active polling timers
-    this.activePolls.forEach((timerId) => clearInterval(timerId));
-    this.activePolls.clear();
+    console.log("EnedisSettingsComponent destroyed");
   }
 
   private loadMeters(): void {
@@ -233,8 +232,12 @@ export class EnedisSettingsComponent implements OnInit, OnDestroy {
         );
         this.importInProgress.set(false);
         this.selectedImportFile.set(null);
-        // Start polling for job completion
-        this.pollJobStatus(job.id, meter);
+        // Start polling using global service
+        this.importNotification.startPollingJob(
+          job.id,
+          meter.id,
+          meter.label || meter.prm
+        );
       },
       error: (err: { error?: { error?: string } }) => {
         this.toast.error(err.error?.error || "Failed to start import");
@@ -243,53 +246,4 @@ export class EnedisSettingsComponent implements OnInit, OnDestroy {
     });
   }
 
-  private pollJobStatus(jobId: string, meter: EnedisMeter) {
-    const pollInterval = 3000; // 3 seconds
-    const maxAttempts = 40; // 2 minutes max
-    let attempts = 0;
-
-    const timerId = setInterval(() => {
-      attempts++;
-      this.enedis.getImportJob(jobId).subscribe({
-        next: (job) => {
-          if (job.status === "Completed") {
-            clearInterval(timerId);
-            this.activePolls.delete(jobId);
-            this.toast.success(
-              `Import completed for ${meter.label || meter.prm}! ${
-                job.importedCount
-              } measurements imported.`,
-              8000
-            );
-          } else if (job.status === "Failed") {
-            clearInterval(timerId);
-            this.activePolls.delete(jobId);
-            this.toast.error(
-              `Import failed for ${meter.label || meter.prm}: ${
-                job.errorMessage || "Unknown error"
-              }`,
-              8000
-            );
-          } else if (attempts >= maxAttempts) {
-            clearInterval(timerId);
-            this.activePolls.delete(jobId);
-            this.toast.info(
-              `Import for ${
-                meter.label || meter.prm
-              } is still running. Check back later.`,
-              6000
-            );
-          }
-        },
-        error: () => {
-          if (attempts >= maxAttempts) {
-            clearInterval(timerId);
-            this.activePolls.delete(jobId);
-          }
-        },
-      });
-    }, pollInterval);
-
-    this.activePolls.set(jobId, timerId);
-  }
 }
