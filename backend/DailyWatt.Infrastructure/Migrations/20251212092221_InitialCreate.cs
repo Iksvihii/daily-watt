@@ -163,10 +163,6 @@ namespace DailyWatt.Infrastructure.Migrations
                     UserId = table.Column<Guid>(type: "TEXT", nullable: false),
                     LoginEncrypted = table.Column<byte[]>(type: "BLOB", nullable: false),
                     PasswordEncrypted = table.Column<byte[]>(type: "BLOB", nullable: false),
-                    MeterNumber = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
-                    Address = table.Column<string>(type: "TEXT", nullable: true),
-                    Latitude = table.Column<double>(type: "REAL", nullable: true),
-                    Longitude = table.Column<double>(type: "REAL", nullable: true),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
@@ -181,11 +177,38 @@ namespace DailyWatt.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "EnedisMeters",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Prm = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
+                    Label = table.Column<string>(type: "TEXT", maxLength: 128, nullable: true),
+                    City = table.Column<string>(type: "TEXT", maxLength: 255, nullable: true),
+                    Latitude = table.Column<double>(type: "REAL", nullable: true),
+                    Longitude = table.Column<double>(type: "REAL", nullable: true),
+                    IsFavorite = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EnedisMeters", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EnedisMeters_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ImportJobs",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     UserId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    MeterId = table.Column<Guid>(type: "TEXT", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     CompletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     Status = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
@@ -204,6 +227,12 @@ namespace DailyWatt.Infrastructure.Migrations
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ImportJobs_EnedisMeters_MeterId",
+                        column: x => x.MeterId,
+                        principalTable: "EnedisMeters",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -212,6 +241,7 @@ namespace DailyWatt.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     UserId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    MeterId = table.Column<Guid>(type: "TEXT", nullable: false),
                     TimestampUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
                     Kwh = table.Column<double>(type: "REAL", nullable: false),
                     Source = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false)
@@ -223,6 +253,44 @@ namespace DailyWatt.Infrastructure.Migrations
                         name: "FK_Measurements_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Measurements_EnedisMeters_MeterId",
+                        column: x => x.MeterId,
+                        principalTable: "EnedisMeters",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WeatherDays",
+                columns: table => new
+                {
+                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    MeterId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Date = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    TempAvg = table.Column<double>(type: "REAL", nullable: false),
+                    TempMin = table.Column<double>(type: "REAL", nullable: false),
+                    TempMax = table.Column<double>(type: "REAL", nullable: false),
+                    Source = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
+                    Latitude = table.Column<double>(type: "REAL", nullable: false),
+                    Longitude = table.Column<double>(type: "REAL", nullable: false),
+                    CreatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WeatherDays", x => new { x.UserId, x.MeterId, x.Date });
+                    table.ForeignKey(
+                        name: "FK_WeatherDays_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_WeatherDays_EnedisMeters_MeterId",
+                        column: x => x.MeterId,
+                        principalTable: "EnedisMeters",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -265,6 +333,17 @@ namespace DailyWatt.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_EnedisMeters_UserId_Prm",
+                table: "EnedisMeters",
+                columns: new[] { "UserId", "Prm" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ImportJobs_MeterId",
+                table: "ImportJobs",
+                column: "MeterId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ImportJobs_Status_CreatedAt",
                 table: "ImportJobs",
                 columns: new[] { "Status", "CreatedAt" });
@@ -275,9 +354,19 @@ namespace DailyWatt.Infrastructure.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Measurements_UserId_TimestampUtc",
+                name: "IX_Measurements_MeterId",
                 table: "Measurements",
-                columns: new[] { "UserId", "TimestampUtc" });
+                column: "MeterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Measurements_UserId_MeterId_TimestampUtc",
+                table: "Measurements",
+                columns: new[] { "UserId", "MeterId", "TimestampUtc" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WeatherDays_MeterId",
+                table: "WeatherDays",
+                column: "MeterId");
         }
 
         /// <inheritdoc />
@@ -308,7 +397,13 @@ namespace DailyWatt.Infrastructure.Migrations
                 name: "Measurements");
 
             migrationBuilder.DropTable(
+                name: "WeatherDays");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "EnedisMeters");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

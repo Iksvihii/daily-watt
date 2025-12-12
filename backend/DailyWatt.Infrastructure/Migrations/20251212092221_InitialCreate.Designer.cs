@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DailyWatt.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251210153048_InitialCreate")]
+    [Migration("20251212092221_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -90,23 +90,9 @@ namespace DailyWatt.Infrastructure.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Address")
-                        .HasColumnType("TEXT");
-
-                    b.Property<double?>("Latitude")
-                        .HasColumnType("REAL");
-
                     b.Property<byte[]>("LoginEncrypted")
                         .IsRequired()
                         .HasColumnType("BLOB");
-
-                    b.Property<double?>("Longitude")
-                        .HasColumnType("REAL");
-
-                    b.Property<string>("MeterNumber")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("TEXT");
 
                     b.Property<byte[]>("PasswordEncrypted")
                         .IsRequired()
@@ -118,6 +104,51 @@ namespace DailyWatt.Infrastructure.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("EnedisCredentials");
+                });
+
+            modelBuilder.Entity("DailyWatt.Domain.Entities.EnedisMeter", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsFavorite")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Label")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("Prm")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Prm")
+                        .IsUnique();
+
+                    b.ToTable("EnedisMeters");
                 });
 
             modelBuilder.Entity("DailyWatt.Domain.Entities.ImportJob", b =>
@@ -146,6 +177,9 @@ namespace DailyWatt.Infrastructure.Migrations
                     b.Property<int>("ImportedCount")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid>("MeterId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -158,6 +192,8 @@ namespace DailyWatt.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MeterId");
 
                     b.HasIndex("UserId");
 
@@ -175,6 +211,9 @@ namespace DailyWatt.Infrastructure.Migrations
                     b.Property<double>("Kwh")
                         .HasColumnType("REAL");
 
+                    b.Property<Guid>("MeterId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Source")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -188,9 +227,52 @@ namespace DailyWatt.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId", "TimestampUtc");
+                    b.HasIndex("MeterId");
+
+                    b.HasIndex("UserId", "MeterId", "TimestampUtc");
 
                     b.ToTable("Measurements");
+                });
+
+            modelBuilder.Entity("DailyWatt.Domain.Entities.WeatherDay", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("MeterId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("TempAvg")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("TempMax")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("TempMin")
+                        .HasColumnType("REAL");
+
+                    b.HasKey("UserId", "MeterId", "Date");
+
+                    b.HasIndex("MeterId");
+
+                    b.ToTable("WeatherDays");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
@@ -330,10 +412,10 @@ namespace DailyWatt.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("DailyWatt.Domain.Entities.ImportJob", b =>
+            modelBuilder.Entity("DailyWatt.Domain.Entities.EnedisMeter", b =>
                 {
                     b.HasOne("DailyWatt.Domain.Entities.DailyWattUser", "User")
-                        .WithMany("ImportJobs")
+                        .WithMany("EnedisMeters")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -341,13 +423,59 @@ namespace DailyWatt.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DailyWatt.Domain.Entities.ImportJob", b =>
+                {
+                    b.HasOne("DailyWatt.Domain.Entities.EnedisMeter", "Meter")
+                        .WithMany()
+                        .HasForeignKey("MeterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DailyWatt.Domain.Entities.DailyWattUser", "User")
+                        .WithMany("ImportJobs")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Meter");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("DailyWatt.Domain.Entities.Measurement", b =>
                 {
+                    b.HasOne("DailyWatt.Domain.Entities.EnedisMeter", "Meter")
+                        .WithMany()
+                        .HasForeignKey("MeterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("DailyWatt.Domain.Entities.DailyWattUser", "User")
                         .WithMany("Measurements")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Meter");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DailyWatt.Domain.Entities.WeatherDay", b =>
+                {
+                    b.HasOne("DailyWatt.Domain.Entities.EnedisMeter", "Meter")
+                        .WithMany()
+                        .HasForeignKey("MeterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DailyWatt.Domain.Entities.DailyWattUser", "User")
+                        .WithMany("WeatherDays")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Meter");
 
                     b.Navigation("User");
                 });
@@ -407,9 +535,13 @@ namespace DailyWatt.Infrastructure.Migrations
                 {
                     b.Navigation("EnedisCredentials");
 
+                    b.Navigation("EnedisMeters");
+
                     b.Navigation("ImportJobs");
 
                     b.Navigation("Measurements");
+
+                    b.Navigation("WeatherDays");
                 });
 #pragma warning restore 612, 618
         }
