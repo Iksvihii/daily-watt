@@ -33,34 +33,6 @@
           </button>
         </div>
       </div>
-      <div>
-        <label for="enedisMeter">Linky meter number</label>
-        <input id="enedisMeter" type="text" formControlName="meterNumber" placeholder="Meter number">
-      </div>
-
-      <!-- Location section -->
-      <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
-        <h4 style="margin-top: 0;">Meter Location</h4>
-        <app-address-map-input
-          [initialAddress]="loadedCity()"
-          [initialLatitude]="credentialsForm.get('latitude')?.value || undefined"
-          [initialLongitude]="credentialsForm.get('longitude')?.value || undefined"
-          (addressSelected)="onLocationSelected($event)"
-          [isInitialLoad]="isInitialLoad"
-          [isLoadedAddress]="loadedCity() !== ''"
-        ></app-address-map-input>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
-          <div>
-            <label for="enedisLatitude">Latitude</label>
-            <input id="enedisLatitude" type="number" formControlName="latitude" disabled placeholder="Latitude" step="0.0001">
-          </div>
-          <div>
-            <label for="enedisLongitude">Longitude</label>
-            <input id="enedisLongitude" type="number" formControlName="longitude" disabled placeholder="Longitude" step="0.0001">
-          </div>
-        </div>
-      </div>
 
       <button class="btn" type="submit" [disabled]="saving()" style="margin-top: 1rem;">Save</button>
     </form>
@@ -68,6 +40,100 @@
 
     @if (message()) {
       <p class="status" style="margin-top: 1rem;">{{ message() }}</p>
+    }
+  </div>
+
+  <div class="card">
+    <h3>Linky meters</h3>
+    <p class="status">Manage your electricity meters.</p>
+
+    @if (meters().length === 0 && !isAddingMeter() && !editingMeter()) {
+      <div style="padding: 2rem; text-align: center; color: #64748b;">
+        No meters configured yet.
+      </div>
+    }
+
+    @if (meters().length > 0 && !isAddingMeter() && !editingMeter()) {
+      <div style="margin-bottom: 1rem;">
+        @for (meter of meters(); track meter.id) {
+          <div style="padding: 1rem; border: 1px solid #e2e8f0; border-radius: 0.375rem; margin-bottom: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong>{{ meter.label || meter.prm }}</strong>
+                @if (meter.isFavorite) {
+                  <span style="margin-left: 0.5rem; color: #f59e0b;">⭐ Default</span>
+                }
+                <div style="font-size: 0.875rem; color: #64748b;">
+                  PRM: {{ meter.prm }}
+                  @if (meter.city) {
+                    · {{ meter.city }}
+                  }
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                @if (!meter.isFavorite) {
+                  <button (click)="setFavorite(meter)" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.875rem;">Set default</button>
+                }
+                <button (click)="editMeter(meter)" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.875rem;">Edit</button>
+                <button (click)="deleteMeter(meter)" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; background: #ef4444;">Delete</button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    @if (!isAddingMeter() && !editingMeter()) {
+      <button (click)="startAddMeter()" class="btn">Add meter</button>
+    }
+
+    @if (isAddingMeter() || editingMeter()) {
+      <form [formGroup]="meterForm" (ngSubmit)="saveMeter()" style="margin-top: 1rem;">
+        <h4>{{ editingMeter() ? 'Edit meter' : 'Add meter' }}</h4>
+        
+        <div>
+          <label for="meterPrm">PRM (meter number)</label>
+          <input 
+            id="meterPrm" 
+            type="text" 
+            formControlName="prm" 
+            placeholder="14 digit PRM"
+            [disabled]="!!editingMeter()">
+        </div>
+
+        <div>
+          <label for="meterLabel">Label (optional)</label>
+          <input id="meterLabel" type="text" formControlName="label" placeholder="e.g., Main house, Garage">
+        </div>
+
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
+          <h4 style="margin-top: 0;">Meter Location</h4>
+          <app-address-map-input
+            [initialAddress]="loadedCity()"
+            [initialLatitude]="meterForm.get('latitude')?.value || undefined"
+            [initialLongitude]="meterForm.get('longitude')?.value || undefined"
+            (addressSelected)="onLocationSelected($event)"
+            [isInitialLoad]="isInitialLoad"
+            [isLoadedAddress]="loadedCity() !== ''"
+          ></app-address-map-input>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+            <div>
+              <label for="meterLatitude">Latitude</label>
+              <input id="meterLatitude" type="number" formControlName="latitude" disabled placeholder="Latitude" step="0.0001">
+            </div>
+            <div>
+              <label for="meterLongitude">Longitude</label>
+              <input id="meterLongitude" type="number" formControlName="longitude" disabled placeholder="Longitude" step="0.0001">
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+          <button class="btn" type="submit">{{ editingMeter() ? 'Update' : 'Add' }}</button>
+          <button class="btn" type="button" (click)="cancelMeterEdit()" style="background: #64748b;">Cancel</button>
+        </div>
+      </form>
     }
   </div>
 </div>

@@ -6,7 +6,7 @@ import { DashboardService } from "../../services/dashboard.service";
 import { Granularity, TimeSeriesResponse } from "../../models/dashboard.models";
 import { ConsumptionChartComponent } from "../consumption-chart/consumption-chart.component";
 import { EnedisService } from "../../services/enedis.service";
-import { EnedisStatus } from "../../models/enedis.models";
+import { EnedisStatus, EnedisMeter } from "../../models/enedis.models";
 
 @Component({
   selector: "app-dashboard",
@@ -37,11 +37,14 @@ export class DashboardComponent implements OnInit {
   status = signal<EnedisStatus | null>(null);
   syncing = signal(false);
   statusMessage = signal<string | undefined>(undefined);
+  meters = signal<EnedisMeter[]>([]);
+  selectedMeterId = signal<string | undefined>(undefined);
 
   private readonly SESSION_STORAGE_PREFIX = "dashboard_";
 
   ngOnInit(): void {
     this.loadStatus();
+    this.loadMeters();
   }
 
   private getStoredFrom(): string | null {
@@ -92,12 +95,36 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  loadMeters() {
+    this.enedis.getMeters().subscribe({
+      next: (meters) => {
+        this.meters.set(meters);
+        // Select favorite meter by default
+        const favorite = meters.find(m => m.isFavorite);
+        if (favorite) {
+          this.selectedMeterId.set(favorite.id);
+        } else if (meters.length > 0) {
+          this.selectedMeterId.set(meters[0].id);
+        }
+      },
+      error: () => {
+        this.meters.set([]);
+      },
+    });
+  }
+
+  onMeterChange(meterId: string) {
+    this.selectedMeterId.set(meterId);
+    this.load();
+  }
+
   load() {
     this.savePreferencesToSession();
     this.loading.set(true);
     this.error.set(undefined);
     this.dashboard
       .getTimeSeries({
+        meterId: this.selectedMeterId(),
         from: new Date(this.from()).toISOString(),
         to: new Date(this.to()).toISOString(),
         granularity: this.granularity(),
@@ -117,8 +144,13 @@ export class DashboardComponent implements OnInit {
 
   syncNow() {
     if (this.syncing()) return;
+    if (!this.selectedMeterId()) {
+      this.statusMessage.set("Please select a meter first");
+      return;
+    }
     this.syncing.set(true);
     const payload = {
+      meterId: this.selectedMeterId()!,
       fromUtc: new Date(this.defaultFrom()).toISOString(),
       toUtc: new Date().toISOString(),
     };

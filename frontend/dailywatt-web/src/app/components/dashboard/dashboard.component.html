@@ -46,6 +46,23 @@
           <button class="btn" type="button" (click)="load()" [disabled]="loading()">Load</button>
         </div>
         <form>
+          @if (meters().length > 0) {
+            <div class="form-group">
+              <label for="meterSelect">Meter</label>
+              <select 
+                id="meterSelect" 
+                [(ngModel)]="selectedMeterId" 
+                (ngModelChange)="onMeterChange($event)"
+                name="meter">
+                @for (meter of meters(); track meter.id) {
+                  <option [value]="meter.id">
+                    {{ meter.label || meter.prm }}
+                    @if (meter.isFavorite) { ⭐ }
+                  </option>
+                }
+              </select>
+            </div>
+          }
           <div class="form-row">
             <div class="form-group">
               <label for="fromDate">From</label>

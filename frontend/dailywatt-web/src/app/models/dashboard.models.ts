@@ -1,6 +1,7 @@
 export type Granularity = "30min" | "hour" | "day" | "month" | "year";
 
 export interface GetTimeSeriesRequest {
+  meterId?: string;
   from: string;
   to: string;
   granularity: Granularity;

@@ -12,11 +12,15 @@ export class DashboardService {
   private http = inject(HttpClient);
 
   getTimeSeries(request: GetTimeSeriesRequest): Observable<TimeSeriesResponse> {
-    const params = new HttpParams()
+    let params = new HttpParams()
       .set("from", request.from)
       .set("to", request.to)
       .set("granularity", request.granularity)
       .set("withWeather", request.withWeather ?? false);
+    
+    if (request.meterId) {
+      params = params.set("meterId", request.meterId);
+    }
 
     return this.http.get<TimeSeriesResponse>(
       `${environment.apiUrl}/api/dashboard/timeseries`,
