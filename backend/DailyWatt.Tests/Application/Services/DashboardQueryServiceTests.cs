@@ -102,7 +102,7 @@ public class DashboardQueryServiceTests
 
         var mockConsumptionService = new Mock<IConsumptionService>();
         mockConsumptionService
-            .Setup(s => s.GetAggregatedAsync(userId, meterId, fromUtc, toUtc, Granularity.Hour, It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetAggregatedAsync(userId, meterId, fromUtc, toUtc, Granularity.Day, It.IsAny<CancellationToken>()))
             .ReturnsAsync(aggregatedPoints);
 
         mockConsumptionService
@@ -133,7 +133,7 @@ public class DashboardQueryServiceTests
             mockMeterService.Object,
             mockMapper.Object);
 
-        var result = await service.GetTimeSeriesAsync(userId, null, fromUtc, toUtc, Granularity.Hour, false);
+        var result = await service.GetTimeSeriesAsync(userId, null, fromUtc, toUtc, Granularity.Day, false);
 
         Assert.NotNull(result);
         mockWeatherSyncService.Verify(s => s.EnsureWeatherAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -169,7 +169,7 @@ public class DashboardQueryServiceTests
 
         var mockConsumptionService = new Mock<IConsumptionService>();
         mockConsumptionService
-            .Setup(s => s.GetAggregatedAsync(userId, meterId, fromUtc, toUtc, Granularity.Hour, It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetAggregatedAsync(userId, meterId, fromUtc, toUtc, Granularity.Day, It.IsAny<CancellationToken>()))
             .ReturnsAsync(aggregatedPoints);
 
         mockConsumptionService
@@ -215,7 +215,7 @@ public class DashboardQueryServiceTests
             mockMeterService.Object,
             mockMapper.Object);
 
-        var result = await service.GetTimeSeriesAsync(userId, null, fromUtc, toUtc, Granularity.Hour, true);
+        var result = await service.GetTimeSeriesAsync(userId, null, fromUtc, toUtc, Granularity.Day, true);
 
         Assert.NotNull(result);
         mockWeatherSyncService.Verify(

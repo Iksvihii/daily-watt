@@ -4,7 +4,8 @@ namespace DailyWatt.Api.Helpers;
 
 /// <summary>
 /// Helper to parse string granularity values to enum.
-/// Supports: 30min, hour, day, month, year.
+/// Supports: day, month, year.
+/// Note: Requests for 30min/hour are coerced to day.
 /// </summary>
 public static class GranularityHelper
 {
@@ -17,8 +18,7 @@ public static class GranularityHelper
 
         return value.ToLowerInvariant() switch
         {
-            "30min" or "30m" => Granularity.ThirtyMinutes,
-            "hour" or "1h" => Granularity.Hour,
+            "30min" or "30m" or "hour" or "1h" => Granularity.Day,
             "day" or "daily" => Granularity.Day,
             "month" or "monthly" => Granularity.Month,
             "year" or "annual" => Granularity.Year,

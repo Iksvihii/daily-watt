@@ -236,6 +236,60 @@ public class EnedisController : ControllerBase
         return Ok(dto);
     }
 
+    [HttpPost("import/upload")]
+    public async Task<ActionResult<ImportJobDto>> UploadConsumptionFile(
+        [FromForm] IFormFile file,
+        [FromForm] Guid meterId,
+        [FromForm] DateTime fromUtc,
+        [FromForm] DateTime toUtc,
+        CancellationToken ct)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(new { error = "File is required" });
+        }
+
+        if (toUtc <= fromUtc)
+        {
+            return BadRequest(new { error = "Invalid date range" });
+        }
+
+        // Validate file extension
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (extension != ".xlsx" && extension != ".xls")
+        {
+            return BadRequest(new { error = "Only Excel files (.xlsx, .xls) are supported" });
+        }
+
+        var userId = User.GetUserId();
+
+        // Save file to temp directory
+        var uploadsDir = Path.Combine(Path.GetTempPath(), "dailywatt-uploads");
+        Directory.CreateDirectory(uploadsDir);
+
+        var fileName = $"{userId}_{meterId}_{Guid.NewGuid()}{extension}";
+        var filePath = Path.Combine(uploadsDir, fileName);
+
+        await using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream, ct);
+        }
+
+        _logger.LogInformation("Uploaded file saved to {FilePath} for user {UserId}", filePath, userId);
+
+        // Create import job with file path
+        var job = await _importJobService.CreateJobWithFileAsync(
+            userId,
+            meterId,
+            fromUtc.ToUniversalTime(),
+            toUtc.ToUniversalTime(),
+            filePath,
+            ct);
+
+        var dto = _mapper.Map<ImportJobDto>(job);
+        return Ok(dto);
+    }
+
     [HttpGet("import/{jobId:guid}")]
     public async Task<ActionResult<ImportJobDto>> GetJob(Guid jobId, CancellationToken ct)
     {

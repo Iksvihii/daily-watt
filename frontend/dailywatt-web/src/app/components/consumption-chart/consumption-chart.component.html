@@ -3,8 +3,6 @@
     <div class="time-scale-selector">
       <label for="granularity">Time Scale:</label>
       <select id="granularity" [value]="granularity" (change)="onGranularityChange($event)" [disabled]="isLoading()">
-        <option value="30min">30 minutes</option>
-        <option value="hour">Hour</option>
         <option value="day">Day</option>
         <option value="month">Month</option>
         <option value="year">Year</option>

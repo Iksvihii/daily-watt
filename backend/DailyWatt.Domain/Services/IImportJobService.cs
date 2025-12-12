@@ -5,6 +5,7 @@ namespace DailyWatt.Domain.Services;
 public interface IImportJobService
 {
     Task<ImportJob> CreateJobAsync(Guid userId, Guid meterId, DateTime fromUtc, DateTime toUtc, CancellationToken ct = default);
+    Task<ImportJob> CreateJobWithFileAsync(Guid userId, Guid meterId, DateTime fromUtc, DateTime toUtc, string filePath, CancellationToken ct = default);
     Task<List<ImportJob>> GetPendingJobsAsync(CancellationToken ct = default);
     Task<ImportJob?> GetAsync(Guid jobId, CancellationToken ct = default);
     Task MarkRunningAsync(ImportJob job, CancellationToken ct = default);

@@ -16,6 +16,11 @@ public class ImportJob
     public DateTime FromUtc { get; set; }
     public DateTime ToUtc { get; set; }
 
+    /// <summary>
+    /// Optional: Path to uploaded Excel file. If set, Worker will read from file instead of scraping.
+    /// </summary>
+    public string? FilePath { get; set; }
+
     public DailyWattUser? User { get; set; }
     public EnedisMeter? Meter { get; set; }
 }

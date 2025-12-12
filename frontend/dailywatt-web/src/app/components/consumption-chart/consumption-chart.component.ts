@@ -52,8 +52,6 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
   private rangeChange$ = new Subject<void>();
 
   granularityOptions: { label: string; value: Granularity }[] = [
-    { label: "30 minutes", value: "30min" },
-    { label: "Hour", value: "hour" },
     { label: "Day", value: "day" },
     { label: "Month", value: "month" },
     { label: "Year", value: "year" },
@@ -110,21 +108,6 @@ export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
     granularity: Granularity
   ): string {
     switch (granularity) {
-      case "30min":
-        // Full date + hours and minutes
-        return date.toLocaleString("en-US", {
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-      case "hour":
-        // Full date + hours
-        return date.toLocaleString("en-US", {
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-        });
       case "day":
         // Just date (month day)
         return date.toLocaleString("en-US", {

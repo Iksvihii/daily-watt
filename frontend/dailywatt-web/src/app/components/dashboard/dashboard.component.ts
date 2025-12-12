@@ -63,7 +63,10 @@ export class DashboardComponent implements OnInit {
     const stored = sessionStorage.getItem(
       this.SESSION_STORAGE_PREFIX + "granularity"
     );
-    return (stored as Granularity) || null;
+    if (stored === "day" || stored === "month" || stored === "year") {
+      return stored as Granularity;
+    }
+    return null;
   }
 
   private getStoredWithWeather(): boolean | null {

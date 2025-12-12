@@ -32,6 +32,24 @@ public class ImportJobService : IImportJobService
         return job;
     }
 
+    public async Task<ImportJob> CreateJobWithFileAsync(Guid userId, Guid meterId, DateTime fromUtc, DateTime toUtc, string filePath, CancellationToken ct = default)
+    {
+        var job = new ImportJob
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            MeterId = meterId,
+            CreatedAt = DateTime.UtcNow,
+            Status = ImportJobStatus.Pending,
+            FromUtc = fromUtc,
+            ToUtc = toUtc,
+            FilePath = filePath
+        };
+        _db.ImportJobs.Add(job);
+        await _db.SaveChangesAsync(ct);
+        return job;
+    }
+
     public Task<List<ImportJob>> GetPendingJobsAsync(CancellationToken ct = default)
     {
         return _db.ImportJobs

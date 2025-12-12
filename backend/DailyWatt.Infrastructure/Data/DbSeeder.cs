@@ -77,8 +77,8 @@ public static class DbSeeder
 
       await context.EnedisMeters.AddAsync(demoMeter);
 
-      // Generate realistic consumption data
-      var measurements = GenerateRealisticConsumptionData(demoUser.Id, demoMeter.Id);
+      // Generate realistic daily consumption data
+      var measurements = GenerateRealisticDailyConsumptionData(demoUser.Id, demoMeter.Id);
 
       await context.Measurements.AddRangeAsync(measurements);
       await context.SaveChangesAsync();
@@ -91,17 +91,17 @@ public static class DbSeeder
     }
   }
 
-  private static List<Measurement> GenerateRealisticConsumptionData(Guid userId, Guid meterId)
+  private static List<Measurement> GenerateRealisticDailyConsumptionData(Guid userId, Guid meterId)
   {
     var measurements = new List<Measurement>();
     var random = new Random(42); // Fixed seed for reproducibility
     var endDate = DateTime.UtcNow.Date;
     var startDate = endDate.AddDays(-90); // 3 months of data
 
-    // Generate data for each 30-minute interval
-    for (var date = startDate; date <= endDate; date = date.AddMinutes(30))
+    // Generate one measurement per day (midnight UTC)
+    for (var date = startDate; date <= endDate; date = date.AddDays(1))
     {
-      var kwh = CalculateRealisticConsumption(date, random);
+      var kwh = CalculateRealisticDailyConsumption(date, random);
 
       measurements.Add(new Measurement
       {
@@ -117,46 +117,34 @@ public static class DbSeeder
     return measurements;
   }
 
-  private static double CalculateRealisticConsumption(DateTime timestamp, Random random)
+  private static double CalculateRealisticDailyConsumption(DateTime date, Random random)
   {
-    var hour = timestamp.Hour;
-    var dayOfWeek = timestamp.DayOfWeek;
+    var dayOfWeek = date.DayOfWeek;
     var isWeekend = dayOfWeek == DayOfWeek.Saturday || dayOfWeek == DayOfWeek.Sunday;
 
-    // Base consumption pattern (in kWh for 30 minutes)
-    double baseConsumption = hour switch
-    {
-      // Night (0h-6h): Low consumption (heating, fridge)
-      >= 0 and < 6 => 0.15,
-      // Morning (6h-9h): Medium consumption (breakfast, getting ready)
-      >= 6 and < 9 => isWeekend ? 0.35 : 0.28,
-      // Day (9h-17h): Low during week (people at work), medium on weekend
-      >= 9 and < 17 => isWeekend ? 0.30 : 0.18,
-      // Evening (17h-22h): High consumption (cooking, TV, activities)
-      >= 17 and < 22 => 0.45,
-      // Late evening (22h-24h): Medium consumption (winding down)
-      >= 22 and <= 23 => 0.25,
-      _ => 0.20
-    };
+    // Base daily household consumption in kWh
+    double baseDaily = 14.0; // typical baseline
 
-    // Add seasonal variation (higher in winter for heating)
-    var month = timestamp.Month;
+    // Weekend adjustment: people home more
+    var weekendMultiplier = isWeekend ? 1.10 : 1.00;
+
+    // Seasonal variation (higher in winter for heating)
+    var month = date.Month;
     var seasonalMultiplier = month switch
     {
-      12 or 1 or 2 => 1.4,  // Winter
-      3 or 11 => 1.2,        // Spring/Fall transition
-      4 or 5 or 9 or 10 => 1.0, // Spring/Fall
-      6 or 7 or 8 => 0.8,    // Summer (less heating, but AC)
-      _ => 1.0
+      12 or 1 or 2 => 1.35,  // Winter
+      3 or 11 => 1.15,        // Spring/Fall transition
+      4 or 5 or 9 or 10 => 1.00, // Spring/Fall
+      6 or 7 or 8 => 0.88,    // Summer (less heating, some AC)
+      _ => 1.00
     };
 
-    // Add some random variation (±20%)
-    var randomFactor = 0.8 + (random.NextDouble() * 0.4);
+    // Random variation (±15%)
+    var randomFactor = 0.85 + (random.NextDouble() * 0.30);
 
-    // Calculate final consumption
-    var consumption = baseConsumption * seasonalMultiplier * randomFactor;
+    var dailyKwh = baseDaily * weekendMultiplier * seasonalMultiplier * randomFactor;
 
-    // Round to 2 decimal places
-    return Math.Round(consumption, 3);
+    // Round to 3 decimal places
+    return Math.Round(dailyKwh, 3);
   }
 }

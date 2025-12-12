@@ -32,20 +32,6 @@ public class ConsumptionService : IConsumptionService
 
         switch (granularity)
         {
-            case Granularity.ThirtyMinutes:
-                return await query
-                    .OrderBy(x => x.TimestampUtc)
-                    .Select(x => new AggregatedConsumptionPoint(x.TimestampUtc, x.Kwh))
-                    .ToListAsync(ct);
-
-            case Granularity.Hour:
-                var hourData = await query.ToListAsync(ct);
-                return hourData
-                    .GroupBy(x => new DateTime(x.TimestampUtc.Year, x.TimestampUtc.Month, x.TimestampUtc.Day, x.TimestampUtc.Hour, 0, 0, DateTimeKind.Utc))
-                    .Select(g => new AggregatedConsumptionPoint(g.Key, g.Sum(m => m.Kwh)))
-                    .OrderBy(x => x.TimestampUtc)
-                    .ToList();
-
             case Granularity.Day:
                 var dayData = await query.ToListAsync(ct);
                 return dayData
@@ -71,11 +57,13 @@ public class ConsumptionService : IConsumptionService
                     .ToList();
 
             default:
-                return await query
+                // Default to day aggregation
+                var defData = await query.ToListAsync(ct);
+                return defData
                     .GroupBy(x => new DateTime(x.TimestampUtc.Year, x.TimestampUtc.Month, x.TimestampUtc.Day, 0, 0, 0, DateTimeKind.Utc))
                     .Select(g => new AggregatedConsumptionPoint(g.Key, g.Sum(m => m.Kwh)))
                     .OrderBy(x => x.TimestampUtc)
-                    .ToListAsync(ct);
+                    .ToList();
         }
     }
 

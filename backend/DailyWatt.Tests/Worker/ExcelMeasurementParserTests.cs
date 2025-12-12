@@ -11,19 +11,19 @@ namespace DailyWatt.Tests.Worker;
 public class ExcelMeasurementParserTests
 {
   private readonly string _testDataPath = Path.Combine(
-      AppContext.BaseDirectory,
-      "TestData",
-      "23157163490924_Export_courbe_de_charge_Consommation_01122025-08122025.xlsx"
+    AppContext.BaseDirectory,
+    "TestData",
+    "23157163490924_Export_energie_Consommation_13122022-11122025.xlsx"
   );
 
   [Fact]
-  public void Parse_WithValidExcelFile_ReturnsListOfMeasurements()
+  public void Parse_WithValidDailyExcelFile_ReturnsListOfMeasurements()
   {
     // Arrange
     var userId = Guid.NewGuid();
     var meterId = Guid.NewGuid();
-    var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
-    var toUtc = new DateTime(2025, 12, 8, 23, 59, 59, DateTimeKind.Utc);
+    var fromUtc = new DateTime(2025, 12, 10, 0, 0, 0, DateTimeKind.Utc);
+    var toUtc = new DateTime(2025, 12, 11, 23, 59, 59, DateTimeKind.Utc);
 
     using var stream = File.OpenRead(_testDataPath);
 
@@ -36,19 +36,23 @@ public class ExcelMeasurementParserTests
     {
       Assert.Equal(userId, m.UserId);
       Assert.True(m.TimestampUtc >= fromUtc && m.TimestampUtc <= toUtc);
-      Assert.True(m.Kwh > 0);
+      Assert.True(m.Kwh >= 0);
       Assert.Equal("enedis", m.Source);
+      // Daily file should have midnight timestamps
+      Assert.Equal(0, m.TimestampUtc.Hour);
+      Assert.Equal(0, m.TimestampUtc.Minute);
+      Assert.Equal(0, m.TimestampUtc.Second);
     });
   }
 
   [Fact]
-  public void Parse_ConvertsKwToKwh_ForThirtyMinuteIntervals()
+  public void Parse_ProducesMidnightTimestamps_ForDailyRows()
   {
     // Arrange
     var userId = Guid.NewGuid();
     var meterId = Guid.NewGuid();
-    var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
-    var toUtc = new DateTime(2025, 12, 1, 2, 0, 0, DateTimeKind.Utc);
+    var fromUtc = new DateTime(2025, 12, 10, 0, 0, 0, DateTimeKind.Utc);
+    var toUtc = new DateTime(2025, 12, 11, 23, 59, 59, DateTimeKind.Utc);
 
     using var stream = File.OpenRead(_testDataPath);
 
@@ -60,9 +64,10 @@ public class ExcelMeasurementParserTests
     Assert.NotEmpty(measurements);
     var firstMeasurement = measurements.FirstOrDefault();
     Assert.NotNull(firstMeasurement);
-    // Verify the value is reasonable (between 0 and 1 for a 30-min interval from kW to kWh)
-    Assert.True(firstMeasurement!.Kwh > 0);
-    Assert.True(firstMeasurement.Kwh < 1);
+    Assert.NotNull(firstMeasurement);
+    Assert.Equal(0, firstMeasurement!.TimestampUtc.Hour);
+    Assert.Equal(0, firstMeasurement.TimestampUtc.Minute);
+    Assert.Equal(0, firstMeasurement.TimestampUtc.Second);
   }
 
   [Fact]
@@ -71,8 +76,8 @@ public class ExcelMeasurementParserTests
     // Arrange
     var userId = Guid.NewGuid();
     var meterId = Guid.NewGuid();
-    var fromUtc = new DateTime(2025, 12, 2, 0, 0, 0, DateTimeKind.Utc); // 2 Dec
-    var toUtc = new DateTime(2025, 12, 3, 23, 59, 59, DateTimeKind.Utc);   // 3 Dec
+    var fromUtc = new DateTime(2025, 11, 10, 0, 0, 0, DateTimeKind.Utc);
+    var toUtc = new DateTime(2025, 11, 11, 23, 59, 59, DateTimeKind.Utc);
 
     using var stream = File.OpenRead(_testDataPath);
 
@@ -82,8 +87,7 @@ public class ExcelMeasurementParserTests
     // Assert
     Assert.All(measurements, m =>
     {
-      var date = m.TimestampUtc.Date;
-      Assert.True(date == new DateTime(2025, 12, 2).Date || date == new DateTime(2025, 12, 3).Date);
+      Assert.True(m.TimestampUtc >= fromUtc && m.TimestampUtc <= toUtc);
     });
   }
 
@@ -93,8 +97,8 @@ public class ExcelMeasurementParserTests
     // Arrange
     var userId = Guid.NewGuid();
     var meterId = Guid.NewGuid();
-    var fromUtc = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc); // Future date
-    var toUtc = new DateTime(2026, 1, 2, 23, 59, 59, DateTimeKind.Utc);
+    var fromUtc = new DateTime(2030, 1, 1, 0, 0, 0, DateTimeKind.Utc); // Far future date
+    var toUtc = new DateTime(2030, 1, 2, 23, 59, 59, DateTimeKind.Utc);
 
     using var stream = File.OpenRead(_testDataPath);
 
@@ -106,13 +110,13 @@ public class ExcelMeasurementParserTests
   }
 
   [Fact]
-  public void Parse_EnsuresTimestampIsUtc()
+  public void Parse_EnsuresTimestampIsUtc_ForDaily()
   {
     // Arrange
     var userId = Guid.NewGuid();
     var meterId = Guid.NewGuid();
     var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
-    var toUtc = new DateTime(2025, 12, 8, 23, 59, 59, DateTimeKind.Utc);
+    var toUtc = new DateTime(2025, 11, 11, 23, 59, 59, DateTimeKind.Utc);
 
     using var stream = File.OpenRead(_testDataPath);
 
@@ -127,13 +131,13 @@ public class ExcelMeasurementParserTests
   }
 
   [Fact]
-  public void Parse_WithValidFile_ParsesExpectedNumberOfRows()
+  public void Parse_WithValidDailyFile_ParsesExpectedNumberOfRows()
   {
     // Arrange
     var userId = Guid.NewGuid();
     var meterId = Guid.NewGuid();
     var fromUtc = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
-    var toUtc = new DateTime(2025, 12, 8, 23, 59, 59, DateTimeKind.Utc);
+    var toUtc = new DateTime(2025, 11, 11, 23, 59, 59, DateTimeKind.Utc);
 
     using var stream = File.OpenRead(_testDataPath);
 
@@ -141,10 +145,50 @@ public class ExcelMeasurementParserTests
     var measurements = ExcelMeasurementParser.Parse(stream, userId, meterId, fromUtc, toUtc);
 
     // Assert
-    // File has 8 days of data, 48 30-minute intervals per day = 384 intervals expected
-    // Verify we get a reasonable number of measurements
-    Assert.True(measurements.Count > 330, $"Expected > 330 measurements, got {measurements.Count}");
-    Assert.True(measurements.Count < 400, $"Expected < 400 measurements, got {measurements.Count}");
+    // Compute expected row count by reading the daily worksheet directly
+    using var stream2 = File.OpenRead(_testDataPath);
+    using var workbook = new ClosedXML.Excel.XLWorkbook(stream2);
+    var ws = workbook.Worksheets.FirstOrDefault(ws => ws.Name == "Export Consommation Quotidienne");
+    Assert.NotNull(ws);
+
+    // Find header row containing 'Date'
+    var used = ws!.RangeUsed();
+    Assert.NotNull(used);
+    int? headerRow = null;
+    for (int r = used!.FirstRow().RowNumber(); r <= used.LastRow().RowNumber(); r++)
+    {
+      var row = ws.Row(r);
+      var lastCol = ws.LastColumnUsed();
+      if (lastCol == null) continue;
+      for (int c = 1; c <= lastCol.ColumnNumber(); c++)
+      {
+        var cell = row.Cell(c);
+        if ((cell.GetString() ?? string.Empty).Trim().Equals("Date", StringComparison.OrdinalIgnoreCase))
+        {
+          headerRow = r;
+          break;
+        }
+      }
+      if (headerRow.HasValue) break;
+    }
+
+    Assert.True(headerRow.HasValue, "Header row not found in daily worksheet");
+
+    var firstDataRow = headerRow!.Value + 1;
+    var lastRow = ws.LastRowUsed();
+    Assert.NotNull(lastRow);
+    var expectedRows = 0;
+    for (int r = firstDataRow; r <= lastRow!.RowNumber(); r++)
+    {
+      var dateVal = ws.Row(r).Cell(1).GetString(); // Date is typically first column
+      var consVal = ws.Row(r).Cell(2).GetString(); // Valeur (en kWh) typically second
+      if (!string.IsNullOrWhiteSpace(dateVal) && !string.IsNullOrWhiteSpace(consVal))
+      {
+        expectedRows++;
+      }
+    }
+
+    Assert.Equal(expectedRows, measurements.Count);
   }
 
   [Fact]

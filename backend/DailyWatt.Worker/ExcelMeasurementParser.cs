@@ -5,55 +5,58 @@ using DailyWatt.Domain.Entities;
 namespace DailyWatt.Worker;
 
 /// <summary>
-/// Parses Enedis Excel export files (hourly consumption data).
-/// Expected structure: Worksheet "Consommation Horaire" with:
-/// - Row X: "Plage horaire" marker (header marker row)
-/// - Row X+1: Actual column headers ("Début", "Fin", "Valeur (en kW)")
-/// - Row X+2+: Data rows with timestamps and consumption values
-/// Column positions are typically: C, D, E
+/// Parses Enedis Excel export files.
+/// Supported structures:
+/// 1) Daily consumption: Worksheet "Export Consommation Quotidienne" with headers:
+///    - "Date" (format JJ/MM/AAAA)
+///    - "Valeur (en kWh)"
+/// 2) Hourly consumption: Worksheet "Consommation Horaire" with headers:
+///    - "Début", "Fin", "Valeur (en kW)" (30-min intervals, converted to kWh)
+/// The parser will prefer Daily worksheet if present, otherwise fallback to Hourly.
 /// </summary>
 public static class ExcelMeasurementParser
 {
-  private const string WorksheetName = "Consommation Horaire";
-  private const string HeaderPlageHoraire = "Plage horaire";
-  private const string HeaderDebut = "Début";
-  private const string HeaderFin = "Fin";
-  private const string HeaderConsommation = "Valeur (en kW)";
+  private const string WorksheetNameDaily = "Export Consommation Quotidienne";
+  private const string HeaderDate = "Date";
+  private const string HeaderConsommationDaily = "Valeur (en kWh)";
+
+  // No longer supporting hourly worksheet parsing
 
   public static List<Measurement> Parse(Stream excelStream, Guid userId, Guid meterId, DateTime fromUtc, DateTime toUtc)
   {
-    var results = new List<Measurement>();
     excelStream.Seek(0, SeekOrigin.Begin);
-
     using var workbook = new XLWorkbook(excelStream);
 
-    // Try to find the consumption worksheet
-    var worksheet = workbook.Worksheets.FirstOrDefault(ws => ws.Name == WorksheetName);
-    if (worksheet == null)
+    // Only support daily worksheet
+    var dailyWs = workbook.Worksheets.FirstOrDefault(ws => ws.Name == WorksheetNameDaily);
+    if (dailyWs == null)
     {
-      throw new InvalidOperationException($"Worksheet '{WorksheetName}' not found in Excel file");
+      throw new InvalidOperationException($"Worksheet '{WorksheetNameDaily}' not found in Excel file");
     }
 
-    // Find header row and column indices
-    var headerRow = FindHeaderRow(worksheet);
+    return ParseDailyWorksheet(dailyWs, userId, meterId, fromUtc, toUtc);
+  }
+
+  private static List<Measurement> ParseDailyWorksheet(IXLWorksheet worksheet, Guid userId, Guid meterId, DateTime fromUtc, DateTime toUtc)
+  {
+    var results = new List<Measurement>();
+
+    var headerRow = FindHeaderRow(worksheet, HeaderDate);
     if (headerRow == null)
     {
-      throw new InvalidOperationException($"Header row with '{HeaderDebut}' not found");
+      throw new InvalidOperationException($"Header row with '{HeaderDate}' not found in '{WorksheetNameDaily}'");
     }
 
-    var debutColIndex = GetColumnIndex(worksheet, headerRow.Value, HeaderDebut);
-    var finColIndex = GetColumnIndex(worksheet, headerRow.Value, HeaderFin);
-    var consommationColIndex = GetColumnIndex(worksheet, headerRow.Value, HeaderConsommation);
+    var dateColIndex = GetColumnIndex(worksheet, headerRow.Value, HeaderDate);
+    var consommationColIndex = GetColumnIndex(worksheet, headerRow.Value, HeaderConsommationDaily);
 
-    if (debutColIndex == 0 || finColIndex == 0 || consommationColIndex == 0)
+    if (dateColIndex == 0 || consommationColIndex == 0)
     {
-      throw new InvalidOperationException($"Required columns not found. Found: Début={debutColIndex}, Fin={finColIndex}, Valeur={consommationColIndex}");
+      throw new InvalidOperationException($"Required columns not found. Found: Date={dateColIndex}, Valeur (en kWh)={consommationColIndex}");
     }
 
-    // Parse data rows (starting from header row + 1)
     var firstDataRow = headerRow.Value + 1;
     var lastRow = worksheet.LastRowUsed();
-
     if (lastRow == null)
     {
       return results;
@@ -62,39 +65,25 @@ public static class ExcelMeasurementParser
     for (int rowNum = firstDataRow; rowNum <= lastRow.RowNumber(); rowNum++)
     {
       var row = worksheet.Row(rowNum);
-
-      // Get cell values
-      var debutCell = row.Cell(debutColIndex);
-      var finCell = row.Cell(finColIndex);
+      var dateCell = row.Cell(dateColIndex);
       var consommationCell = row.Cell(consommationColIndex);
 
-      // Skip empty rows
-      if (debutCell.IsEmpty() && finCell.IsEmpty())
+      if (dateCell.IsEmpty())
       {
         continue;
       }
 
-      // Parse timestamp from Début column
-      if (!TryParseDateTime(debutCell, out var timestamp))
+      if (!TryParseDateOnly(dateCell, out var dateUtc))
       {
         continue;
       }
 
-      // Parse consumption value (convert kW to kWh for 30-min intervals)
-      if (!TryParseConsumption(consommationCell, out var kw))
+      if (!TryParseConsumption(consommationCell, out var kwh))
       {
         continue;
       }
 
-      // Convert kW to kWh (assuming 30-minute intervals: kW * 0.5)
-      var kwh = kw * 0.5;      // Ensure timestamp is UTC
-      if (timestamp.Kind != DateTimeKind.Utc)
-      {
-        timestamp = DateTime.SpecifyKind(timestamp, DateTimeKind.Utc);
-      }
-
-      // Filter by date range
-      if (timestamp < fromUtc || timestamp > toUtc)
+      if (dateUtc < fromUtc || dateUtc > toUtc)
       {
         continue;
       }
@@ -104,7 +93,7 @@ public static class ExcelMeasurementParser
         Id = Guid.NewGuid(),
         UserId = userId,
         MeterId = meterId,
-        TimestampUtc = timestamp,
+        TimestampUtc = dateUtc,
         Kwh = kwh,
         Source = "enedis"
       });
@@ -113,10 +102,12 @@ public static class ExcelMeasurementParser
     return results;
   }
 
+  // Removed hourly worksheet parser: only daily imports are supported
+
   /// <summary>
-  /// Finds the row number containing the header "Début"
+  /// Finds the row number containing the specified header name
   /// </summary>
-  private static int? FindHeaderRow(IXLWorksheet worksheet)
+  private static int? FindHeaderRow(IXLWorksheet worksheet, string headerName)
   {
     var usedRange = worksheet.RangeUsed();
     if (usedRange == null)
@@ -138,7 +129,7 @@ public static class ExcelMeasurementParser
       for (int col = firstCell.Address.ColumnNumber; col <= lastColumn.ColumnNumber(); col++)
       {
         var cell = worksheet.Cell(row, col);
-        if (HeaderDebut.Equals(cell.GetString()?.Trim(), StringComparison.OrdinalIgnoreCase))
+        if (headerName.Equals(cell.GetString()?.Trim(), StringComparison.OrdinalIgnoreCase))
         {
           return row;
         }
@@ -171,10 +162,12 @@ public static class ExcelMeasurementParser
     return 0; // Not found
   }
 
+  // Removed TryParseDateTime: no hourly parsing anymore
+
   /// <summary>
-  /// Attempts to parse a DateTime value from a cell
+  /// Attempts to parse a Date-only value and return DateTime at 00:00 UTC
   /// </summary>
-  private static bool TryParseDateTime(IXLCell cell, out DateTime result)
+  private static bool TryParseDateOnly(IXLCell cell, out DateTime result)
   {
     result = DateTime.MinValue;
 
@@ -183,40 +176,27 @@ public static class ExcelMeasurementParser
       return false;
     }
 
-    // Try to get as DateTime if cell is formatted as date
     if (cell.DataType == XLDataType.DateTime)
     {
       try
       {
-        result = cell.GetDateTime();
+        var dt = cell.GetDateTime().Date;
+        result = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
         return true;
       }
-      catch
-      {
-        // Fall through to string parsing
-      }
+      catch { }
     }
 
-    // Try to parse as string
     var value = cell.GetString();
     if (string.IsNullOrWhiteSpace(value))
     {
       return false;
     }
 
-    // Try various date formats
-    var formats = new[]
-    {
-            "yyyy-MM-dd HH:mm:ss",
-            "dd/MM/yyyy HH:mm:ss",
-            "yyyy-MM-ddTHH:mm:ss",
-            "dd/MM/yyyy HH:mm",
-            "yyyy-MM-dd HH:mm"
-        };
-
+    var formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd" };
     if (DateTime.TryParseExact(value, formats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var parsed))
     {
-      result = DateTime.SpecifyKind(parsed, DateTimeKind.Utc);
+      result = DateTime.SpecifyKind(parsed.Date, DateTimeKind.Utc);
       return true;
     }
 

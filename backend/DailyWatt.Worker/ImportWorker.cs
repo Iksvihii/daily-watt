@@ -70,8 +70,22 @@ public class ImportWorker : BackgroundService
                 var password = secretProtector.Unprotect(credentials.PasswordEncrypted);
 
                 await jobService.MarkRunningAsync(job, ct);
-                await using var excelStream = await scraper.DownloadConsumptionCsvAsync(login, password, job.FromUtc, job.ToUtc, ct);
-                var measurements = ExcelMeasurementParser.Parse(excelStream, job.UserId, job.MeterId, job.FromUtc, job.ToUtc);
+
+                List<Measurement> measurements;
+
+                // Check if FilePath is provided (manual upload) or use scraper
+                if (!string.IsNullOrEmpty(job.FilePath) && File.Exists(job.FilePath))
+                {
+                    _logger.LogInformation("Processing import job {JobId} from uploaded file {FilePath}", job.Id, job.FilePath);
+                    await using var fileStream = File.OpenRead(job.FilePath);
+                    measurements = ExcelMeasurementParser.Parse(fileStream, job.UserId, job.MeterId, job.FromUtc, job.ToUtc);
+                }
+                else
+                {
+                    _logger.LogInformation("Processing import job {JobId} via scraper", job.Id);
+                    await using var excelStream = await scraper.DownloadConsumptionCsvAsync(login, password, job.FromUtc, job.ToUtc, ct);
+                    measurements = ExcelMeasurementParser.Parse(excelStream, job.UserId, job.MeterId, job.FromUtc, job.ToUtc);
+                }
 
                 await db.Measurements
                     .Where(m => m.UserId == job.UserId && m.MeterId == job.MeterId && m.TimestampUtc >= job.FromUtc && m.TimestampUtc <= job.ToUtc)
@@ -101,6 +115,20 @@ public class ImportWorker : BackgroundService
                 }
 
                 await jobService.MarkCompletedAsync(job, measurements.Count, ct);
+
+                // Cleanup uploaded file if it exists
+                if (!string.IsNullOrEmpty(job.FilePath) && File.Exists(job.FilePath))
+                {
+                    try
+                    {
+                        File.Delete(job.FilePath);
+                        _logger.LogInformation("Deleted temporary file {FilePath} for job {JobId}", job.FilePath, job.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to delete temporary file {FilePath}", job.FilePath);
+                    }
+                }
             }
             catch (TaskCanceledException)
             {

@@ -48,7 +48,7 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
     return userId;
   }
   [Fact]
-  public async Task GetAggregatedAsync_WithHourlyGranularity_AggregatesDataCorrectly()
+  public async Task GetAggregatedAsync_WithDailyGranularity_AggregatesTwoHoursIntoOneDay()
   {
     // Arrange
     using var dbContext = _fixture.CreateContext();
@@ -82,20 +82,15 @@ public class ConsumptionServiceTests : IClassFixture<TestDatabaseFixture>
     var toUtc = new DateTime(2025, 12, 1, 23, 59, 59, DateTimeKind.Utc);
 
     // Act
-    var result = await consumptionService.GetAggregatedAsync(userId, meterId, fromUtc, toUtc, Granularity.Hour);
+    var result = await consumptionService.GetAggregatedAsync(userId, meterId, fromUtc, toUtc, Granularity.Day);
 
     // Assert
     Assert.NotEmpty(result);
-    // Should have 2 hours of data (00:00-01:00 and 01:00-02:00)
-    Assert.Equal(2, result.Count);
-
-    var hour0 = result.FirstOrDefault(r => r.TimestampUtc == new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc));
-    Assert.NotNull(hour0);
-    Assert.Equal(0.53, hour0!.Kwh, 2); // 0.31 + 0.22
-
-    var hour1 = result.FirstOrDefault(r => r.TimestampUtc == new DateTime(2025, 12, 1, 1, 0, 0, DateTimeKind.Utc));
-    Assert.NotNull(hour1);
-    Assert.Equal(0.53, hour1!.Kwh, 2); // 0.28 + 0.25
+    // Should have 1 day of aggregated data (sum of two hours)
+    Assert.Single(result);
+    var day = result.First();
+    Assert.Equal(new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc), day.TimestampUtc);
+    Assert.Equal(1.06, day.Kwh, 2); // 0.31 + 0.22 + 0.28 + 0.25
   }
 
   [Fact]
