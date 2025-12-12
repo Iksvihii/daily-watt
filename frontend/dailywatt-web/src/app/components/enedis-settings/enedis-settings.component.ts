@@ -162,26 +162,28 @@ export class EnedisSettingsComponent implements OnInit {
       // Update existing meter
       const updateRequest: UpdateMeterRequest = {
         label: formValue.label || undefined,
-        city: isCoordinates ? undefined : (city || undefined),
+        city: isCoordinates ? undefined : city || undefined,
         latitude: formValue.latitude || undefined,
         longitude: formValue.longitude || undefined,
       };
-      this.enedis.updateMeter(this.editingMeter()!.id, updateRequest).subscribe({
-        next: () => {
-          this.message.set("Meter updated");
-          this.loadMeters();
-          this.cancelMeterEdit();
-        },
-        error: (err: { error?: { error?: string } }) => {
-          this.message.set(err.error?.error || "Failed to update meter");
-        },
-      });
+      this.enedis
+        .updateMeter(this.editingMeter()!.id, updateRequest)
+        .subscribe({
+          next: () => {
+            this.message.set("Meter updated");
+            this.loadMeters();
+            this.cancelMeterEdit();
+          },
+          error: (err: { error?: { error?: string } }) => {
+            this.message.set(err.error?.error || "Failed to update meter");
+          },
+        });
     } else {
       // Create new meter
       const createRequest: CreateMeterRequest = {
         prm: formValue.prm || "",
         label: formValue.label || undefined,
-        city: isCoordinates ? undefined : (city || undefined),
+        city: isCoordinates ? undefined : city || undefined,
         latitude: formValue.latitude || undefined,
         longitude: formValue.longitude || undefined,
       };

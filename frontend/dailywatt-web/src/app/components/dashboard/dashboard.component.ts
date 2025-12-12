@@ -100,7 +100,7 @@ export class DashboardComponent implements OnInit {
       next: (meters) => {
         this.meters.set(meters);
         // Select favorite meter by default
-        const favorite = meters.find(m => m.isFavorite);
+        const favorite = meters.find((m) => m.isFavorite);
         if (favorite) {
           this.selectedMeterId.set(favorite.id);
         } else if (meters.length > 0) {

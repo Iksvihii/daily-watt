@@ -17,7 +17,7 @@ export class DashboardService {
       .set("to", request.to)
       .set("granularity", request.granularity)
       .set("withWeather", request.withWeather ?? false);
-    
+
     if (request.meterId) {
       params = params.set("meterId", request.meterId);
     }
