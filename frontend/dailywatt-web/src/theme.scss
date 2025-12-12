@@ -1,0 +1,28 @@
+// Use Angular Material 3 modern theme
+@use '@angular/material' as mat;
+
+// Include Material core styles for MDC components
+@include mat.core();
+
+// Define a proper Material 3 theme with teal primary color
+$my-primary: mat.m2-define-palette(mat.$m2-teal-palette, 500);
+$my-accent: mat.m2-define-palette(mat.$m2-cyan-palette, 400);
+$my-warn: mat.m2-define-palette(mat.$m2-red-palette);
+
+// Create a dark theme
+$my-theme: mat.m2-define-dark-theme((
+  color: (
+    primary: $my-primary,
+    accent: $my-accent,
+    warn: $my-warn,
+  ),
+  typography: mat.m2-define-typography-config(),
+  density: 0,
+));
+
+// Apply the theme to all Material components
+@include mat.all-component-themes($my-theme);
+
+
+
+

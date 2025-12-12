@@ -1,0 +1,53 @@
+/* Login Component - Material Design */
+
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+
+  h2 {
+    margin: 0 0 24px 0;
+    font-size: 24px;
+    font-weight: 500;
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 16px 0;
+
+    a {
+      color: var(--primary);
+      font-weight: 500;
+
+      &:hover {
+        color: var(--primary-light);
+      }
+    }
+  }
+}
+
+/* Form layout - Material handles styling */
+.form-group {
+  margin-bottom: 20px;
+
+  &:last-child {
+    margin-bottom: 24px;
+  }
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+/* Button styling - use Material buttons only */
+button[mat-raised-button] {
+  width: 100%;
+}

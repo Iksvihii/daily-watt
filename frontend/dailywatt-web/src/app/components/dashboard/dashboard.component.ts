@@ -15,6 +15,14 @@ import { EnedisService } from "../../services/enedis.service";
 import { EnedisMeter } from "../../models/enedis.models";
 import { ImportJobNotificationService } from "../../services/import-job-notification.service";
 import { Subscription } from "rxjs";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatInputModule } from "@angular/material/input";
+import { MatSelectModule } from "@angular/material/select";
+import { MatDatepickerModule } from "@angular/material/datepicker";
+import { MatNativeDateModule } from "@angular/material/core";
+import { MatCheckboxModule } from "@angular/material/checkbox";
+import { MatButtonModule } from "@angular/material/button";
+import { MatIconModule } from "@angular/material/icon";
 
 @Component({
   selector: "app-dashboard",
@@ -24,9 +32,17 @@ import { Subscription } from "rxjs";
     FormsModule,
     ReactiveFormsModule,
     ConsumptionChartComponent,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatCheckboxModule,
+    MatButtonModule,
+    MatIconModule,
   ],
   templateUrl: "./dashboard.component.html",
-  styleUrl: "./dashboard.component.less",
+  styleUrl: "./dashboard.component.scss",
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private dashboard = inject(DashboardService);
@@ -161,6 +177,55 @@ export class DashboardComponent implements OnInit, OnDestroy {
   onMeterChange(meterId: string) {
     this.selectedMeterId.set(meterId);
     this.load();
+  }
+
+  /**
+   * Convert datetime string (YYYY-MM-DDTHH:mm) to date string (YYYY-MM-DD)
+   */
+  getDateString(datetimeStr: string): string {
+    return datetimeStr.slice(0, 10);
+  }
+
+  /**
+   * Convert date string (YYYY-MM-DD) to datetime string (YYYY-MM-DDTHH:mm)
+   * Sets time to 00:00 (midnight UTC)
+   */
+  getDateTimeString(dateStr: string): string {
+    return `${dateStr}T00:00`;
+  }
+
+  /**
+   * Quick date range selection (e.g., 7, 30, 90 days)
+   */
+  setDateRange(days: number): void {
+    const to = new Date();
+    const from = new Date();
+    from.setDate(from.getDate() - days);
+
+    this.to.set(to.toISOString().slice(0, 16));
+    this.from.set(from.toISOString().slice(0, 16));
+    this.savePreferencesToSession();
+    this.load();
+  }
+
+  /**
+   * Check if current date range matches a quick select option
+   */
+  isRangeActive(days: number): boolean {
+    try {
+      const fromDate = new Date(this.from());
+      const toDate = new Date(this.to());
+      const expectedFromDate = new Date(toDate);
+      expectedFromDate.setDate(expectedFromDate.getDate() - days);
+
+      // Compare dates at midnight (ignore time)
+      return (
+        fromDate.toDateString() === expectedFromDate.toDateString() &&
+        toDate.toDateString() === new Date().toDateString()
+      );
+    } catch {
+      return false;
+    }
   }
 
   load() {

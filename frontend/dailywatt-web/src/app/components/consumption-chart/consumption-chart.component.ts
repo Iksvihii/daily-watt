@@ -34,7 +34,7 @@ interface ChartData {
   imports: [NgxEchartsModule, CommonModule],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: "./consumption-chart.component.html",
-  styleUrl: "./consumption-chart.component.less",
+  styleUrl: "./consumption-chart.component.scss",
 })
 export class ConsumptionChartComponent implements OnInit, OnChanges, OnDestroy {
   private dashboardService = inject(DashboardService);

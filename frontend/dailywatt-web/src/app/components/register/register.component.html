@@ -1,22 +1,32 @@
-<div class="card">
-  <h2>Create account</h2>
-  @if (error()) {
-    <p class="status negative">{{ error() }}</p>
-  }
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div>
-      <label for="registerEmail">Identifiant (email)</label>
-      <input id="registerEmail" type="email" formControlName="email" placeholder="user@example.com">
-    </div>
-    <div>
-      <label for="registerUsername">Username</label>
-      <input id="registerUsername" type="text" formControlName="username" placeholder="Display name">
-    </div>
-    <div>
-      <label for="registerPassword">Password</label>
-      <input id="registerPassword" type="password" formControlName="password" placeholder="At least 6 characters">
-    </div>
-    <button class="btn" type="submit" [disabled]="loading()">Register</button>
-  </form>
-  <p class="status">Already registered? <a routerLink="/login">Sign in</a></p>
+<div class="register-container">
+  <div class="card register-card">
+    <h2>Create account</h2>
+    @if (error()) {
+      <p class="status negative">{{ error() }}</p>
+    }
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-group">
+        <mat-form-field>
+          <mat-label>Email</mat-label>
+          <input matInput type="email" formControlName="email" placeholder="user@example.com">
+        </mat-form-field>
+      </div>
+      <div class="form-group">
+        <mat-form-field>
+          <mat-label>Username</mat-label>
+          <input matInput type="text" formControlName="username" placeholder="Display name">
+        </mat-form-field>
+      </div>
+      <div class="form-group">
+        <mat-form-field>
+          <mat-label>Password</mat-label>
+          <input matInput type="password" formControlName="password" placeholder="At least 6 characters">
+        </mat-form-field>
+      </div>
+      <button mat-raised-button color="primary" type="submit" [disabled]="loading()">
+        {{ loading() ? 'Creating account...' : 'Register' }}
+      </button>
+    </form>
+    <p>Already registered? <a routerLink="/login">Sign in</a></p>
+  </div>
 </div>

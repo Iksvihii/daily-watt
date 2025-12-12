@@ -3,13 +3,22 @@ import { CommonModule } from "@angular/common";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { AuthService } from "../../services/auth.service";
 import { ChangePasswordRequest, UserProfile } from "../../models/auth.models";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatInputModule } from "@angular/material/input";
+import { MatButtonModule } from "@angular/material/button";
 
 @Component({
   selector: "app-user-profile",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+  ],
   templateUrl: "./user-profile.component.html",
-  styleUrl: "./user-profile.component.less",
+  styleUrl: "./user-profile.component.scss",
 })
 export class UserProfileComponent implements OnInit {
   private auth = inject(AuthService);

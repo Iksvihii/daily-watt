@@ -16,7 +16,7 @@ import { ToastContainerComponent } from "./components/toast-container/toast-cont
     ToastContainerComponent,
   ],
   templateUrl: "./app.component.html",
-  styleUrl: "./app.component.less",
+  styleUrl: "./app.component.scss",
 })
 export class AppComponent implements OnInit {
   private authService = inject(AuthService);

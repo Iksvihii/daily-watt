@@ -1,0 +1,180 @@
+/* Enedis Settings Component - Material Design */
+
+.enedis-settings {
+  max-width: 1200px;
+}
+
+.settings-section {
+  margin-bottom: 24px;
+
+  h3 {
+    margin: 0 0 20px 0;
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  h4 {
+    margin: 20px 0 16px 0;
+    font-size: 16px;
+    font-weight: 500;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0 0 20px 0;
+}
+
+/* Empty state */
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+
+  .empty-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 8px 0;
+  }
+
+  .empty-subtext {
+    font-size: 14px;
+    margin: 0;
+    color: var(--text-secondary);
+  }
+}
+
+/* Meters list */
+.meters-list {
+  margin-bottom: 20px;
+  display: grid;
+  gap: 12px;
+}
+
+.meter-card {
+  background: rgba(0, 168, 132, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary);
+    background: rgba(0, 168, 132, 0.08);
+  }
+
+  .meter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 12px;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+    }
+  }
+
+  .meter-info {
+    flex: 1;
+
+    .meter-title {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .meter-meta {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-secondary);
+
+      code {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+        color: var(--primary);
+      }
+    }
+  }
+
+  .meter-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    @media (max-width: 768px) {
+      width: 100%;
+
+      button {
+        flex: 1;
+        min-width: 100px;
+      }
+    }
+  }
+}
+
+/* Form section */
+.form-section {
+  margin-top: 24px;
+
+  h4 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  mat-form-field {
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* Import form */
+.import-form {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+
+  input[type="file"] {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  button[mat-raised-button] {
+    white-space: nowrap;
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+
+    input,
+    button {
+      width: 100%;
+    }
+  }
+}

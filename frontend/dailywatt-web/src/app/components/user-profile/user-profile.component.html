@@ -12,28 +12,36 @@
       @if (profileMessage()) {
         <p class="status">{{ profileMessage() }}</p>
       }
-      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="grid two">
-        <div>
-          <label for="profileEmail">Email</label>
-          <input id="profileEmail" type="text" [value]="profile()?.email" disabled>
+      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="form-row">
+        <div class="form-group">
+          <mat-form-field>
+            <mat-label>Email</mat-label>
+            <input matInput type="text" [value]="profile()?.email" disabled>
+          </mat-form-field>
         </div>
-        <div>
-          <label for="profileUsername">Username</label>
-          <input id="profileUsername" type="text" formControlName="username" placeholder="Votre pseudo">
+        <div class="form-group">
+          <mat-form-field>
+            <mat-label>Username</mat-label>
+            <input matInput type="text" formControlName="username" placeholder="Your username">
+          </mat-form-field>
         </div>
-        <button class="btn" type="submit" [disabled]="profileSaving()">Mettre à jour</button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="profileSaving()">Update Profile</button>
       </form>
 
-      <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="grid two" style="margin-top:12px;">
-        <div>
-          <label for="currentPassword">Mot de passe actuel</label>
-          <input id="currentPassword" type="password" formControlName="currentPassword" placeholder="••••••">
+      <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="form-row" style="margin-top: 24px;">
+        <div class="form-group">
+          <mat-form-field>
+            <mat-label>Current Password</mat-label>
+            <input matInput type="password" formControlName="currentPassword" placeholder="••••••">
+          </mat-form-field>
         </div>
-        <div>
-          <label for="newPassword">Nouveau mot de passe</label>
-          <input id="newPassword" type="password" formControlName="newPassword" placeholder="Au moins 6 caractères">
+        <div class="form-group">
+          <mat-form-field>
+            <mat-label>New Password</mat-label>
+            <input matInput type="password" formControlName="newPassword" placeholder="At least 6 characters">
+          </mat-form-field>
         </div>
-        <button class="btn" type="submit" [disabled]="passwordSaving()">Changer le mot de passe</button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="passwordSaving()">Change Password</button>
       </form>
     </div>
   }

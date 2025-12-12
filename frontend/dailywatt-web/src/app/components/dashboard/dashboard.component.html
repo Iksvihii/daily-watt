@@ -3,49 +3,58 @@
   <div class="card dashboard-form">
     <div class="dashboard-header">
       <h3>Dashboard</h3>
-      <button class="btn" type="button" (click)="load()" [disabled]="loading()">Load</button>
+      <button mat-raised-button color="primary" type="button" (click)="load()" [disabled]="loading()">{{ loading() ? 'Loading...' : 'Load' }}</button>
     </div>
     <form>
       <div class="form-row">
         @if (meters().length > 0) {
-          <div class="form-group">
-            <label for="meterSelect">Meter</label>
-            <select id="meterSelect" [ngModel]="selectedMeterId()" (ngModelChange)="onMeterChange($event)" name="meter" class="custom-select">
+          <mat-form-field>
+            <mat-label>Meter</mat-label>
+            <mat-select [ngModel]="selectedMeterId()" (ngModelChange)="onMeterChange($event)" name="meter">
               @for (meter of meters(); track meter.id) {
-                <option [value]="meter.id">
+                <mat-option [value]="meter.id">
                   {{ meter.label || meter.prm }}
                   @if (meter.isFavorite) { ⭐ }
-                </option>
+                </mat-option>
               }
-            </select>
-          </div>
+            </mat-select>
+          </mat-form-field>
         }
-        <div class="form-group">
-          <label for="fromDate">From</label>
-          <input id="fromDate" type="datetime-local" [ngModel]="from()" (ngModelChange)="from.set($event)" name="from">
-        </div>
-        <div class="form-group">
-          <label for="toDate">To</label>
-          <input id="toDate" type="datetime-local" [ngModel]="to()" (ngModelChange)="to.set($event)" name="to">
-        </div>
-        <div class="form-group">
-          <label for="granularity">Granularity</label>
-          <select id="granularity" [ngModel]="granularity()" (ngModelChange)="granularity.set($event)" name="granularity" class="custom-select">
-            <option value="day">Day</option>
-            <option value="month">Month</option>
-            <option value="year">Year</option>
-          </select>
-        </div>
-        <div class="checkbox-wrapper">
-          <input 
-            type="checkbox" 
+        <mat-form-field>
+          <mat-label>From</mat-label>
+          <input matInput [matDatepicker]="fromPicker" [ngModel]="from()" (ngModelChange)="from.set(getDateTimeString($event))" name="from">
+          <mat-datepicker-toggle matIconSuffix [for]="fromPicker"></mat-datepicker-toggle>
+          <mat-datepicker #fromPicker></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>To</mat-label>
+          <input matInput [matDatepicker]="toPicker" [ngModel]="to()" (ngModelChange)="to.set(getDateTimeString($event))" name="to">
+          <mat-datepicker-toggle matIconSuffix [for]="toPicker"></mat-datepicker-toggle>
+          <mat-datepicker #toPicker></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Granularity</mat-label>
+          <mat-select [ngModel]="granularity()" (ngModelChange)="granularity.set($event)" name="granularity">
+            <mat-option value="day">Day</mat-option>
+            <mat-option value="month">Month</mat-option>
+            <mat-option value="year">Year</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <div class="form-group checkbox-group">
+          <mat-checkbox 
             [ngModel]="withWeather()" 
             (ngModelChange)="withWeather.set($event)" 
-            id="weather" 
-            name="weather"
-            class="custom-checkbox">
-          <label for="weather">Show temperature</label>
+            name="weather">
+            Show temperature
+          </mat-checkbox>
         </div>
+      </div>
+      <!-- Quick date shortcuts -->
+      <div class="quick-select-wrapper">
+        <span class="quick-select-label">Quick select:</span>
+        <button mat-stroked-button type="button" (click)="setDateRange(7)" [class.active]="isRangeActive(7)">Last 7 days</button>
+        <button mat-stroked-button type="button" (click)="setDateRange(30)" [class.active]="isRangeActive(30)">Last 30 days</button>
+        <button mat-stroked-button type="button" (click)="setDateRange(90)" [class.active]="isRangeActive(90)">Last 90 days</button>
       </div>
     </form>
     @if (error()) {
@@ -58,19 +67,19 @@
     <div class="chart-wrapper">
       @if (data() && data()!.consumption.length > 0) {
         <!-- Data available: show stats and chart -->
-        <div class="grid two" style="margin-bottom: 1rem;">
-          <div class="card">
-            <div class="status">Total kWh</div>
-            <div style="font-size:28px;font-weight:700;">{{ data()!.summary.totalKwh | number:'1.0-2' }}</div>
+        <div class="summary-stats">
+          <div class="stat">
+            <div class="stat-label">Total kWh</div>
+            <div class="stat-value">{{ data()!.summary.totalKwh | number:'1.0-2' }}</div>
           </div>
-          <div class="card">
-            <div class="status">Average per day</div>
-            <div style="font-size:28px;font-weight:700;">{{ data()!.summary.avgKwhPerDay | number:'1.0-2' }}</div>
+          <div class="stat">
+            <div class="stat-label">Avg/day</div>
+            <div class="stat-value">{{ data()!.summary.avgKwhPerDay | number:'1.0-2' }}</div>
           </div>
-          <div class="card">
-            <div class="status">Max day</div>
-            <div style="font-size:28px;font-weight:700;">{{ data()!.summary.maxDayKwh | number:'1.0-2' }}</div>
-            <div class="status">{{ data()!.summary.maxDay }}</div>
+          <div class="stat">
+            <div class="stat-label">Max day</div>
+            <div class="stat-value">{{ data()!.summary.maxDayKwh | number:'1.0-2' }}</div>
+            <div class="stat-detail">{{ data()!.summary.maxDay }}</div>
           </div>
         </div>
 

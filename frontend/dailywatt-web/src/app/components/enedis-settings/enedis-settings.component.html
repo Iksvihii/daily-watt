@@ -1,45 +1,69 @@
-<div class="grid one">
+<div class="enedis-settings">
   <div class="card">
-    <h3>Linky meters</h3>
-    <p class="status">Manage your electricity meters and import consumption data from Excel.</p>
+    <h3>Linky Meters</h3>
+    <p class="subtitle">Manage your electricity meters and import consumption data from Excel.</p>
 
     @if (meters().length === 0) {
-      <div style="padding: 2rem; text-align: center; color: #64748b;">
-        No meters configured yet.
+      <div class="empty-state">
+        <div class="empty-icon">🔌</div>
+        <div class="empty-text">No meters configured yet</div>
+        <p class="empty-subtext">Add your first Linky meter to get started</p>
       </div>
     }
 
     @if (meters().length > 0) {
-      <div style="margin-bottom: 1rem;">
+      <div class="meters-list">
         @for (meter of meters(); track meter.id) {
-          <div style="padding: 1rem; border: 1px solid #e2e8f0; border-radius: 0.375rem; margin-bottom: 0.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <strong>{{ meter.label || meter.prm }}</strong>
-                @if (meter.isFavorite) {
-                  <span style="margin-left: 0.5rem; color: #f59e0b;">⭐ Default</span>
-                }
-                <div style="font-size: 0.875rem; color: #64748b;">
-                  PRM: {{ meter.prm }}
+          <div class="meter-card">
+            <div class="meter-header">
+              <div class="meter-info">
+                <h4 class="meter-title">
+                  {{ meter.label || meter.prm }}
+                  @if (meter.isFavorite) {
+                    <span class="badge-favorite">⭐ Default</span>
+                  }
+                </h4>
+                <p class="meter-meta">
+                  PRM: <code>{{ meter.prm }}</code>
                   @if (meter.city) {
                     · {{ meter.city }}
                   }
-                </div>
-                <!-- Excel import for this meter -->
-                <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; align-items: center;">
-                  <input type="file" accept=".xlsx,.xls" (change)="onImportFileSelected($event)" />
-                  <button class="btn" type="button" (click)="startImportForMeter(meter)" [disabled]="importInProgress()">Import Excel</button>
-                  @if (importMessage()) {
-                    <div style="grid-column: span 2;" class="status">{{ importMessage() }}</div>
-                  }
-                </div>
+                </p>
               </div>
-              <div style="display: flex; gap: 0.5rem;">
+              <div class="meter-actions">
                 @if (!meter.isFavorite) {
-                  <button (click)="setFavorite(meter)" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.875rem;">Set default</button>
+                  <button mat-stroked-button (click)="setFavorite(meter)" title="Set as default">★ Default</button>
                 }
-                <button (click)="editMeter(meter)" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.875rem;">Edit</button>
-                <button (click)="deleteMeter(meter)" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; background: #ef4444;">Delete</button>
+                <button mat-stroked-button (click)="editMeter(meter)" title="Edit meter">Edit</button>
+                <button mat-raised-button color="warn" (click)="deleteMeter(meter)" title="Delete meter">Delete</button>
+              </div>
+            </div>
+
+            <!-- Excel import section -->
+            <div class="import-section">
+              <div class="import-form">
+                <input 
+                  type="file" 
+                  accept=".xlsx,.xls"
+                  (change)="onImportFileSelected($event)"
+                  #fileInput
+                  class="file-input">
+                <button 
+                  mat-raised-button
+                  type="button" 
+                  (click)="fileInput.click()"
+                  [disabled]="importInProgress()">
+                  📁 Choose file
+                </button>
+                <span class="file-name">{{ selectedImportFile() ? selectedImportFile()?.name : 'No file selected' }}</span>
+                <button 
+                  mat-raised-button
+                  color="primary"
+                  type="button" 
+                  (click)="startImportForMeter(meter)" 
+                  [disabled]="!selectedImportFile() || importInProgress()">
+                  {{ importInProgress() ? 'Importing...' : 'Import Excel' }}
+                </button>
               </div>
             </div>
           </div>
@@ -48,30 +72,41 @@
     }
 
     @if (!isAddingMeter() && !editingMeter()) {
-      <button (click)="startAddMeter()" class="btn">Add meter</button>
+      <button mat-raised-button color="primary" (click)="startAddMeter()" style="margin-top: 16px;">+ Add Meter</button>
     }
 
+    <!-- Meter form (add/edit) -->
     @if (isAddingMeter() || editingMeter()) {
-      <form [formGroup]="meterForm" (ngSubmit)="saveMeter()" style="margin-top: 1rem;">
-        <h4>{{ editingMeter() ? 'Edit meter' : 'Add meter' }}</h4>
+      <form [formGroup]="meterForm" (ngSubmit)="saveMeter()" class="meter-form">
+        <h4>{{ editingMeter() ? 'Edit Meter' : 'Add New Meter' }}</h4>
         
-        <div>
-          <label for="meterPrm">PRM (meter number)</label>
-          <input 
-            id="meterPrm" 
-            type="text" 
-            formControlName="prm" 
-            placeholder="14 digit PRM"
-            [disabled]="!!editingMeter()">
+        <div class="form-row">
+          <div class="form-group">
+            <mat-form-field>
+              <mat-label>PRM (meter number) *</mat-label>
+              <input 
+                matInput
+                type="text" 
+                formControlName="prm" 
+                placeholder="14 digit PRM"
+                [disabled]="!!editingMeter()">
+            </mat-form-field>
+          </div>
+
+          <div class="form-group">
+            <mat-form-field>
+              <mat-label>Label (optional)</mat-label>
+              <input 
+                matInput
+                type="text" 
+                formControlName="label" 
+                placeholder="e.g., Main house, Garage">
+            </mat-form-field>
+          </div>
         </div>
 
-        <div>
-          <label for="meterLabel">Label (optional)</label>
-          <input id="meterLabel" type="text" formControlName="label" placeholder="e.g., Main house, Garage">
-        </div>
-
-        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
-          <h4 style="margin-top: 0;">Meter Location</h4>
+        <div class="form-section">
+          <h5>Meter Location</h5>
           <app-address-map-input
             [initialAddress]="loadedCity()"
             [initialLatitude]="meterForm.get('latitude')?.value || undefined"
@@ -81,23 +116,43 @@
             [isLoadedAddress]="loadedCity() !== ''"
           ></app-address-map-input>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
-            <div>
-              <label for="meterLatitude">Latitude</label>
-              <input id="meterLatitude" type="number" formControlName="latitude" disabled placeholder="Latitude" step="0.0001">
+          <div class="form-row">
+            <div class="form-group">
+              <mat-form-field>
+                <mat-label>Latitude</mat-label>
+                <input 
+                  matInput
+                  type="number" 
+                  formControlName="latitude" 
+                  disabled
+                  placeholder="Latitude"
+                  step="0.0001">
+              </mat-form-field>
             </div>
-            <div>
-              <label for="meterLongitude">Longitude</label>
-              <input id="meterLongitude" type="number" formControlName="longitude" disabled placeholder="Longitude" step="0.0001">
+            <div class="form-group">
+              <mat-form-field>
+                <mat-label>Longitude</mat-label>
+                <input 
+                  matInput
+                  type="number" 
+                  formControlName="longitude" 
+                  disabled
+                  placeholder="Longitude"
+                  step="0.0001">
+              </mat-form-field>
             </div>
           </div>
         </div>
 
-        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-          <button class="btn" type="submit">{{ editingMeter() ? 'Update' : 'Add' }}</button>
-          <button class="btn" type="button" (click)="cancelMeterEdit()" style="background: #64748b;">Cancel</button>
+        <div class="form-actions">
+          <button mat-raised-button color="primary" type="submit">{{ editingMeter() ? 'Update' : 'Add' }}</button>
+          <button mat-stroked-button type="button" (click)="cancelMeterEdit()">Cancel</button>
         </div>
       </form>
+    }
+
+    @if (message()) {
+      <div class="status info" style="margin-top: 16px;">{{ message() }}</div>
     }
   </div>
 </div>

@@ -3,13 +3,24 @@ import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
 import { AuthService } from "../../services/auth.service";
 import { RegisterRequest } from "../../models/auth.models";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatInputModule } from "@angular/material/input";
+import { MatButtonModule } from "@angular/material/button";
+import { CommonModule } from "@angular/common";
 
 @Component({
   selector: "app-register",
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+  ],
   templateUrl: "./register.component.html",
-  styleUrl: "./register.component.less",
+  styleUrl: "./register.component.scss",
 })
 export class RegisterComponent {
   private fb = inject(FormBuilder);

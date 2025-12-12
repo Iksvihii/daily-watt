@@ -15,6 +15,10 @@ import {
   UpdateMeterRequest,
 } from "../../models/enedis.models";
 import { AddressMapInputComponent } from "../address-map-input/address-map-input.component";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatInputModule } from "@angular/material/input";
+import { MatButtonModule } from "@angular/material/button";
+import { MatIconModule } from "@angular/material/icon";
 
 @Component({
   selector: "app-enedis-settings",
@@ -24,9 +28,13 @@ import { AddressMapInputComponent } from "../address-map-input/address-map-input
     ReactiveFormsModule,
     FormsModule,
     AddressMapInputComponent,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
   ],
   templateUrl: "./enedis-settings.component.html",
-  styleUrl: "./enedis-settings.component.less",
+  styleUrl: "./enedis-settings.component.scss",
 })
 export class EnedisSettingsComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);

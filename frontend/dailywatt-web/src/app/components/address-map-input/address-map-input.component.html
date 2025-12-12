@@ -1,27 +1,27 @@
 <div class="address-map-container">
   <div class="address-input-section">
     <div class="input-group">
-      <label for="city-input">City (France only)</label>
-      <div class="input-wrapper">
+      <mat-form-field class="full-width">
+        <mat-label>City (France only)</mat-label>
         <input
-          id="city-input"
+          matInput
           type="text"
           [(ngModel)]="addressInput"
           (input)="onAddressInput()"
           (keyup.escape)="suggestions.set([])"
           placeholder="Enter city name and press Enter or click on map"
-          class="address-input"
         />
         <button
+          mat-icon-button
+          matSuffix
           type="button"
           (click)="clearSelection()"
-          class="clear-btn"
           [disabled]="!addressInput()"
           title="Clear selection"
         >
-          ✕
+          <mat-icon>close</mat-icon>
         </button>
-      </div>
+      </mat-form-field>
 
       <!-- Autocomplete suggestions dropdown -->
       @if (suggestions().length > 0) {
