@@ -4,14 +4,14 @@ using DailyWatt.Domain.Services;
 namespace DailyWatt.Infrastructure.Services;
 
 /// <summary>
-/// Weather provider service using Open-Meteo API.
-/// Fetches real-time weather data without storing it.
+/// Weather provider service using Open-Meteo Archive API.
+/// Fetches historical weather data without limitations or authentication.
 /// </summary>
 public class OpenMeteoWeatherService : IWeatherProviderService
 {
   private readonly HttpClient _httpClient;
-  // Using the public API endpoint - no authentication needed, 10,000 requests/day free
-  private const string ApiUrl = "https://api.open-meteo.com/v1/forecast";
+  // Using the Archive API - free, unlimited, no authentication needed
+  private const string ArchiveApiUrl = "https://archive-api.open-meteo.com/v1/archive";
 
   public OpenMeteoWeatherService(HttpClient httpClient)
   {
@@ -31,9 +31,9 @@ public class OpenMeteoWeatherService : IWeatherProviderService
       var latStr = latitude.ToString("G", System.Globalization.CultureInfo.InvariantCulture);
       var lngStr = longitude.ToString("G", System.Globalization.CultureInfo.InvariantCulture);
 
-      // Use the public forecast API with date range for historical data
-      // This API is free with no authentication needed
-      var url = $"{ApiUrl}?" +
+      // Use the Archive API with date range - free, unlimited historical data
+      // Works for any date range in the past
+      var url = $"{ArchiveApiUrl}?" +
           $"latitude={latStr}&" +
           $"longitude={lngStr}&" +
           $"start_date={fromDate:yyyy-MM-dd}&" +
