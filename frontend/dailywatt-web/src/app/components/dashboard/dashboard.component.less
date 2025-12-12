@@ -96,8 +96,15 @@
         font-weight: 600;
       }
 
+      .meter-selector-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        align-items: center;
+      }
+
       .meter-select {
-        width: 100%;
+        flex: 1;
         padding: 10px 12px;
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 8px;
@@ -106,7 +113,6 @@
         font-size: 14px;
         font-weight: 500;
         cursor: pointer;
-        margin-bottom: 12px;
 
         &:focus {
           outline: none;
@@ -117,6 +123,38 @@
         option {
           background: #1e293b;
           color: var(--text);
+        }
+      }
+
+      .btn-sync {
+        padding: 10px 12px;
+        min-width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(58, 209, 197, 0.15);
+        border: 1px solid rgba(58, 209, 197, 0.3);
+        border-radius: 8px;
+        color: #3ad1c5;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 16px;
+
+        &:hover:not(:disabled) {
+          background: rgba(58, 209, 197, 0.25);
+          border-color: #3ad1c5;
+          transform: rotate(15deg);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .sync-spinner {
+          display: inline-block;
+          animation: spin 0.8s linear infinite;
         }
       }
 

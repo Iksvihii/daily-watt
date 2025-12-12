@@ -161,6 +161,7 @@ export class EnedisSettingsComponent implements OnInit {
     if (this.editingMeter()) {
       // Update existing meter
       const updateRequest: UpdateMeterRequest = {
+        prm: formValue.prm || this.editingMeter()!.prm,
         label: formValue.label || undefined,
         city: isCoordinates ? undefined : city || undefined,
         latitude: formValue.latitude || undefined,

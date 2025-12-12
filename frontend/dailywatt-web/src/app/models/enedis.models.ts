@@ -51,6 +51,7 @@ export interface CreateMeterRequest {
 }
 
 export interface UpdateMeterRequest {
+  prm: string;
   label?: string;
   city?: string;
   latitude?: number;

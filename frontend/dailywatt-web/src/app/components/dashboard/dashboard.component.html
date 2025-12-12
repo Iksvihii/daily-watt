@@ -21,25 +21,35 @@
           @if (meters().length > 0) {
             <div class="meter-selector-container">
               <label for="meterSelectStatus" class="meter-label">Selected Meter</label>
-              <select 
-                id="meterSelectStatus" 
-                [(ngModel)]="selectedMeterId" 
-                (ngModelChange)="onMeterChange($event)"
-                name="meterStatus"
-                class="meter-select">
-                @for (meter of meters(); track meter.id) {
-                  <option [value]="meter.id">
-                    {{ meter.label || meter.prm }}
-                    @if (meter.isFavorite) { ⭐ }
-                  </option>
-                }
-              </select>
+              <div class="meter-selector-row">
+                <select 
+                  id="meterSelectStatus" 
+                  [(ngModel)]="selectedMeterId" 
+                  (ngModelChange)="onMeterChange($event)"
+                  name="meterStatus"
+                  class="meter-select">
+                  @for (meter of meters(); track meter.id) {
+                    <option [value]="meter.id">
+                      {{ meter.prm }}
+                      @if (meter.isFavorite) { ⭐ }
+                    </option>
+                  }
+                </select>
+                <button 
+                  class="btn btn-sync" 
+                  type="button" 
+                  (click)="syncNow()" 
+                  [disabled]="syncing()"
+                  title="Synchronize now">
+                  @if (syncing()) {
+                    <span class="sync-spinner">⟳</span>
+                  } @else {
+                    <span>⟳</span>
+                  }
+                </button>
+              </div>
               @if (selectedMeter()) {
                 <div class="meter-details">
-                  <div class="info-item">
-                    <span class="info-label">PRM</span>
-                    <span class="info-value">{{ selectedMeter()!.prm }}</span>
-                  </div>
                   <div class="info-item">
                     <span class="info-label">Label</span>
                     <span class="info-value">{{ selectedMeter()!.label || 'N/A' }}</span>
@@ -50,17 +60,15 @@
                       <span class="info-value">{{ selectedMeter()!.city }}</span>
                     </div>
                   }
+                  <div class="info-item">
+                    <span class="info-label">Last Sync</span>
+                    <span class="info-value">{{ status()!.updatedAt | date:'short' }}</span>
+                  </div>
                 </div>
               }
             </div>
           }
-          <div class="status-info">
-            <div class="info-item">
-              <span class="info-label">Last sync</span>
-              <span class="info-value">{{ status()!.updatedAt | date:'short' }}</span>
-            </div>
-          </div>
-          <button class="btn btn-primary" type="button" (click)="syncNow()" [disabled]="syncing()">
+          <button class="btn btn-primary" type="button" (click)="syncNow()" [disabled]="syncing()" style="display: none;">
             @if (syncing()) {
               <span>Synchronizing...</span>
             } @else {
