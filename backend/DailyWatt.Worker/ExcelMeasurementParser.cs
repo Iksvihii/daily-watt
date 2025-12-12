@@ -22,7 +22,7 @@ public static class ExcelMeasurementParser
 
   // No longer supporting hourly worksheet parsing
 
-  public static List<Measurement> Parse(Stream excelStream, Guid userId, Guid meterId, DateTime fromUtc, DateTime toUtc)
+  public static List<Measurement> Parse(Stream excelStream, Guid userId, Guid meterId)
   {
     excelStream.Seek(0, SeekOrigin.Begin);
     using var workbook = new XLWorkbook(excelStream);
@@ -34,10 +34,10 @@ public static class ExcelMeasurementParser
       throw new InvalidOperationException($"Worksheet '{WorksheetNameDaily}' not found in Excel file");
     }
 
-    return ParseDailyWorksheet(dailyWs, userId, meterId, fromUtc, toUtc);
+    return ParseDailyWorksheet(dailyWs, userId, meterId);
   }
 
-  private static List<Measurement> ParseDailyWorksheet(IXLWorksheet worksheet, Guid userId, Guid meterId, DateTime fromUtc, DateTime toUtc)
+  private static List<Measurement> ParseDailyWorksheet(IXLWorksheet worksheet, Guid userId, Guid meterId)
   {
     var results = new List<Measurement>();
 
@@ -79,11 +79,6 @@ public static class ExcelMeasurementParser
       }
 
       if (!TryParseConsumption(consommationCell, out var kwh))
-      {
-        continue;
-      }
-
-      if (dateUtc < fromUtc || dateUtc > toUtc)
       {
         continue;
       }

@@ -24,66 +24,104 @@ public static class DbSeeder
     {
       // Check if demo user already exists
       var demoUser = await userManager.FindByEmailAsync("demo@dailywatt.com");
-      if (demoUser != null)
+
+      if (demoUser == null)
       {
-        logger.LogInformation("Demo user already exists, skipping seed");
-        return;
+        logger.LogInformation("Creating demo user and consumption data...");
+
+        // Create demo user
+        demoUser = new DailyWattUser
+        {
+          UserName = "demo@dailywatt.com",
+          Email = "demo@dailywatt.com",
+          EmailConfirmed = true
+        };
+
+        var result = await userManager.CreateAsync(demoUser, "Demo123!");
+        if (!result.Succeeded)
+        {
+          logger.LogError("Failed to create demo user: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
+          return;
+        }
+
+        logger.LogInformation("Demo user created with email: demo@dailywatt.com and password: Demo123!");
+      }
+      else
+      {
+        logger.LogInformation("Demo user already exists, will ensure meter and data are seeded");
       }
 
-      logger.LogInformation("Creating demo user and consumption data...");
+      // Check if Enedis credentials already exist for demo user
+      var existingCredential = await context.EnedisCredentials
+        .FirstOrDefaultAsync(c => c.UserId == demoUser.Id);
 
-      // Create demo user
-      demoUser = new DailyWattUser
+      if (existingCredential == null)
       {
-        UserName = "demo@dailywatt.com",
-        Email = "demo@dailywatt.com",
-        EmailConfirmed = true
-      };
+        // Create Enedis credentials for demo user
+        var enedisCredential = new EnedisCredential
+        {
+          UserId = demoUser.Id,
+          LoginEncrypted = secretProtector.Protect("demo_login"),
+          PasswordEncrypted = secretProtector.Protect("demo_password"),
+          UpdatedAt = DateTime.UtcNow
+        };
 
-      var result = await userManager.CreateAsync(demoUser, "Demo123!");
-      if (!result.Succeeded)
+        await context.EnedisCredentials.AddAsync(enedisCredential);
+        await context.SaveChangesAsync();
+        logger.LogInformation("Created Enedis credentials for demo user");
+      }
+      else
       {
-        logger.LogError("Failed to create demo user: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
-        return;
+        logger.LogInformation("Enedis credentials already exist for demo user");
       }
 
-      logger.LogInformation("Demo user created with email: demo@dailywatt.com and password: Demo123!");
+      // Check if demo meter already exists for this user
+      var existingMeter = await context.EnedisMeters
+        .FirstOrDefaultAsync(m => m.UserId == demoUser.Id && m.Prm == "DEMO123456789");
 
-      // Create Enedis credentials for demo user
-      var enedisCredential = new EnedisCredential
+      EnedisMeter demoMeter;
+      bool meterWasCreated = false;
+
+      if (existingMeter != null)
       {
-        UserId = demoUser.Id,
-        LoginEncrypted = secretProtector.Protect("demo_login"),
-        PasswordEncrypted = secretProtector.Protect("demo_password"),
-        UpdatedAt = DateTime.UtcNow
-      };
-
-      await context.EnedisCredentials.AddAsync(enedisCredential);
-
-      // Create a demo meter for the user
-      var demoMeter = new EnedisMeter
+        logger.LogInformation("Demo meter already exists, skipping data generation");
+        demoMeter = existingMeter;
+      }
+      else
       {
-        Id = Guid.NewGuid(),
-        UserId = demoUser.Id,
-        Prm = "DEMO123456789",
-        Label = "Home Meter",
-        City = "Paris",
-        Latitude = 48.8566,
-        Longitude = 2.3522,
-        IsFavorite = true,
-        CreatedAtUtc = DateTime.UtcNow,
-        UpdatedAtUtc = DateTime.UtcNow
-      };
+        // Create a demo meter for the user
+        demoMeter = new EnedisMeter
+        {
+          Id = Guid.NewGuid(),
+          UserId = demoUser.Id,
+          Prm = "DEMO123456789",
+          Label = "Home Meter",
+          City = "Paris",
+          Latitude = 48.8566,
+          Longitude = 2.3522,
+          IsFavorite = true,
+          CreatedAtUtc = DateTime.UtcNow,
+          UpdatedAtUtc = DateTime.UtcNow
+        };
 
-      await context.EnedisMeters.AddAsync(demoMeter);
+        await context.EnedisMeters.AddAsync(demoMeter);
+        await context.SaveChangesAsync();
+        meterWasCreated = true;
+        logger.LogInformation("Created demo meter");
+      }
 
-      // Generate realistic daily consumption data
-      var measurements = GenerateRealisticDailyConsumptionData(demoUser.Id, demoMeter.Id);
+      // Only generate measurements if meter was just created
+      if (meterWasCreated)
+      {
+        // Generate realistic daily consumption data
+        var measurements = GenerateRealisticDailyConsumptionData(demoUser.Id, demoMeter.Id);
 
-      await context.Measurements.AddRangeAsync(measurements);
-      await context.SaveChangesAsync();
+        await context.Measurements.AddRangeAsync(measurements);
+        await context.SaveChangesAsync();
+        logger.LogInformation("Generated {Count} measurements for demo meter", measurements.Count);
+      }
 
-      logger.LogInformation("Successfully seeded Enedis credentials, meter, and {Count} measurements for demo user", measurements.Count);
+      logger.LogInformation("Successfully seeded demo data");
     }
     catch (Exception ex)
     {

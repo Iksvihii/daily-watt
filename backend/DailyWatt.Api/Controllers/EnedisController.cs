@@ -240,18 +240,11 @@ public class EnedisController : ControllerBase
     public async Task<ActionResult<ImportJobDto>> UploadConsumptionFile(
         [FromForm] IFormFile file,
         [FromForm] Guid meterId,
-        [FromForm] DateTime fromUtc,
-        [FromForm] DateTime toUtc,
         CancellationToken ct)
     {
         if (file == null || file.Length == 0)
         {
             return BadRequest(new { error = "File is required" });
-        }
-
-        if (toUtc <= fromUtc)
-        {
-            return BadRequest(new { error = "Invalid date range" });
         }
 
         // Validate file extension
@@ -277,12 +270,10 @@ public class EnedisController : ControllerBase
 
         _logger.LogInformation("Uploaded file saved to {FilePath} for user {UserId}", filePath, userId);
 
-        // Create import job with file path
+        // Create import job with file path (dates will be extracted from Excel)
         var job = await _importJobService.CreateJobWithFileAsync(
             userId,
             meterId,
-            fromUtc.ToUniversalTime(),
-            toUtc.ToUniversalTime(),
             filePath,
             ct);
 

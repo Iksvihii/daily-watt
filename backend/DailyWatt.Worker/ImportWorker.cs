@@ -78,17 +78,36 @@ public class ImportWorker : BackgroundService
                 {
                     _logger.LogInformation("Processing import job {JobId} from uploaded file {FilePath}", job.Id, job.FilePath);
                     await using var fileStream = File.OpenRead(job.FilePath);
-                    measurements = ExcelMeasurementParser.Parse(fileStream, job.UserId, job.MeterId, job.FromUtc, job.ToUtc);
+                    measurements = ExcelMeasurementParser.Parse(fileStream, job.UserId, job.MeterId);
                 }
                 else
                 {
                     _logger.LogInformation("Processing import job {JobId} via scraper", job.Id);
                     await using var excelStream = await scraper.DownloadConsumptionCsvAsync(login, password, job.FromUtc, job.ToUtc, ct);
-                    measurements = ExcelMeasurementParser.Parse(excelStream, job.UserId, job.MeterId, job.FromUtc, job.ToUtc);
+                    measurements = ExcelMeasurementParser.Parse(excelStream, job.UserId, job.MeterId);
                 }
 
+                if (measurements.Count == 0)
+                {
+                    await jobService.MarkFailedAsync(job, "NO_DATA", "No measurements found in file", ct);
+                    continue;
+                }
+
+                // Extract date range from measurements
+                var minDate = measurements.Min(m => m.TimestampUtc);
+                var maxDate = measurements.Max(m => m.TimestampUtc);
+
+                // Update job dates if they were not set
+                if (job.FromUtc == DateTime.MinValue || job.ToUtc == DateTime.MinValue)
+                {
+                    job.FromUtc = minDate;
+                    job.ToUtc = maxDate;
+                    await db.SaveChangesAsync(ct);
+                }
+
+                // Delete existing measurements in the date range
                 await db.Measurements
-                    .Where(m => m.UserId == job.UserId && m.MeterId == job.MeterId && m.TimestampUtc >= job.FromUtc && m.TimestampUtc <= job.ToUtc)
+                    .Where(m => m.UserId == job.UserId && m.MeterId == job.MeterId && m.TimestampUtc >= minDate && m.TimestampUtc <= maxDate)
                     .ExecuteDeleteAsync(ct);
 
                 await consumptionService.BulkInsertAsync(measurements, ct);
@@ -98,12 +117,12 @@ public class ImportWorker : BackgroundService
                     // Delete all existing weather data for the meter and date range before regenerating
                     await db.WeatherDays
                         .Where(w => w.UserId == job.UserId && w.MeterId == job.MeterId &&
-                                    w.Date >= DateOnly.FromDateTime(job.FromUtc) &&
-                                    w.Date <= DateOnly.FromDateTime(job.ToUtc))
+                                    w.Date >= DateOnly.FromDateTime(minDate) &&
+                                    w.Date <= DateOnly.FromDateTime(maxDate))
                         .ExecuteDeleteAsync(ct);
 
-                    var fromDate = DateOnly.FromDateTime(job.FromUtc);
-                    var toDate = DateOnly.FromDateTime(job.ToUtc);
+                    var fromDate = DateOnly.FromDateTime(minDate);
+                    var toDate = DateOnly.FromDateTime(maxDate);
                     await weatherSyncService.EnsureWeatherAsync(
                         job.UserId,
                         job.MeterId,

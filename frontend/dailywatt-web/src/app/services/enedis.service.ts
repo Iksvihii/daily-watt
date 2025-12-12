@@ -92,4 +92,17 @@ export class EnedisService {
       {}
     );
   }
+
+  uploadConsumptionFile(payload: {
+    file: File;
+    meterId: string;
+  }): Observable<ImportJob> {
+    const formData = new FormData();
+    formData.append("file", payload.file);
+    formData.append("meterId", payload.meterId);
+    return this.http.post<ImportJob>(
+      `${environment.apiUrl}/api/enedis/import/upload`,
+      formData
+    );
+  }
 }

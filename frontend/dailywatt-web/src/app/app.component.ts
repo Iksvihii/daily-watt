@@ -4,10 +4,17 @@ import { CommonModule } from "@angular/common";
 import { AuthService } from "./services/auth.service";
 import { BackendHealthService } from "./services/backend-health.service";
 import { BackendErrorComponent } from "./components/backend-error/backend-error.component";
+import { ToastContainerComponent } from "./components/toast-container/toast-container.component";
 @Component({
   selector: "app-root",
   standalone: true,
-  imports: [RouterOutlet, RouterLink, CommonModule, BackendErrorComponent],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    CommonModule,
+    BackendErrorComponent,
+    ToastContainerComponent,
+  ],
   templateUrl: "./app.component.html",
   styleUrl: "./app.component.less",
 })

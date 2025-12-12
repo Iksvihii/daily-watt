@@ -32,8 +32,9 @@ public class ImportJobService : IImportJobService
         return job;
     }
 
-    public async Task<ImportJob> CreateJobWithFileAsync(Guid userId, Guid meterId, DateTime fromUtc, DateTime toUtc, string filePath, CancellationToken ct = default)
+    public async Task<ImportJob> CreateJobWithFileAsync(Guid userId, Guid meterId, string filePath, CancellationToken ct = default)
     {
+        // Dates will be extracted from Excel file during processing
         var job = new ImportJob
         {
             Id = Guid.NewGuid(),
@@ -41,8 +42,8 @@ public class ImportJobService : IImportJobService
             MeterId = meterId,
             CreatedAt = DateTime.UtcNow,
             Status = ImportJobStatus.Pending,
-            FromUtc = fromUtc,
-            ToUtc = toUtc,
+            FromUtc = DateTime.MinValue, // Will be set by worker after parsing
+            ToUtc = DateTime.MinValue, // Will be set by worker after parsing
             FilePath = filePath
         };
         _db.ImportJobs.Add(job);

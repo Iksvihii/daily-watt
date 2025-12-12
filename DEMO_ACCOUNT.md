@@ -11,9 +11,8 @@ Pour faciliter le développement et les tests, un utilisateur de démonstration 
 
 Le compte de démonstration contient :
 - **90 jours** de données de consommation électrique (3 mois)
-- Données toutes les **30 minutes** (288 mesures par jour)
+- Données **quotidiennes** (1 mesure par jour à minuit UTC)
 - Consommation **réaliste** avec :
-  - Variation horaire (faible la nuit, élevée en soirée)
   - Variation saisonnière (plus élevée en hiver pour le chauffage)
   - Différences week-end/semaine
   - Variation aléatoire (±20%) pour plus de réalisme
@@ -22,12 +21,9 @@ Le compte de démonstration contient :
 
 Le générateur crée des données avec les patterns suivants :
 
-### Par tranche horaire
-- **0h-6h** : ~0.15 kWh/30min (nuit - appareils en veille, chauffage)
-- **6h-9h** : ~0.28-0.35 kWh/30min (matin - petit-déjeuner, préparation)
-- **9h-17h** : ~0.18-0.30 kWh/30min (journée - varie selon week-end)
-- **17h-22h** : ~0.45 kWh/30min (soirée - pic de consommation)
-- **22h-24h** : ~0.25 kWh/30min (fin de soirée)
+### Consommation journalière de base
+- **Jour de semaine** : ~14 kWh/jour
+- **Week-end** : ~16 kWh/jour (+15% pour plus de présence à domicile)
 
 ### Par saison
 - **Hiver** (déc-fév) : +40% (chauffage)

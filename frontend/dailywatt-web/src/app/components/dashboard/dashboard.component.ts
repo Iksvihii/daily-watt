@@ -1,12 +1,11 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit, inject, signal, computed } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, FormsModule } from "@angular/forms";
-import { RouterLink } from "@angular/router";
 import { DashboardService } from "../../services/dashboard.service";
 import { Granularity, TimeSeriesResponse } from "../../models/dashboard.models";
 import { ConsumptionChartComponent } from "../consumption-chart/consumption-chart.component";
 import { EnedisService } from "../../services/enedis.service";
-import { EnedisStatus, EnedisMeter } from "../../models/enedis.models";
+import { EnedisMeter } from "../../models/enedis.models";
 
 @Component({
   selector: "app-dashboard",
@@ -15,7 +14,6 @@ import { EnedisStatus, EnedisMeter } from "../../models/enedis.models";
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    RouterLink,
     ConsumptionChartComponent,
   ],
   templateUrl: "./dashboard.component.html",
@@ -34,9 +32,6 @@ export class DashboardComponent implements OnInit {
   error = signal<string | undefined>(undefined);
 
   data = signal<TimeSeriesResponse | undefined>(undefined);
-  status = signal<EnedisStatus | null>(null);
-  syncing = signal(false);
-  statusMessage = signal<string | undefined>(undefined);
   meters = signal<EnedisMeter[]>([]);
   selectedMeterId = signal<string | undefined>(undefined);
   selectedMeter = computed(() => {
@@ -47,7 +42,6 @@ export class DashboardComponent implements OnInit {
   private readonly SESSION_STORAGE_PREFIX = "dashboard_";
 
   ngOnInit(): void {
-    this.loadStatus();
     this.loadMeters();
   }
 
@@ -89,18 +83,7 @@ export class DashboardComponent implements OnInit {
     );
   }
 
-  loadStatus() {
-    this.statusMessage.set(undefined);
-    this.enedis.getStatus().subscribe({
-      next: (s) => {
-        this.status.set(s);
-        if (s.configured) {
-          this.load();
-        }
-      },
-      error: () => this.statusMessage.set("Unable to load Enedis status"),
-    });
-  }
+  // Enedis status and sync have been removed in favor of manual Excel import via settings
 
   loadMeters() {
     this.enedis.getMeters().subscribe({
@@ -112,6 +95,10 @@ export class DashboardComponent implements OnInit {
           this.selectedMeterId.set(favorite.id);
         } else if (meters.length > 0) {
           this.selectedMeterId.set(meters[0].id);
+        }
+        // Auto-load data if a meter is selected
+        if (this.selectedMeterId()) {
+          this.load();
         }
       },
       error: () => {
@@ -149,29 +136,7 @@ export class DashboardComponent implements OnInit {
       });
   }
 
-  syncNow() {
-    if (this.syncing()) return;
-    if (!this.selectedMeterId()) {
-      this.statusMessage.set("Please select a meter first");
-      return;
-    }
-    this.syncing.set(true);
-    const payload = {
-      meterId: this.selectedMeterId()!,
-      fromUtc: new Date(this.defaultFrom()).toISOString(),
-      toUtc: new Date().toISOString(),
-    };
-    this.enedis.createImportJob(payload).subscribe({
-      next: (job) => {
-        this.statusMessage.set(`Sync started (job ${job.id})`);
-        this.syncing.set(false);
-      },
-      error: (err) => {
-        this.statusMessage.set(err.error?.error || "Failed to start sync");
-        this.syncing.set(false);
-      },
-    });
-  }
+  // Sync button removed; imports are initiated via Enedis settings and processed by the worker
 
   private defaultFrom(): string {
     const d = new Date();

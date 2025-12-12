@@ -1,10 +1,14 @@
-import { Component, inject, signal, OnInit } from "@angular/core";
+import { Component, inject, signal, OnInit, OnDestroy } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
-import { EnedisService } from "../../services/enedis.service";
 import {
-  SaveCredentialsRequest,
-  CredentialsResponse,
+  FormBuilder,
+  ReactiveFormsModule,
+  FormsModule,
+  Validators,
+} from "@angular/forms";
+import { EnedisService } from "../../services/enedis.service";
+import { ToastService } from "../../services/toast.service";
+import {
   EnedisMeter,
   CreateMeterRequest,
   UpdateMeterRequest,
@@ -14,23 +18,31 @@ import { AddressMapInputComponent } from "../address-map-input/address-map-input
 @Component({
   selector: "app-enedis-settings",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, AddressMapInputComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    AddressMapInputComponent,
+  ],
   templateUrl: "./enedis-settings.component.html",
   styleUrl: "./enedis-settings.component.less",
 })
-export class EnedisSettingsComponent implements OnInit {
+export class EnedisSettingsComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private enedis = inject(EnedisService);
+  private toast = inject(ToastService);
+  private activePolls = new Map<string, any>();
 
   message = signal<string | undefined>(undefined);
-  saving = signal(false);
   loading = signal(true);
-  showPassword = signal(false);
   isInitialLoad = signal(true);
 
   meters = signal<EnedisMeter[]>([]);
   editingMeter = signal<EnedisMeter | null>(null);
   isAddingMeter = signal(false);
+  importMessage = signal<string | undefined>(undefined);
+  importInProgress = signal(false);
+  selectedImportFile = signal<File | null>(null);
 
   selectedCoordinates = signal<{
     city?: string;
@@ -39,11 +51,6 @@ export class EnedisSettingsComponent implements OnInit {
   }>({});
 
   loadedCity = signal<string>("");
-
-  credentialsForm = this.fb.group({
-    login: ["" as string, Validators.required],
-    password: [""],
-  });
 
   meterForm = this.fb.group({
     prm: ["" as string, Validators.required],
@@ -54,41 +61,27 @@ export class EnedisSettingsComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.loadCredentials();
     this.loadMeters();
   }
 
-  private loadCredentials(): void {
-    this.enedis.getCredentials().subscribe({
-      next: (credentials: CredentialsResponse) => {
-        this.credentialsForm.patchValue({
-          login: credentials.login,
-        });
-        this.loading.set(false);
-        this.isInitialLoad.set(false);
-      },
-      error: () => {
-        // No credentials saved yet, form stays empty
-        this.loading.set(false);
-        this.isInitialLoad.set(false);
-      },
-    });
+  ngOnDestroy(): void {
+    // Clear all active polling timers
+    this.activePolls.forEach((timerId) => clearInterval(timerId));
+    this.activePolls.clear();
   }
 
   private loadMeters(): void {
     this.enedis.getMeters().subscribe({
       next: (meters: EnedisMeter[]) => {
         this.meters.set(meters);
+        this.loading.set(false);
       },
       error: () => {
         // No meters yet
         this.meters.set([]);
+        this.loading.set(false);
       },
     });
-  }
-
-  togglePasswordVisibility(): void {
-    this.showPassword.update((val: boolean) => !val);
   }
 
   onLocationSelected(data: {
@@ -110,29 +103,6 @@ export class EnedisSettingsComponent implements OnInit {
 
     this.meterForm.get("latitude")?.setValue(data.latitude);
     this.meterForm.get("longitude")?.setValue(data.longitude);
-  }
-
-  saveCredentials() {
-    if (this.credentialsForm.invalid) {
-      return;
-    }
-    this.saving.set(true);
-    const formValue = this.credentialsForm.getRawValue();
-
-    const request: SaveCredentialsRequest = {
-      login: formValue.login || "",
-      password: formValue.password || "",
-    };
-    this.enedis.saveCredentials(request).subscribe({
-      next: () => {
-        this.message.set("Credentials saved");
-        this.saving.set(false);
-      },
-      error: (err: { error?: { error?: string } }) => {
-        this.message.set(err.error?.error || "Failed to save credentials");
-        this.saving.set(false);
-      },
-    });
   }
 
   startAddMeter() {
@@ -241,5 +211,85 @@ export class EnedisSettingsComponent implements OnInit {
         this.message.set(err.error?.error || "Failed to set default meter");
       },
     });
+  }
+
+  onImportFileSelected(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const file = target.files && target.files[0] ? target.files[0] : null;
+    this.selectedImportFile.set(file);
+  }
+
+  startImportForMeter(meter: EnedisMeter) {
+    const file = this.selectedImportFile();
+    if (!file) {
+      this.toast.error("Please choose an Excel file first");
+      return;
+    }
+    this.importInProgress.set(true);
+    this.enedis.uploadConsumptionFile({ file, meterId: meter.id }).subscribe({
+      next: (job) => {
+        this.toast.success(
+          `Import started for ${meter.label || meter.prm}. Processing...`
+        );
+        this.importInProgress.set(false);
+        this.selectedImportFile.set(null);
+        // Start polling for job completion
+        this.pollJobStatus(job.id, meter);
+      },
+      error: (err: { error?: { error?: string } }) => {
+        this.toast.error(err.error?.error || "Failed to start import");
+        this.importInProgress.set(false);
+      },
+    });
+  }
+
+  private pollJobStatus(jobId: string, meter: EnedisMeter) {
+    const pollInterval = 3000; // 3 seconds
+    const maxAttempts = 40; // 2 minutes max
+    let attempts = 0;
+
+    const timerId = setInterval(() => {
+      attempts++;
+      this.enedis.getImportJob(jobId).subscribe({
+        next: (job) => {
+          if (job.status === "Completed") {
+            clearInterval(timerId);
+            this.activePolls.delete(jobId);
+            this.toast.success(
+              `Import completed for ${meter.label || meter.prm}! ${
+                job.importedCount
+              } measurements imported.`,
+              8000
+            );
+          } else if (job.status === "Failed") {
+            clearInterval(timerId);
+            this.activePolls.delete(jobId);
+            this.toast.error(
+              `Import failed for ${meter.label || meter.prm}: ${
+                job.errorMessage || "Unknown error"
+              }`,
+              8000
+            );
+          } else if (attempts >= maxAttempts) {
+            clearInterval(timerId);
+            this.activePolls.delete(jobId);
+            this.toast.info(
+              `Import for ${
+                meter.label || meter.prm
+              } is still running. Check back later.`,
+              6000
+            );
+          }
+        },
+        error: () => {
+          if (attempts >= maxAttempts) {
+            clearInterval(timerId);
+            this.activePolls.delete(jobId);
+          }
+        },
+      });
+    }, pollInterval);
+
+    this.activePolls.set(jobId, timerId);
   }
 }
