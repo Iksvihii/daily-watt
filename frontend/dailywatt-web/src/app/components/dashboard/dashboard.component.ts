@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit, inject, signal } from "@angular/core";
+import { Component, OnInit, inject, signal, computed } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, FormsModule } from "@angular/forms";
 import { RouterLink } from "@angular/router";
 import { DashboardService } from "../../services/dashboard.service";
@@ -39,6 +39,10 @@ export class DashboardComponent implements OnInit {
   statusMessage = signal<string | undefined>(undefined);
   meters = signal<EnedisMeter[]>([]);
   selectedMeterId = signal<string | undefined>(undefined);
+  selectedMeter = computed(() => {
+    const id = this.selectedMeterId();
+    return id ? this.meters().find((m) => m.id === id) : undefined;
+  });
 
   private readonly SESSION_STORAGE_PREFIX = "dashboard_";
 

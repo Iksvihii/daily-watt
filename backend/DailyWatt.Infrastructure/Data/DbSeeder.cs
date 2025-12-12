@@ -1,4 +1,5 @@
 using DailyWatt.Domain.Entities;
+using DailyWatt.Domain.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,7 @@ public static class DbSeeder
     using var scope = serviceProvider.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<DailyWattUser>>();
+    var secretProtector = scope.ServiceProvider.GetRequiredService<ISecretProtector>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<ApplicationDbContext>>();
 
     try
@@ -51,8 +53,8 @@ public static class DbSeeder
       var enedisCredential = new EnedisCredential
       {
         UserId = demoUser.Id,
-        LoginEncrypted = System.Text.Encoding.UTF8.GetBytes("demo_login"),
-        PasswordEncrypted = System.Text.Encoding.UTF8.GetBytes("demo_password"),
+        LoginEncrypted = secretProtector.Protect("demo_login"),
+        PasswordEncrypted = secretProtector.Protect("demo_password"),
         UpdatedAt = DateTime.UtcNow
       };
 

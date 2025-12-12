@@ -19,6 +19,7 @@ public class EnedisController : ControllerBase
     private readonly IGeocodingService _geocodingService;
     private readonly ISecretProtector _secretProtector;
     private readonly IMapper _mapper;
+    private readonly ILogger<EnedisController> _logger;
 
     public EnedisController(
         IEnedisCredentialService credentialsService,
@@ -26,7 +27,8 @@ public class EnedisController : ControllerBase
         IImportJobService importJobService,
         IGeocodingService geocodingService,
         ISecretProtector secretProtector,
-        IMapper mapper)
+        IMapper mapper,
+        ILogger<EnedisController> logger)
     {
         _credentialsService = credentialsService;
         _meterService = meterService;
@@ -34,6 +36,7 @@ public class EnedisController : ControllerBase
         _geocodingService = geocodingService;
         _secretProtector = secretProtector;
         _mapper = mapper;
+        _logger = logger;
     }
 
     [HttpPost("credentials")]
@@ -59,9 +62,18 @@ public class EnedisController : ControllerBase
             return NotFound();
         }
 
-        var decryptedLogin = cred.LoginEncrypted != null && cred.LoginEncrypted.Length > 0
-            ? _secretProtector.Unprotect(cred.LoginEncrypted)
-            : "";
+        string decryptedLogin = "";
+        try
+        {
+            decryptedLogin = cred.LoginEncrypted != null && cred.LoginEncrypted.Length > 0
+                ? _secretProtector.Unprotect(cred.LoginEncrypted)
+                : "";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to decrypt login for user {UserId}", userId);
+            // Return empty login if decryption fails
+        }
 
         return Ok(new
         {

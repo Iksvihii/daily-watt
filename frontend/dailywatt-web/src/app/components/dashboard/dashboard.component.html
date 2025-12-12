@@ -17,11 +17,44 @@
         </div>
       } @else {
         <div class="status-content configured">
-          <div class="status-info">
-            <div class="info-item">
-              <span class="info-label">Meter</span>
-              <span class="info-value">{{ status()!.meterNumber }}</span>
+          <!-- Meter selector with detailed info -->
+          @if (meters().length > 0) {
+            <div class="meter-selector-container">
+              <label for="meterSelectStatus" class="meter-label">Selected Meter</label>
+              <select 
+                id="meterSelectStatus" 
+                [(ngModel)]="selectedMeterId" 
+                (ngModelChange)="onMeterChange($event)"
+                name="meterStatus"
+                class="meter-select">
+                @for (meter of meters(); track meter.id) {
+                  <option [value]="meter.id">
+                    {{ meter.label || meter.prm }}
+                    @if (meter.isFavorite) { ⭐ }
+                  </option>
+                }
+              </select>
+              @if (selectedMeter()) {
+                <div class="meter-details">
+                  <div class="info-item">
+                    <span class="info-label">PRM</span>
+                    <span class="info-value">{{ selectedMeter()!.prm }}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Label</span>
+                    <span class="info-value">{{ selectedMeter()!.label || 'N/A' }}</span>
+                  </div>
+                  @if (selectedMeter()!.city) {
+                    <div class="info-item">
+                      <span class="info-label">City</span>
+                      <span class="info-value">{{ selectedMeter()!.city }}</span>
+                    </div>
+                  }
+                </div>
+              }
             </div>
+          }
+          <div class="status-info">
             <div class="info-item">
               <span class="info-label">Last sync</span>
               <span class="info-value">{{ status()!.updatedAt | date:'short' }}</span>
@@ -46,23 +79,6 @@
           <button class="btn" type="button" (click)="load()" [disabled]="loading()">Load</button>
         </div>
         <form>
-          @if (meters().length > 0) {
-            <div class="form-group">
-              <label for="meterSelect">Meter</label>
-              <select 
-                id="meterSelect" 
-                [(ngModel)]="selectedMeterId" 
-                (ngModelChange)="onMeterChange($event)"
-                name="meter">
-                @for (meter of meters(); track meter.id) {
-                  <option [value]="meter.id">
-                    {{ meter.label || meter.prm }}
-                    @if (meter.isFavorite) { ⭐ }
-                  </option>
-                }
-              </select>
-            </div>
-          }
           <div class="form-row">
             <div class="form-group">
               <label for="fromDate">From</label>
