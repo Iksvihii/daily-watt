@@ -245,5 +245,4 @@ export class EnedisSettingsComponent implements OnInit, OnDestroy {
       },
     });
   }
-
 }

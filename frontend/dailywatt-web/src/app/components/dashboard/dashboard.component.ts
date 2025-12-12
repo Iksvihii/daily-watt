@@ -1,5 +1,12 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit, OnDestroy, inject, signal, computed } from "@angular/core";
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  signal,
+  computed,
+} from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, FormsModule } from "@angular/forms";
 import { DashboardService } from "../../services/dashboard.service";
 import { Granularity, TimeSeriesResponse } from "../../models/dashboard.models";
@@ -52,18 +59,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.to.set(this.getStoredTo() || new Date().toISOString().slice(0, 16));
     this.granularity.set(this.getStoredGranularity() || "day");
     this.withWeather.set(this.getStoredWithWeather() ?? true);
-    
+
     this.loadMeters();
-    
+
     // Écouter les notifications d'import terminé pour recharger les données
-    this.importSubscription = this.importNotification.importCompleted$.subscribe(
-      (event) => {
+    this.importSubscription =
+      this.importNotification.importCompleted$.subscribe((event) => {
         // Recharger uniquement si l'import concerne le meter actuellement sélectionné
         if (event.success && event.meterId === this.selectedMeterId()) {
           this.load();
         }
-      }
-    );
+      });
   }
 
   ngOnDestroy(): void {
@@ -122,11 +128,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.enedis.getMeters().subscribe({
       next: (meters) => {
         this.meters.set(meters);
-        
+
         // Restaurer le meter précédemment sélectionné s'il existe
         const storedMeterId = this.getStoredMeterId();
-        const storedMeter = storedMeterId ? meters.find(m => m.id === storedMeterId) : null;
-        
+        const storedMeter = storedMeterId
+          ? meters.find((m) => m.id === storedMeterId)
+          : null;
+
         if (storedMeter) {
           this.selectedMeterId.set(storedMeter.id);
         } else {
@@ -138,7 +146,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.selectedMeterId.set(meters[0].id);
           }
         }
-        
+
         // Auto-load data if a meter is selected
         if (this.selectedMeterId()) {
           this.load();
